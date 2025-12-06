@@ -1,219 +1,383 @@
-# Development Seeds - Realistic test data for development
+# Development seeds - Creates 600 doctors with realistic distribution
+#
 # Run with: mix run priv/repo/seeds/dev.exs
-# Requires Faker: {:faker, "~> 0.18", only: [:dev, :test]}
+# Or:       mix seed.dev
 
 alias Medic.Repo
 alias Medic.Accounts
-alias Medic.Accounts.User
 alias Medic.Doctors
 alias Medic.Doctors.{Doctor, Specialty}
 alias Medic.Patients
 alias Medic.Patients.Patient
 alias Medic.Appointments
 alias Medic.Appointments.Appointment
+alias Medic.MedicalTaxonomy
+alias Medic.Scheduling
 
-# First run production seeds to ensure specialties exist
-Code.require_file("prod.exs", __DIR__)
+require Logger
+import Ecto.Query
 
-IO.puts("\n🧪 Seeding development data...")
+IO.puts("\n🏥 Starting development seed (600 doctors)...\n")
 
-# Greek cities with coordinates
-greek_cities = [
-  %{city: "Αθήνα", lat: 37.9838, lng: 23.7275},
-  %{city: "Θεσσαλονίκη", lat: 40.6401, lng: 22.9444},
-  %{city: "Πάτρα", lat: 38.2466, lng: 21.7346},
-  %{city: "Ηράκλειο", lat: 35.3387, lng: 25.1442},
-  %{city: "Λάρισα", lat: 39.6390, lng: 22.4191},
-  %{city: "Βόλος", lat: 39.3666, lng: 22.9507},
-  %{city: "Ιωάννινα", lat: 39.6650, lng: 20.8537},
-  %{city: "Χανιά", lat: 35.5138, lng: 24.0180}
+# --- Configuration ---
+
+@doctor_count 600
+@patient_count 50
+@demo_password "DemoPassword123!"
+
+# Greek cities with approximate populations (for weighted distribution)
+@cities [
+  %{name: "Athens", lat: 37.9838, lng: 23.7275, weight: 40},
+  %{name: "Thessaloniki", lat: 40.6401, lng: 22.9444, weight: 15},
+  %{name: "Patras", lat: 38.2466, lng: 21.7346, weight: 7},
+  %{name: "Heraklion", lat: 35.3387, lng: 25.1442, weight: 6},
+  %{name: "Larissa", lat: 39.6390, lng: 22.4191, weight: 5},
+  %{name: "Volos", lat: 39.3666, lng: 22.9507, weight: 4},
+  %{name: "Ioannina", lat: 39.6650, lng: 20.8537, weight: 4},
+  %{name: "Chania", lat: 35.5138, lng: 24.0180, weight: 3},
+  %{name: "Rhodes", lat: 36.4349, lng: 28.2176, weight: 3},
+  %{name: "Alexandroupoli", lat: 40.8475, lng: 25.8743, weight: 2},
+  %{name: "Kalamata", lat: 37.0389, lng: 22.1142, weight: 2},
+  %{name: "Kavala", lat: 40.9397, lng: 24.4128, weight: 2},
+  %{name: "Serres", lat: 41.0866, lng: 23.5497, weight: 2},
+  %{name: "Corfu", lat: 39.6243, lng: 19.9217, weight: 2},
+  %{name: "Mykonos", lat: 37.4467, lng: 25.3289, weight: 1},
+  %{name: "Santorini", lat: 36.3932, lng: 25.4615, weight: 1},
+  %{name: "Zakynthos", lat: 37.7879, lng: 20.8979, weight: 1}
 ]
 
-# Greek first names
-greek_first_names = [
-  "Γιώργος", "Νίκος", "Δημήτρης", "Κώστας", "Γιάννης",
-  "Μαρία", "Ελένη", "Κατερίνα", "Αναστασία", "Σοφία",
-  "Αλέξανδρος", "Μιχάλης", "Παναγιώτης", "Χρήστος", "Αντώνης",
-  "Βασιλική", "Αικατερίνη", "Παναγιώτα", "Ευαγγελία", "Δήμητρα"
-]
+# English first names (common)
+@first_names ~w(
+  Alexander Alexandra Andrew Anna Anthony Barbara Benjamin Catherine
+  Charles Christina Christopher Daniel David Elizabeth Emily Emma
+  George Helen James Jennifer John Jonathan Julia Katherine
+  Margaret Maria Mark Matthew Michael Nicholas Patricia Paul
+  Peter Rachel Rebecca Richard Robert Sarah Sophia Stephen
+  Thomas Victoria William Jennifer Jessica Ashley Amanda Brittany
+)
 
-# Greek last names
-greek_last_names = [
-  "Παπαδόπουλος", "Αντωνίου", "Γεωργίου", "Νικολάου", "Δημητρίου",
-  "Παπαδάκης", "Κωνσταντίνου", "Ιωάννου", "Βασιλείου", "Αλεξίου",
-  "Οικονόμου", "Καραγιάννης", "Μακρής", "Παπανικολάου", "Σπυρόπουλος"
-]
+# English last names (common)
+@last_names ~w(
+  Anderson Brown Campbell Clark Davis Evans Garcia Green
+  Hall Harris Jackson Johnson Jones King Lee Lewis
+  Martin Martinez Miller Mitchell Moore Nelson Parker Perez
+  Phillips Roberts Robinson Rodriguez Scott Smith Taylor Thomas
+  Thompson Turner Walker White Williams Wilson Wright Young
+)
 
-# Helper to generate Greek phone numbers
+# Specialty distribution (higher weight = more doctors)
+@specialty_weights %{
+  "general-practice" => 15,
+  "internal-medicine" => 12,
+  "family-medicine" => 10,
+  "pediatrics" => 8,
+  "cardiology" => 7,
+  "orthopedics" => 7,
+  "dermatology" => 6,
+  "ophthalmology" => 6,
+  "gynecology" => 6,
+  "obgyn" => 5,
+  "dentistry" => 8,
+  "psychiatry" => 5,
+  "neurology" => 4,
+  "gastroenterology" => 4,
+  "ent" => 4,
+  "pulmonology" => 4,
+  "endocrinology" => 3,
+  "rheumatology" => 3,
+  "nephrology" => 3,
+  "urology" => 3,
+  "oncology" => 3,
+  "hematology" => 2,
+  "allergy-immunology" => 2,
+  "infectious-diseases" => 2,
+  "radiology" => 3,
+  "pathology" => 2,
+  "anesthesiology" => 3,
+  "emergency-medicine" => 3,
+  "critical-care" => 2,
+  "plastic-surgery" => 2,
+  "general-surgery" => 4,
+  "neurosurgery" => 2,
+  "cardiac-surgery" => 1,
+  "vascular-surgery" => 2,
+  "thoracic-surgery" => 1,
+  "orthopedic-surgery" => 3,
+  "sports-medicine" => 2,
+  "physical-rehab" => 3,
+  "geriatrics" => 2,
+  "palliative-medicine" => 1,
+  "sleep-medicine" => 1,
+  "optometry" => 2,
+  "periodontology" => 2,
+  "psychology" => 4
+}
+
+# --- Helper Functions ---
+
 defmodule DevSeeds do
-  def greek_phone, do: "69#{:rand.uniform(99_999_999) |> Integer.to_string() |> String.pad_leading(8, "0")}"
-  
   def random_item(list), do: Enum.random(list)
-  
+
+  def weighted_random(items, weight_fn) do
+    weighted_list =
+      Enum.flat_map(items, fn item ->
+        weight = weight_fn.(item)
+        List.duplicate(item, weight)
+      end)
+
+    random_item(weighted_list)
+  end
+
+  def random_city(cities) do
+    weighted_random(cities, fn city -> city.weight end)
+  end
+
+  def random_specialty_id(weights, specialties) do
+    available_ids = Enum.map(specialties, & &1.id)
+
+    weights
+    |> Enum.filter(fn {id, _} -> id in available_ids end)
+    |> Enum.flat_map(fn {id, weight} -> List.duplicate(id, weight) end)
+    |> random_item()
+  end
+
+  def random_rating do
+    # Weighted towards higher ratings (realistic)
+    base = Enum.random(35..50) / 10.0
+    Float.round(base, 1)
+  end
+
+  def random_review_count do
+    # Exponential distribution (most have few, some have many)
+    case Enum.random(1..100) do
+      n when n <= 50 -> Enum.random(0..20)
+      n when n <= 80 -> Enum.random(20..100)
+      n when n <= 95 -> Enum.random(100..300)
+      _ -> Enum.random(300..1000)
+    end
+  end
+
+  def random_fee do
+    # Realistic consultation fees in euros
+    Enum.random([30, 40, 50, 60, 70, 80, 100, 120, 150, 200])
+  end
+
   def random_bio(specialty_name) do
     years = Enum.random(5..30)
+    hospitals = [
+      "Athens General Hospital", "Thessaloniki Medical Center",
+      "Evangelismos Hospital", "AHEPA University Hospital",
+      "Hippocrates Hospital", "Metropolitan Hospital",
+      "Hygeia Hospital", "Mediterraneo Hospital"
+    ]
+    certifications = [
+      "American Board certified", "European Board certified",
+      "Fellowship trained", "University accredited"
+    ]
+
     """
-    Ειδικός #{specialty_name} με #{years} χρόνια εμπειρίας. 
-    Απόφοιτος Ιατρικής Σχολής του Πανεπιστημίου Αθηνών. 
-    Μέλος της Ελληνικής Ιατρικής Εταιρείας.
+    Experienced #{specialty_name} specialist with #{years} years of practice.
+    Previously at #{random_item(hospitals)}. #{random_item(certifications)}.
+    Committed to providing excellent patient care with a focus on modern treatment approaches.
     """
+    |> String.trim()
+  end
+
+  def add_location_jitter(lat, lng) do
+    # Add small random offset (within ~5km)
+    lat_offset = (:rand.uniform() - 0.5) * 0.05
+    lng_offset = (:rand.uniform() - 0.5) * 0.05
+    {lat + lat_offset, lng + lng_offset}
   end
 end
 
-# Get all specialties
-specialties = Doctors.list_specialties()
+# --- Seed Specialties from Taxonomy ---
 
-IO.puts("\n👨‍⚕️ Creating demo doctors...")
+IO.puts("📋 Seeding specialties from taxonomy...")
 
-# Create 20 demo doctors
+taxonomy_specialties = MedicalTaxonomy.specialties()
+
+specialties_created =
+  for spec <- taxonomy_specialties do
+    case Doctors.get_specialty_by_slug(spec.id) do
+      nil ->
+        {:ok, specialty} =
+          Doctors.create_specialty(%{
+            name_en: spec.name,
+            name_el: spec.name_el,
+            slug: spec.id,
+            icon: spec.icon
+          })
+        specialty
+
+      existing ->
+        existing
+    end
+  end
+
+IO.puts("  ✓ #{length(specialties_created)} specialties ready")
+
+# Build specialty map for quick lookup
+specialty_map =
+  specialties_created
+  |> Enum.map(fn s -> {s.slug, s} end)
+  |> Map.new()
+
+# --- Seed Doctors ---
+
+IO.puts("\n👨‍⚕️ Seeding #{@doctor_count} doctors...")
+
+existing_doctor_count =
+  Repo.one(from d in Doctor, select: count(d.id))
+
+doctors_to_create = max(0, @doctor_count - existing_doctor_count)
+
 doctors_created =
-  for i <- 1..20 do
-    first_name = DevSeeds.random_item(greek_first_names)
-    last_name = DevSeeds.random_item(greek_last_names)
-    email = "doctor#{i}@demo.medic.gr"
-    specialty = DevSeeds.random_item(specialties)
-    location = DevSeeds.random_item(greek_cities)
-    is_verified = rem(i, 5) != 0  # 80% verified
+  if doctors_to_create > 0 do
+    for i <- 1..doctors_to_create do
+      # Pick specialty based on weights
+      specialty_id = DevSeeds.random_specialty_id(@specialty_weights, specialties_created)
+      specialty = Map.get(specialty_map, specialty_id)
 
-    # Create user
-    {:ok, user} =
-      case Repo.get_by(User, email: email) do
-        nil ->
-          Accounts.register_user(%{
-            "email" => email,
-            "password" => "DemoPassword123!",
-            "role" => "doctor"
-          })
-        existing ->
-          {:ok, existing}
-      end
+      # Pick city based on population
+      city = DevSeeds.random_city(@cities)
+      {lat, lng} = DevSeeds.add_location_jitter(city.lat, city.lng)
 
-    # Create or update doctor profile
-    case Doctors.get_doctor_by_user_id(user.id) do
-      nil ->
-        # Insert with basic changeset
-        {:ok, doctor} =
-          %Doctor{user_id: user.id}
-          |> Doctor.changeset(%{
-            first_name: first_name,
-            last_name: last_name,
-            specialty_id: specialty.id,
-            bio_el: DevSeeds.random_bio(specialty.name_el),
-            bio: "Specialist in #{specialty.name_en} with extensive experience.",
-            city: location.city,
-            address: "Λεωφ. #{DevSeeds.random_item(["Αλεξάνδρας", "Συγγρού", "Κηφισίας", "Βουλιαγμένης"])} #{:rand.uniform(200)}",
-            location_lat: location.lat + (:rand.uniform() - 0.5) * 0.1,
-            location_lng: location.lng + (:rand.uniform() - 0.5) * 0.1,
-            consultation_fee: Decimal.new(Enum.random([30, 40, 50, 60, 80, 100])),
-            cal_com_username: if(rem(i, 3) == 0, do: "demo-doctor-#{i}", else: nil)
-          })
-          |> Repo.insert()
-        
-        # Update rating and review_count separately
-        {:ok, doctor} =
-          doctor
-          |> Doctor.rating_changeset(%{
-            rating: (3.5 + :rand.uniform() * 1.5) |> Float.round(1),
-            review_count: :rand.uniform(150)
-          })
-          |> Repo.update()
-        
-        # Verify if needed
-        doctor =
-          if is_verified do
-            {:ok, verified} = Doctors.verify_doctor(doctor)
-            verified
-          else
-            doctor
-          end
-        
-        IO.puts("  ✓ Dr. #{first_name} #{last_name} (#{specialty.name_el})#{if is_verified, do: " ✔", else: ""}")
+      first_name = DevSeeds.random_item(@first_names)
+      last_name = DevSeeds.random_item(@last_names)
+      email = "doctor#{existing_doctor_count + i}@demo.medic.gr"
+
+      # Create user
+      {:ok, user} =
+        Accounts.register_user(%{
+          email: email,
+          password: @demo_password,
+          role: "doctor"
+        })
+
+      # Create doctor profile
+      {:ok, doctor} =
+        Doctors.create_doctor(user, %{
+          first_name: first_name,
+          last_name: last_name,
+          specialty_id: specialty.id,
+          bio: DevSeeds.random_bio(specialty.name_en),
+          city: city.name,
+          address: "#{Enum.random(1..999)} Main Street, #{city.name}",
+          location_lat: lat,
+          location_lng: lng,
+          consultation_fee: DevSeeds.random_fee(),
+          cal_com_username: if(Enum.random(1..100) > 30, do: "dr-#{String.downcase(last_name)}-#{i}")
+        })
+
+      # Verify 70% of doctors
+      if Enum.random(1..100) <= 70 do
+        {:ok, doctor} = Doctors.verify_doctor(doctor)
+
+        # Update rating for verified doctors
         doctor
-
-      existing ->
-        IO.puts("  • Dr. #{existing.first_name} #{existing.last_name} exists")
-        existing
-    end
-  end
-
-IO.puts("\n👤 Creating demo patients...")
-
-# Create 10 demo patients
-patients_created =
-  for i <- 1..10 do
-    first_name = DevSeeds.random_item(greek_first_names)
-    last_name = DevSeeds.random_item(greek_last_names)
-    email = "patient#{i}@demo.medic.gr"
-
-    # Create user
-    {:ok, user} =
-      case Repo.get_by(User, email: email) do
-        nil ->
-          Accounts.register_user(%{
-            "email" => email,
-            "password" => "DemoPassword123!",
-            "role" => "patient"
-          })
-        existing ->
-          {:ok, existing}
+        |> Doctor.rating_changeset(%{
+          rating: DevSeeds.random_rating(),
+          review_count: DevSeeds.random_review_count()
+        })
+        |> Repo.update!()
       end
 
-    # Create patient profile
-    case Patients.get_patient_by_user_id(user.id) do
-      nil ->
-        {:ok, patient} =
-          %Patient{user_id: user.id}
-          |> Patient.changeset(%{
-            first_name: first_name,
-            last_name: last_name,
-            phone: DevSeeds.greek_phone(),
-            date_of_birth: Date.new!(1960 + :rand.uniform(40), :rand.uniform(12), :rand.uniform(28))
-          })
-          |> Repo.insert()
-        
-        IO.puts("  ✓ #{first_name} #{last_name}")
-        patient
+      if rem(i, 50) == 0 do
+        IO.puts("  ... created #{existing_doctor_count + i} doctors")
+      end
 
-      existing ->
-        IO.puts("  • #{existing.first_name} #{existing.last_name} exists")
-        existing
+      doctor
     end
+  else
+    IO.puts("  • #{existing_doctor_count} doctors already exist, skipping creation")
+    []
   end
 
-IO.puts("\n📅 Creating demo appointments...")
+total_doctors = Repo.one(from d in Doctor, select: count(d.id))
+IO.puts("  ✓ #{total_doctors} doctors total")
 
-# Filter verified doctors (those with verified_at set)
-verified_doctors = 
-  doctors_created
-  |> Enum.filter(fn d -> d.verified_at != nil end)
+# --- Seed Patients ---
+
+IO.puts("\n🏃 Seeding #{@patient_count} patients...")
+
+existing_patient_count =
+  Repo.one(from p in Patient, select: count(p.id))
+
+patients_to_create = max(0, @patient_count - existing_patient_count)
+
+patients_created =
+  if patients_to_create > 0 do
+    for i <- 1..patients_to_create do
+      first_name = DevSeeds.random_item(@first_names)
+      last_name = DevSeeds.random_item(@last_names)
+      email = "patient#{existing_patient_count + i}@demo.medic.gr"
+
+      {:ok, user} =
+        Accounts.register_user(%{
+          email: email,
+          password: @demo_password,
+          role: "patient"
+        })
+
+      {:ok, patient} =
+        Patients.create_patient(user, %{
+          first_name: first_name,
+          last_name: last_name,
+          phone: "+30 69#{:rand.uniform(99999999) |> Integer.to_string() |> String.pad_leading(8, "0")}",
+          date_of_birth: Date.add(Date.utc_today(), -Enum.random(18..80) * 365)
+        })
+
+      patient
+    end
+  else
+    IO.puts("  • #{existing_patient_count} patients already exist")
+    Repo.all(from p in Patient, limit: @patient_count)
+  end
+
+total_patients = Repo.one(from p in Patient, select: count(p.id))
+IO.puts("  ✓ #{total_patients} patients total")
+
+# --- Seed Sample Appointments ---
+
+IO.puts("\n📅 Seeding sample appointments...")
+
+verified_doctors =
+  from(d in Doctor,
+    where: not is_nil(d.verified_at),
+    preload: [:user],
+    limit: 100
+  )
+  |> Repo.all()
 
 if Enum.empty?(verified_doctors) do
   IO.puts("  ⚠ No verified doctors found, skipping appointments")
 else
-  for patient <- Enum.take(patients_created, 5) do
+  all_patients = Repo.all(from p in Patient, preload: [:user], limit: 20)
+
+  for patient <- all_patients do
     doctor = DevSeeds.random_item(verified_doctors)
-    
-    # Past appointment (completed) - use seed_changeset to bypass future validation
+
+    # Past appointment (completed)
     past_start = DateTime.utc_now() |> DateTime.add(-Enum.random(1..30), :day) |> DateTime.truncate(:second)
     past_end = DateTime.add(past_start, 30 * 60, :second)
-    
+
     case Repo.get_by(Appointment, patient_id: patient.id, doctor_id: doctor.id, status: "completed") do
       nil ->
-        {:ok, _} =
-          %Appointment{}
-          |> Appointment.seed_changeset(%{
-            patient_id: patient.id,
-            doctor_id: doctor.id,
-            starts_at: past_start,
-            ends_at: past_end,
-            duration_minutes: 30,
-            status: "completed",
-            appointment_type: "in_person"
-          })
-          |> Repo.insert()
-        IO.puts("  ✓ Past: #{patient.first_name} → Dr. #{doctor.last_name}")
+        %Appointment{}
+        |> Appointment.seed_changeset(%{
+          patient_id: patient.id,
+          doctor_id: doctor.id,
+          starts_at: past_start,
+          ends_at: past_end,
+          duration_minutes: 30,
+          status: "completed",
+          appointment_type: "in_person"
+        })
+        |> Repo.insert()
+
       _ ->
-        IO.puts("  • Past appointment exists")
+        :exists
     end
 
     # Future appointment (confirmed)
@@ -223,31 +387,77 @@ else
 
     case Repo.get_by(Appointment, patient_id: patient.id, doctor_id: doctor2.id, status: "confirmed") do
       nil ->
-        {:ok, _} =
-          %Appointment{}
-          |> Appointment.changeset(%{
-            patient_id: patient.id,
-            doctor_id: doctor2.id,
-            starts_at: future_start,
-            ends_at: future_end,
-            duration_minutes: 30,
-            status: "confirmed",
-            appointment_type: Enum.random(["in_person", "telemedicine"])
-          })
-          |> Repo.insert()
-        IO.puts("  ✓ Future: #{patient.first_name} → Dr. #{doctor2.last_name}")
+        %Appointment{}
+        |> Appointment.changeset(%{
+          patient_id: patient.id,
+          doctor_id: doctor2.id,
+          starts_at: future_start,
+          ends_at: future_end,
+          duration_minutes: 30,
+          status: "confirmed",
+          appointment_type: Enum.random(["in_person", "telemedicine"])
+        })
+        |> Repo.insert()
+
       _ ->
-        IO.puts("  • Future appointment exists")
+        :exists
     end
   end
+
+  IO.puts("  ✓ Sample appointments created")
 end
+
+# --- Seed Availability Rules for Some Doctors ---
+
+IO.puts("\n🗓️ Seeding availability rules...")
+
+rules_created =
+  verified_doctors
+  |> Enum.take(50)
+  |> Enum.map(fn doctor ->
+    # Create rules for Monday-Friday
+    for day <- 1..5 do
+      case Repo.get_by(Medic.Scheduling.AvailabilityRule, doctor_id: doctor.id, day_of_week: day) do
+        nil ->
+          Scheduling.create_availability_rule(%{
+            doctor_id: doctor.id,
+            day_of_week: day,
+            start_time: ~T[09:00:00],
+            end_time: ~T[17:00:00],
+            break_start: ~T[13:00:00],
+            break_end: ~T[14:00:00],
+            slot_duration_minutes: 30
+          })
+          :created
+
+        _ ->
+          :exists
+      end
+    end
+  end)
+  |> List.flatten()
+  |> Enum.count(& &1 == :created)
+
+IO.puts("  ✓ #{rules_created} availability rules created")
+
+# --- Summary ---
 
 IO.puts("""
 
 ✅ Development seeding complete!
 
+📊 Statistics:
+   Specialties: #{length(specialties_created)}
+   Doctors: #{total_doctors}
+   Patients: #{total_patients}
+
 📧 Demo Accounts:
-   Doctors: doctor1@demo.medic.gr ... doctor20@demo.medic.gr
-   Patients: patient1@demo.medic.gr ... patient10@demo.medic.gr
-   Password: DemoPassword123!
+   Doctors:  doctor1@demo.medic.gr ... doctor#{total_doctors}@demo.medic.gr
+   Patients: patient1@demo.medic.gr ... patient#{total_patients}@demo.medic.gr
+   Password: #{@demo_password}
+
+🔍 Search Examples:
+   - "heart" → Cardiology, Cardiac Surgery, etc.
+   - "brain" → Neurology, Neurosurgery, Psychiatry
+   - "stomach" → Gastroenterology
 """)
