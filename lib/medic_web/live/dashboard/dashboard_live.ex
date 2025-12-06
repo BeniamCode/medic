@@ -12,12 +12,12 @@ defmodule MedicWeb.DashboardLive do
     <div class="max-w-4xl mx-auto py-8 px-4">
       <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-2xl font-bold">Καλώς ήρθατε</h1>
-          <p class="text-base-content/70">{@current_user.email}</p>
+          <h1 class="text-2xl font-bold">Welcome</h1>
+          <p class="text-base-content/70"><%= @current_user.email %></p>
         </div>
         <.link navigate={~p"/search"} class="btn btn-primary">
           <.icon name="hero-magnifying-glass" class="w-5 h-5 mr-2" />
-          Βρείτε Γιατρό
+          Find Doctor
         </.link>
       </div>
 
@@ -27,21 +27,21 @@ defmodule MedicWeb.DashboardLive do
           <div class="stat-figure text-primary">
             <.icon name="hero-calendar" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Επόμενα Ραντεβού</div>
-          <div class="stat-value text-primary">{length(@upcoming_appointments)}</div>
+          <div class="stat-title">Upcoming Appointments</div>
+          <div class="stat-value text-primary"><%= length(@upcoming_appointments) %></div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
           <div class="stat-figure text-secondary">
             <.icon name="hero-check-circle" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Ολοκληρωμένα</div>
-          <div class="stat-value text-secondary">{@completed_count}</div>
+          <div class="stat-title">Completed</div>
+          <div class="stat-value text-secondary"><%= @completed_count %></div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
           <div class="stat-figure text-accent">
             <.icon name="hero-heart" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Αγαπημένοι Γιατροί</div>
+          <div class="stat-title">Favorite Doctors</div>
           <div class="stat-value">3</div>
         </div>
       </div>
@@ -51,15 +51,15 @@ defmodule MedicWeb.DashboardLive do
         <div class="card-body">
           <h2 class="card-title">
             <.icon name="hero-calendar-days" class="w-6 h-6 text-primary" />
-            Επόμενα Ραντεβού
+            Upcoming Appointments
           </h2>
 
           <%= if @upcoming_appointments == [] do %>
             <div class="py-12 text-center">
               <.icon name="hero-calendar" class="w-16 h-16 mx-auto text-base-content/30 mb-4" />
-              <p class="text-base-content/70 mb-4">Δεν έχετε προγραμματισμένα ραντεβού</p>
+              <p class="text-base-content/70 mb-4">No scheduled appointments</p>
               <.link navigate={~p"/search"} class="btn btn-primary">
-                Κλείστε το πρώτο σας ραντεβού
+                Book your first appointment
               </.link>
             </div>
           <% else %>
@@ -73,17 +73,17 @@ defmodule MedicWeb.DashboardLive do
                   </div>
                   <div class="flex-1">
                     <h3 class="font-medium">
-                      Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+                      Dr. <%= appointment.doctor.first_name %> <%= appointment.doctor.last_name %>
                     </h3>
                     <p class="text-sm text-base-content/70">
-                      {Calendar.strftime(appointment.scheduled_at, "%d/%m/%Y στις %H:%M")}
+                      <%= Calendar.strftime(appointment.starts_at, "%m/%d/%Y at %H:%M") %>
                     </p>
                   </div>
-                  <div class="badge badge-{status_color(appointment.status)}">
-                    {status_text(appointment.status)}
+                  <div class={"badge badge-#{status_color(appointment.status)}"}>
+                    <%= status_text(appointment.status) %>
                   </div>
                   <.link navigate={~p"/appointments/#{appointment.id}"} class="btn btn-ghost btn-sm">
-                    Λεπτομέρειες
+                    Details
                   </.link>
                 </div>
               <% end %>
@@ -135,9 +135,9 @@ defmodule MedicWeb.DashboardLive do
   defp status_color("cancelled"), do: "error"
   defp status_color(_), do: "ghost"
 
-  defp status_text("pending"), do: "Εκκρεμεί"
-  defp status_text("confirmed"), do: "Επιβεβαιωμένο"
-  defp status_text("completed"), do: "Ολοκληρώθηκε"
-  defp status_text("cancelled"), do: "Ακυρώθηκε"
-  defp status_text(_), do: "Άγνωστο"
+  defp status_text("pending"), do: "Pending"
+  defp status_text("confirmed"), do: "Confirmed"
+  defp status_text("completed"), do: "Completed"
+  defp status_text("cancelled"), do: "Cancelled"
+  defp status_text(_), do: "Unknown"
 end

@@ -15,10 +15,10 @@ defmodule MedicWeb.UserRegistrationLive do
             </div>
           </div>
           <h2 class="mt-6 text-3xl font-bold">
-            <%= if @role == "doctor", do: "Εγγραφή Γιατρού", else: "Εγγραφή Ασθενή" %>
+            <%= if @role == "doctor", do: "Doctor Registration", else: "Patient Registration" %>
           </h2>
           <p class="mt-2 text-base-content/70">
-            Δημιουργήστε τον λογαριασμό σας στο Medic
+            Create your Medic account
           </p>
         </div>
 
@@ -45,20 +45,20 @@ defmodule MedicWeb.UserRegistrationLive do
             <.input
               field={@form[:password]}
               type="password"
-              label="Κωδικός"
-              placeholder="Τουλάχιστον 8 χαρακτήρες"
+              label="Password"
+              placeholder="At least 8 characters"
               required
               autocomplete="new-password"
               phx-debounce="blur"
             />
 
             <div class="text-xs text-base-content/60 space-y-1">
-              <p>Ο κωδικός πρέπει να περιέχει:</p>
+              <p>Password must contain:</p>
               <ul class="list-disc list-inside">
-                <li>Τουλάχιστον 8 χαρακτήρες</li>
-                <li>Ένα κεφαλαίο γράμμα</li>
-                <li>Ένα πεζό γράμμα</li>
-                <li>Έναν αριθμό</li>
+                <li>At least 8 characters</li>
+                <li>One uppercase letter</li>
+                <li>One lowercase letter</li>
+                <li>One number</li>
               </ul>
             </div>
           </div>
@@ -66,18 +66,18 @@ defmodule MedicWeb.UserRegistrationLive do
           <input type="hidden" name="user[role]" value={@role} />
 
           <div>
-            <.button type="submit" class="w-full btn-primary" phx-disable-with="Δημιουργία...">
+            <.button type="submit" class="w-full btn-primary" phx-disable-with="Creating...">
               <.icon name="hero-check" class="w-5 h-5 mr-2" />
-              Δημιουργία Λογαριασμού
+              Create Account
             </.button>
           </div>
         </.form>
 
         <div class="text-center">
           <p class="text-base-content/70">
-            Έχετε ήδη λογαριασμό;
+            Already have an account?
             <.link navigate={~p"/login"} class="link link-primary">
-              Σύνδεση
+              Sign In
             </.link>
           </p>
         </div>
@@ -85,13 +85,13 @@ defmodule MedicWeb.UserRegistrationLive do
         <%= if @role == "patient" do %>
           <div class="text-center">
             <.link navigate={~p"/register/doctor"} class="link text-sm">
-              Είστε γιατρός; Εγγραφείτε εδώ →
+              Are you a doctor? Register here →
             </.link>
           </div>
         <% else %>
           <div class="text-center">
             <.link navigate={~p"/register"} class="link text-sm">
-              ← Εγγραφή ως ασθενής
+              ← Register as a patient
             </.link>
           </div>
         <% end %>
@@ -107,6 +107,7 @@ defmodule MedicWeb.UserRegistrationLive do
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false, role: role)
+      |> assign(page_title: if(role == "doctor", do: "Doctor Registration", else: "Patient Registration"))
       |> assign_form(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}

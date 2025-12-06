@@ -11,7 +11,7 @@ defmodule MedicWeb.DoctorLive.Show do
     <div class="max-w-4xl mx-auto py-8 px-4">
       <.link navigate={~p"/search"} class="btn btn-ghost btn-sm mb-4">
         <.icon name="hero-arrow-left" class="w-4 h-4" />
-        Πίσω στην αναζήτηση
+        Back to search
       </.link>
 
       <div class="card bg-base-100 shadow-lg">
@@ -24,21 +24,21 @@ defmodule MedicWeb.DoctorLive.Show do
               </div>
             </div>
             <div class="flex-1">
-              <h1 class="text-2xl font-bold">Dr. {@doctor.first_name} {@doctor.last_name}</h1>
+              <h1 class="text-2xl font-bold">Dr. <%= @doctor.first_name %> <%= @doctor.last_name %></h1>
               <p class="text-lg text-base-content/70">
-                {@doctor.specialty && @doctor.specialty.name_el || "Γενική Ιατρική"}
+                <%= @doctor.specialty && @doctor.specialty.name_en || "General Practice" %>
               </p>
 
               <div class="flex items-center gap-4 mt-4">
                 <div class="flex items-center gap-1">
                   <.icon name="hero-star" class="w-5 h-5 text-warning" />
-                  <span class="font-medium">{Float.round(@doctor.rating, 1)}</span>
-                  <span class="text-base-content/70">({@doctor.review_count} κριτικές)</span>
+                  <span class="font-medium"><%= Float.round(@doctor.rating || 0.0, 1) %></span>
+                  <span class="text-base-content/70">(<%= @doctor.review_count || 0 %> reviews)</span>
                 </div>
                 <%= if @doctor.verified_at do %>
                   <div class="badge badge-success gap-1">
                     <.icon name="hero-check-badge" class="w-4 h-4" />
-                    Πιστοποιημένος
+                    Verified
                   </div>
                 <% end %>
               </div>
@@ -46,8 +46,8 @@ defmodule MedicWeb.DoctorLive.Show do
 
             <%= if @doctor.consultation_fee do %>
               <div class="text-right">
-                <p class="text-sm text-base-content/70">Κόστος επίσκεψης</p>
-                <p class="text-2xl font-bold text-primary">€{@doctor.consultation_fee}</p>
+                <p class="text-sm text-base-content/70">Consultation fee</p>
+                <p class="text-2xl font-bold text-primary">€<%= @doctor.consultation_fee %></p>
               </div>
             <% end %>
           </div>
@@ -55,10 +55,10 @@ defmodule MedicWeb.DoctorLive.Show do
           <div class="divider"></div>
 
           <%!-- Bio --%>
-          <%= if @doctor.bio_el || @doctor.bio do %>
+          <%= if @doctor.bio do %>
             <div class="prose max-w-none">
-              <h3>Σχετικά</h3>
-              <p>{@doctor.bio_el || @doctor.bio}</p>
+              <h3>About</h3>
+              <p><%= @doctor.bio %></p>
             </div>
           <% end %>
 
@@ -67,23 +67,23 @@ defmodule MedicWeb.DoctorLive.Show do
             <div class="mt-6">
               <h3 class="font-semibold mb-2">
                 <.icon name="hero-map-pin" class="w-5 h-5 inline text-primary" />
-                Τοποθεσία
+                Location
               </h3>
               <p class="text-base-content/70">
-                {@doctor.address}
+                <%= @doctor.address %>
                 <%= if @doctor.address && @doctor.city do %>, <% end %>
-                {@doctor.city}
+                <%= @doctor.city %>
               </p>
             </div>
           <% end %>
 
           <div class="divider"></div>
 
-          <%!-- Cal.com Booking Embed --%>
+          <%!-- Booking Section --%>
           <div class="mt-6">
             <h3 class="font-semibold mb-4">
               <.icon name="hero-calendar" class="w-5 h-5 inline text-primary" />
-              Κλείστε Ραντεβού
+              Book Appointment
             </h3>
 
             <%= if @doctor.cal_com_username do %>
@@ -100,7 +100,7 @@ defmodule MedicWeb.DoctorLive.Show do
             <% else %>
               <div class="alert alert-info">
                 <.icon name="hero-information-circle" class="w-5 h-5" />
-                <span>Η online κράτηση δεν είναι διαθέσιμη για αυτόν τον γιατρό. Επικοινωνήστε απευθείας.</span>
+                <span>Online booking is not available for this doctor. Please contact them directly.</span>
               </div>
             <% end %>
           </div>

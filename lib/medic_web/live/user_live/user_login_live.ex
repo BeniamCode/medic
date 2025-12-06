@@ -12,10 +12,10 @@ defmodule MedicWeb.UserLoginLive do
             </div>
           </div>
           <h2 class="mt-6 text-3xl font-bold">
-            Καλώς ήρθατε στο Medic
+            Welcome to Medic
           </h2>
           <p class="mt-2 text-base-content/70">
-            Συνδεθείτε στον λογαριασμό σας
+            Sign in to your account
           </p>
         </div>
 
@@ -38,7 +38,7 @@ defmodule MedicWeb.UserLoginLive do
             <.input
               field={@form[:password]}
               type="password"
-              label="Κωδικός"
+              label="Password"
               placeholder="••••••••"
               required
               autocomplete="current-password"
@@ -48,33 +48,30 @@ defmodule MedicWeb.UserLoginLive do
           <div class="flex items-center justify-between">
             <label class="label cursor-pointer gap-2">
               <input type="checkbox" name="user[remember_me]" class="checkbox checkbox-sm" />
-              <span class="label-text">Να με θυμάσαι</span>
+              <span class="label-text">Remember me</span>
             </label>
-            <.link navigate={~p"/reset-password"} class="link link-primary text-sm">
-              Ξεχάσατε τον κωδικό;
-            </.link>
           </div>
 
           <div>
-            <.button type="submit" class="w-full btn-primary" phx-disable-with="Σύνδεση...">
+            <.button type="submit" class="w-full btn-primary" phx-disable-with="Signing in...">
               <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5 mr-2" />
-              Σύνδεση
+              Sign In
             </.button>
           </div>
         </.form>
 
-        <div class="divider">ή</div>
+        <div class="divider">or</div>
 
         <div class="text-center space-y-4">
-          <p class="text-base-content/70">Δεν έχετε λογαριασμό;</p>
+          <p class="text-base-content/70">Don't have an account?</p>
           <div class="flex gap-4 justify-center">
             <.link navigate={~p"/register"} class="btn btn-outline btn-primary">
               <.icon name="hero-user-plus" class="w-5 h-5 mr-2" />
-              Εγγραφή Ασθενή
+              Patient Sign Up
             </.link>
             <.link navigate={~p"/register/doctor"} class="btn btn-outline">
               <.icon name="hero-identification" class="w-5 h-5 mr-2" />
-              Εγγραφή Γιατρού
+              Doctor Sign Up
             </.link>
           </div>
         </div>
@@ -86,6 +83,6 @@ defmodule MedicWeb.UserLoginLive do
   def mount(_params, _session, socket) do
     email = Phoenix.Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
-    {:ok, assign(socket, form: form), temporary_assigns: [form: form]}
+    {:ok, assign(socket, form: form, page_title: "Sign In"), temporary_assigns: [form: form]}
   end
 end

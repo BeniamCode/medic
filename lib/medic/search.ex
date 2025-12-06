@@ -7,6 +7,8 @@ defmodule Medic.Search do
   - Specialty and city filtering
   - Geo-search for nearby doctors
   - Real-time indexing
+
+  Uses Req HTTP client for Typesense API calls.
   """
 
   alias Medic.Repo
@@ -17,6 +19,18 @@ defmodule Medic.Search do
 
   @collection_name "doctors"
 
+  # Get Typesense config
+  defp typesense_url do
+    host = Application.get_env(:ex_typesense, :host, "localhost")
+    port = Application.get_env(:ex_typesense, :port, 8108)
+    scheme = Application.get_env(:ex_typesense, :scheme, "http")
+    "#{scheme}://#{host}:#{port}"
+  end
+
+  defp api_key do
+    Application.get_env(:ex_typesense, :api_key, "xyz")
+  end
+
   # Collection schema for Typesense
   @collection_schema %{
     "name" => @collection_name,
@@ -25,14 +39,12 @@ defmodule Medic.Search do
       %{"name" => "first_name", "type" => "string"},
       %{"name" => "last_name", "type" => "string"},
       %{"name" => "full_name", "type" => "string"},
-      %{"name" => "specialty_name_el", "type" => "string", "optional" => true},
-      %{"name" => "specialty_name_en", "type" => "string", "optional" => true},
+      %{"name" => "specialty_name", "type" => "string", "optional" => true},
       %{"name" => "specialty_slug", "type" => "string", "optional" => true, "facet" => true},
-      %{"name" => "bio_el", "type" => "string", "optional" => true},
       %{"name" => "bio", "type" => "string", "optional" => true},
       %{"name" => "city", "type" => "string", "optional" => true, "facet" => true},
       %{"name" => "address", "type" => "string", "optional" => true},
-      %{"name" => "rating", "type" => "float", "optional" => true},
+      %{"name" => "rating", "type" => "float"},
       %{"name" => "review_count", "type" => "int32", "optional" => true},
       %{"name" => "consultation_fee", "type" => "float", "optional" => true},
       %{"name" => "location", "type" => "geopoint", "optional" => true},
@@ -44,21 +56,32 @@ defmodule Medic.Search do
 
   @doc """
   Creates or recreates the doctors collection in Typesense.
-  Call this once during initial setup.
   """
   def create_collection do
-    with {:ok, _} <- delete_collection(),
-         {:ok, result} <- ExTypesense.create_collection(@collection_schema) do
-      Logger.info("Typesense collection '#{@collection_name}' created")
-      {:ok, result}
-    else
-      {:error, %{"message" => "Not Found"}} ->
-        # Collection didn't exist, that's fine - create it
-        ExTypesense.create_collection(@collection_schema)
+    # Delete if exists
+    _ = delete_collection()
 
-      error ->
-        Logger.error("Failed to create Typesense collection: #{inspect(error)}")
-        error
+    url = "#{typesense_url()}/collections"
+
+    case Req.post(url,
+           json: @collection_schema,
+           headers: [{"X-TYPESENSE-API-KEY", api_key()}]
+         ) do
+      {:ok, %{status: 201, body: body}} ->
+        Logger.info("Typesense collection '#{@collection_name}' created")
+        {:ok, body}
+
+      {:ok, %{status: 409}} ->
+        Logger.info("Typesense collection '#{@collection_name}' already exists")
+        {:ok, :already_exists}
+
+      {:ok, %{status: status, body: body}} ->
+        Logger.error("Failed to create collection: #{status} - #{inspect(body)}")
+        {:error, body}
+
+      {:error, reason} ->
+        Logger.error("Failed to create collection: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 
@@ -66,21 +89,41 @@ defmodule Medic.Search do
   Deletes the doctors collection.
   """
   def delete_collection do
-    ExTypesense.delete_collection(@collection_name)
+    url = "#{typesense_url()}/collections/#{@collection_name}"
+
+    case Req.delete(url, headers: [{"X-TYPESENSE-API-KEY", api_key()}]) do
+      {:ok, %{status: 200}} ->
+        Logger.info("Deleted Typesense collection '#{@collection_name}'")
+        {:ok, :deleted}
+
+      {:ok, %{status: 404}} ->
+        {:ok, :not_found}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """
-  Indexes a single doctor document.
-  Call this after creating or updating a doctor.
+  Indexes a single doctor document (upsert).
   """
   def index_doctor(%Doctor{} = doctor) do
     doctor = Repo.preload(doctor, :specialty)
     doc = doctor_to_document(doctor)
 
-    case ExTypesense.upsert_document(@collection_name, doc) do
-      {:ok, _} ->
+    url = "#{typesense_url()}/collections/#{@collection_name}/documents?action=upsert"
+
+    case Req.post(url,
+           json: doc,
+           headers: [{"X-TYPESENSE-API-KEY", api_key()}]
+         ) do
+      {:ok, %{status: status}} when status in [200, 201] ->
         Logger.debug("Indexed doctor: #{doctor.id}")
         :ok
+
+      {:ok, %{status: status, body: body}} ->
+        Logger.error("Failed to index doctor #{doctor.id}: #{status} - #{inspect(body)}")
+        {:error, body}
 
       {:error, reason} ->
         Logger.error("Failed to index doctor #{doctor.id}: #{inspect(reason)}")
@@ -91,112 +134,84 @@ defmodule Medic.Search do
   @doc """
   Removes a doctor from the search index.
   """
-  def delete_doctor(%Doctor{id: id}) do
-    delete_doctor_by_id(id)
-  end
+  def delete_doctor(%Doctor{id: id}), do: delete_doctor_by_id(id)
 
   def delete_doctor_by_id(id) when is_binary(id) do
-    case ExTypesense.delete_document(@collection_name, id) do
-      {:ok, _} ->
+    url = "#{typesense_url()}/collections/#{@collection_name}/documents/#{id}"
+
+    case Req.delete(url, headers: [{"X-TYPESENSE-API-KEY", api_key()}]) do
+      {:ok, %{status: 200}} ->
         Logger.debug("Deleted doctor from index: #{id}")
         :ok
 
+      {:ok, %{status: 404}} ->
+        Logger.debug("Doctor #{id} not in index")
+        :ok
+
       {:error, reason} ->
-        Logger.warning("Failed to delete doctor #{id} from index: #{inspect(reason)}")
+        Logger.warning("Failed to delete doctor #{id}: #{inspect(reason)}")
         {:error, reason}
     end
   end
 
   @doc """
   Syncs all verified doctors to Typesense.
-  Use for initial indexing or re-sync.
   """
   def sync_all_doctors do
-    doctors =
-      Doctors.list_doctors(verified: true, preload: [:specialty])
+    case create_collection() do
+      {:ok, _} -> :ok
+      {:error, reason} -> Logger.warning("Collection issue: #{inspect(reason)}")
+    end
 
+    doctors = Doctors.list_doctors(verified: true, preload: [:specialty])
     Logger.info("Syncing #{length(doctors)} doctors to Typesense...")
 
-    documents = Enum.map(doctors, &doctor_to_document/1)
+    results =
+      doctors
+      |> Enum.map(&index_doctor/1)
+      |> Enum.count(&(&1 == :ok))
 
-    case ExTypesense.import_documents(@collection_name, documents, action: "upsert") do
-      {:ok, results} ->
-        success_count = Enum.count(results, & &1["success"])
-        Logger.info("Synced #{success_count}/#{length(doctors)} doctors to Typesense")
-        {:ok, success_count}
-
-      {:error, reason} ->
-        Logger.error("Failed to sync doctors: #{inspect(reason)}")
-        {:error, reason}
-    end
+    Logger.info("Synced #{results}/#{length(doctors)} doctors to Typesense")
+    {:ok, results}
   end
 
   @doc """
   Searches for doctors.
-
-  ## Options
-    * `:query` - Search query string (default: "*")
-    * `:specialty` - Filter by specialty slug
-    * `:city` - Filter by city
-    * `:lat` / `:lng` - Geo-search center point
-    * `:radius_km` - Search radius in kilometers (default: 10)
-    * `:min_rating` - Minimum rating filter
-    * `:verified_only` - Only show verified doctors (default: true)
-    * `:per_page` - Results per page (default: 20)
-    * `:page` - Page number (default: 1)
   """
   def search_doctors(opts \\ []) do
     query = Keyword.get(opts, :query, "*")
     per_page = Keyword.get(opts, :per_page, 20)
     page = Keyword.get(opts, :page, 1)
 
-    search_params = %{
+    filters = build_filters(opts)
+    sort_by = build_sort_by(opts)
+
+    params = %{
       "q" => query,
-      "query_by" => "full_name,specialty_name_el,specialty_name_en,city,bio_el,bio",
+      "query_by" => "full_name,specialty_name,city,bio",
       "per_page" => per_page,
       "page" => page,
-      "sort_by" => build_sort_by(opts)
+      "sort_by" => sort_by,
+      "filter_by" => filters
     }
 
-    # Add filters
-    filters = build_filters(opts)
-    search_params = if filters != "", do: Map.put(search_params, "filter_by", filters), else: search_params
+    url = "#{typesense_url()}/collections/#{@collection_name}/documents/search"
 
-    # Add geo-search if coordinates provided
-    search_params =
-      case {Keyword.get(opts, :lat), Keyword.get(opts, :lng)} do
-        {lat, lng} when is_number(lat) and is_number(lng) ->
-          radius = Keyword.get(opts, :radius_km, 10) * 1000  # Convert to meters
-          Map.merge(search_params, %{
-            "filter_by" => add_geo_filter(search_params["filter_by"], lat, lng, radius)
-          })
-
-        _ ->
-          search_params
-      end
-
-    case ExTypesense.search(@collection_name, search_params) do
-      {:ok, %{"hits" => hits, "found" => found}} ->
-        results =
-          Enum.map(hits, fn %{"document" => doc} ->
-            %{
-              id: doc["id"],
-              first_name: doc["first_name"],
-              last_name: doc["last_name"],
-              full_name: doc["full_name"],
-              specialty_name_el: doc["specialty_name_el"],
-              specialty_name_en: doc["specialty_name_en"],
-              specialty_slug: doc["specialty_slug"],
-              city: doc["city"],
-              rating: doc["rating"],
-              review_count: doc["review_count"],
-              consultation_fee: doc["consultation_fee"],
-              verified: doc["verified"],
-              has_cal_com: doc["has_cal_com"]
-            }
-          end)
-
+    case Req.get(url,
+           params: params,
+           headers: [{"X-TYPESENSE-API-KEY", api_key()}]
+         ) do
+      {:ok, %{status: 200, body: %{"hits" => hits, "found" => found}}} ->
+        results = Enum.map(hits, &doc_to_result/1)
         {:ok, %{results: results, total: found, page: page, per_page: per_page}}
+
+      {:ok, %{status: 404}} ->
+        Logger.error("Search failed: Collection not found")
+        {:error, "Not found."}
+
+      {:ok, %{status: status, body: body}} ->
+        Logger.error("Search failed: #{status} - #{inspect(body)}")
+        {:error, body}
 
       {:error, reason} ->
         Logger.error("Search failed: #{inspect(reason)}")
@@ -204,37 +219,49 @@ defmodule Medic.Search do
     end
   end
 
-  # Convert Doctor struct to Typesense document
+  defp doc_to_result(%{"document" => doc}) do
+    %{
+      id: doc["id"],
+      first_name: doc["first_name"],
+      last_name: doc["last_name"],
+      full_name: doc["full_name"],
+      specialty_name: doc["specialty_name"],
+      specialty_slug: doc["specialty_slug"],
+      city: doc["city"],
+      rating: doc["rating"],
+      review_count: doc["review_count"],
+      consultation_fee: doc["consultation_fee"],
+      verified: doc["verified"],
+      has_cal_com: doc["has_cal_com"]
+    }
+  end
+
   defp doctor_to_document(%Doctor{} = doctor) do
     doc = %{
       "id" => doctor.id,
       "first_name" => doctor.first_name || "",
       "last_name" => doctor.last_name || "",
       "full_name" => "#{doctor.first_name} #{doctor.last_name}",
-      "bio_el" => doctor.bio_el,
-      "bio" => doctor.bio,
-      "city" => doctor.city,
-      "address" => doctor.address,
+      "bio" => doctor.bio || "",
+      "city" => doctor.city || "",
+      "address" => doctor.address || "",
       "rating" => doctor.rating || 0.0,
       "review_count" => doctor.review_count || 0,
-      "consultation_fee" => doctor.consultation_fee && Decimal.to_float(doctor.consultation_fee),
+      "consultation_fee" => if(doctor.consultation_fee, do: Decimal.to_float(doctor.consultation_fee), else: 0.0),
       "verified" => doctor.verified_at != nil,
       "has_cal_com" => doctor.cal_com_username != nil
     }
 
-    # Add specialty if loaded
     doc =
       if Ecto.assoc_loaded?(doctor.specialty) && doctor.specialty do
         Map.merge(doc, %{
-          "specialty_name_el" => doctor.specialty.name_el,
-          "specialty_name_en" => doctor.specialty.name_en,
-          "specialty_slug" => doctor.specialty.slug
+          "specialty_name" => doctor.specialty.name_en || "",
+          "specialty_slug" => doctor.specialty.slug || ""
         })
       else
-        doc
+        Map.merge(doc, %{"specialty_name" => "", "specialty_slug" => ""})
       end
 
-    # Add location if available
     if doctor.location_lat && doctor.location_lng do
       Map.put(doc, "location", [doctor.location_lat, doctor.location_lng])
     else
@@ -245,52 +272,19 @@ defmodule Medic.Search do
   defp build_filters(opts) do
     filters = []
 
-    filters =
-      if Keyword.get(opts, :verified_only, true) do
-        ["verified:=true" | filters]
-      else
-        filters
-      end
-
-    filters =
-      case Keyword.get(opts, :specialty) do
-        nil -> filters
-        slug -> ["specialty_slug:=#{slug}" | filters]
-      end
-
-    filters =
-      case Keyword.get(opts, :city) do
-        nil -> filters
-        city -> ["city:=#{city}" | filters]
-      end
-
-    filters =
-      case Keyword.get(opts, :min_rating) do
-        nil -> filters
-        rating -> ["rating:>=#{rating}" | filters]
-      end
+    filters = if Keyword.get(opts, :verified_only, true), do: ["verified:=true" | filters], else: filters
+    filters = case Keyword.get(opts, :specialty), do: (nil -> filters; slug -> ["specialty_slug:=#{slug}" | filters])
+    filters = case Keyword.get(opts, :city), do: (nil -> filters; city -> ["city:=#{city}" | filters])
+    filters = case Keyword.get(opts, :min_rating), do: (nil -> filters; rating -> ["rating:>=#{rating}" | filters])
 
     Enum.join(filters, " && ")
-  end
-
-  defp add_geo_filter(existing_filter, lat, lng, radius_meters) do
-    geo_filter = "location:(#{lat}, #{lng}, #{radius_meters} m)"
-
-    case existing_filter do
-      nil -> geo_filter
-      "" -> geo_filter
-      filter -> "#{filter} && #{geo_filter}"
-    end
   end
 
   defp build_sort_by(opts) do
     case {Keyword.get(opts, :lat), Keyword.get(opts, :lng)} do
       {lat, lng} when is_number(lat) and is_number(lng) ->
-        # Sort by distance when geo-searching
         "location(#{lat}, #{lng}):asc,rating:desc"
-
       _ ->
-        # Default: sort by rating
         "rating:desc"
     end
   end

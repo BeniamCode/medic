@@ -13,13 +13,13 @@ defmodule MedicWeb.DoctorDashboardLive do
       <div class="flex items-center justify-between mb-8">
         <div>
           <h1 class="text-2xl font-bold">
-            Καλημέρα, Dr. {@doctor && @doctor.last_name || "Γιατρέ"}
+            Good morning, Dr. <%= @doctor && @doctor.last_name || "Doctor" %>
           </h1>
-          <p class="text-base-content/70">{Date.utc_today() |> Calendar.strftime("%A, %d %B %Y")}</p>
+          <p class="text-base-content/70"><%= Date.utc_today() |> Calendar.strftime("%A, %B %d, %Y") %></p>
         </div>
         <.link navigate={~p"/dashboard/doctor/profile"} class="btn btn-outline">
           <.icon name="hero-user-circle" class="w-5 h-5 mr-2" />
-          Προφίλ
+          Profile
         </.link>
       </div>
 
@@ -29,33 +29,33 @@ defmodule MedicWeb.DoctorDashboardLive do
           <div class="stat-figure text-primary">
             <.icon name="hero-calendar" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Σήμερα</div>
-          <div class="stat-value text-primary">{length(@today_appointments)}</div>
-          <div class="stat-desc">Ραντεβού</div>
+          <div class="stat-title">Today</div>
+          <div class="stat-value text-primary"><%= length(@today_appointments) %></div>
+          <div class="stat-desc">Appointments</div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
           <div class="stat-figure text-warning">
             <.icon name="hero-clock" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Εκκρεμή</div>
-          <div class="stat-value text-warning">{@pending_count}</div>
-          <div class="stat-desc">Προς επιβεβαίωση</div>
+          <div class="stat-title">Pending</div>
+          <div class="stat-value text-warning"><%= @pending_count %></div>
+          <div class="stat-desc">To confirm</div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
           <div class="stat-figure text-success">
             <.icon name="hero-check-circle" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Αυτή την εβδομάδα</div>
-          <div class="stat-value text-success">{@upcoming_count}</div>
-          <div class="stat-desc">Επιβεβαιωμένα</div>
+          <div class="stat-title">This Week</div>
+          <div class="stat-value text-success"><%= @upcoming_count %></div>
+          <div class="stat-desc">Confirmed</div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
           <div class="stat-figure text-secondary">
             <.icon name="hero-star" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Βαθμολογία</div>
-          <div class="stat-value">{@doctor && Float.round(@doctor.rating, 1) || "N/A"}</div>
-          <div class="stat-desc">{@doctor && @doctor.review_count || 0} κριτικές</div>
+          <div class="stat-title">Rating</div>
+          <div class="stat-value"><%= @doctor && Float.round(@doctor.rating || 0.0, 1) || "N/A" %></div>
+          <div class="stat-desc"><%= @doctor && @doctor.review_count || 0 %> reviews</div>
         </div>
       </div>
 
@@ -66,13 +66,13 @@ defmodule MedicWeb.DoctorDashboardLive do
             <div class="card-body">
               <h2 class="card-title">
                 <.icon name="hero-calendar-days" class="w-6 h-6 text-primary" />
-                Σημερινά Ραντεβού
+                Today's Appointments
               </h2>
 
               <%= if @today_appointments == [] do %>
                 <div class="py-12 text-center">
                   <.icon name="hero-calendar" class="w-16 h-16 mx-auto text-base-content/30 mb-4" />
-                  <p class="text-base-content/70">Δεν έχετε ραντεβού σήμερα</p>
+                  <p class="text-base-content/70">No appointments today</p>
                 </div>
               <% else %>
                 <div class="space-y-4">
@@ -80,10 +80,10 @@ defmodule MedicWeb.DoctorDashboardLive do
                     <div class="flex items-center gap-4 p-4 bg-base-200/50 rounded-lg">
                       <div class="text-center min-w-[60px]">
                         <div class="text-lg font-bold text-primary">
-                          {Calendar.strftime(appointment.scheduled_at, "%H:%M")}
+                          <%= Calendar.strftime(appointment.starts_at, "%H:%M") %>
                         </div>
                         <div class="text-xs text-base-content/70">
-                          {appointment.duration_minutes} λεπτά
+                          <%= appointment.duration_minutes %> min
                         </div>
                       </div>
                       <div class="divider divider-horizontal m-0"></div>
@@ -94,18 +94,18 @@ defmodule MedicWeb.DoctorDashboardLive do
                       </div>
                       <div class="flex-1">
                         <h3 class="font-medium">
-                          {appointment.patient && "#{appointment.patient.first_name} #{appointment.patient.last_name}" || "Ασθενής"}
+                          <%= appointment.patient && "#{appointment.patient.first_name} #{appointment.patient.last_name}" || "Patient" %>
                         </h3>
                         <p class="text-sm text-base-content/70">
                           <%= if appointment.appointment_type == "telemedicine" do %>
-                            <.icon name="hero-video-camera" class="w-4 h-4 inline" /> Τηλεϊατρική
+                            <.icon name="hero-video-camera" class="w-4 h-4 inline" /> Telemedicine
                           <% else %>
-                            <.icon name="hero-building-office" class="w-4 h-4 inline" /> Δια ζώσης
+                            <.icon name="hero-building-office" class="w-4 h-4 inline" /> In-person
                           <% end %>
                         </p>
                       </div>
-                      <div class="badge badge-{status_color(appointment.status)}">
-                        {status_text(appointment.status)}
+                      <div class={"badge badge-#{status_color(appointment.status)}"}>
+                        <%= status_text(appointment.status) %>
                       </div>
                     </div>
                   <% end %>
@@ -119,19 +119,19 @@ defmodule MedicWeb.DoctorDashboardLive do
         <div class="space-y-6">
           <div class="card bg-base-100 shadow-lg">
             <div class="card-body">
-              <h2 class="card-title text-lg">Γρήγορες Ενέργειες</h2>
+              <h2 class="card-title text-lg">Quick Actions</h2>
               <div class="space-y-2">
                 <.link navigate={~p"/dashboard/doctor/schedule"} class="btn btn-block btn-outline justify-start">
                   <.icon name="hero-calendar" class="w-5 h-5" />
-                  Διαχείριση Διαθεσιμότητας
+                  Manage Availability
                 </.link>
                 <.link navigate={~p"/dashboard/doctor/profile"} class="btn btn-block btn-outline justify-start">
                   <.icon name="hero-user-circle" class="w-5 h-5" />
-                  Επεξεργασία Προφίλ
+                  Edit Profile
                 </.link>
                 <button class="btn btn-block btn-outline justify-start" disabled>
                   <.icon name="hero-chart-bar" class="w-5 h-5" />
-                  Αναλυτικά (Σύντομα)
+                  Analytics (Coming Soon)
                 </button>
               </div>
             </div>
@@ -141,8 +141,8 @@ defmodule MedicWeb.DoctorDashboardLive do
             <div class="alert alert-warning">
               <.icon name="hero-exclamation-triangle" class="w-6 h-6" />
               <div>
-                <h3 class="font-bold">Προφίλ υπό επαλήθευση</h3>
-                <div class="text-sm">Συμπληρώστε το προφίλ σας για να εμφανιστείτε στην αναζήτηση.</div>
+                <h3 class="font-bold">Profile under verification</h3>
+                <div class="text-sm">Complete your profile to appear in search.</div>
               </div>
             </div>
           <% end %>
@@ -168,7 +168,7 @@ defmodule MedicWeb.DoctorDashboardLive do
 
     {:ok,
      assign(socket,
-       page_title: "Dashboard Γιατρού",
+       page_title: "Doctor Dashboard",
        doctor: doctor,
        today_appointments: today_appointments,
        pending_count: pending_count,
@@ -182,9 +182,9 @@ defmodule MedicWeb.DoctorDashboardLive do
   defp status_color("cancelled"), do: "error"
   defp status_color(_), do: "ghost"
 
-  defp status_text("pending"), do: "Εκκρεμεί"
-  defp status_text("confirmed"), do: "Επιβεβαιωμένο"
-  defp status_text("completed"), do: "Ολοκληρώθηκε"
-  defp status_text("cancelled"), do: "Ακυρώθηκε"
-  defp status_text(_), do: "Άγνωστο"
+  defp status_text("pending"), do: "Pending"
+  defp status_text("confirmed"), do: "Confirmed"
+  defp status_text("completed"), do: "Completed"
+  defp status_text("cancelled"), do: "Cancelled"
+  defp status_text(_), do: "Unknown"
 end
