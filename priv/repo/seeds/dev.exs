@@ -9,7 +9,6 @@ alias Medic.Doctors
 alias Medic.Doctors.{Doctor, Specialty}
 alias Medic.Patients
 alias Medic.Patients.Patient
-alias Medic.Appointments
 alias Medic.Appointments.Appointment
 alias Medic.MedicalTaxonomy
 alias Medic.Scheduling
@@ -21,12 +20,12 @@ IO.puts("\n🏥 Starting development seed (600 doctors)...\n")
 
 # --- Configuration ---
 
-@doctor_count 600
-@patient_count 50
-@demo_password "DemoPassword123!"
+doctor_count = 600
+patient_count = 50
+demo_password = "DemoPassword123!"
 
 # Greek cities with approximate populations (for weighted distribution)
-@cities [
+cities = [
   %{name: "Athens", lat: 37.9838, lng: 23.7275, weight: 40},
   %{name: "Thessaloniki", lat: 40.6401, lng: 22.9444, weight: 15},
   %{name: "Patras", lat: 38.2466, lng: 21.7346, weight: 7},
@@ -47,7 +46,7 @@ IO.puts("\n🏥 Starting development seed (600 doctors)...\n")
 ]
 
 # English first names (common)
-@first_names ~w(
+first_names = ~w(
   Alexander Alexandra Andrew Anna Anthony Barbara Benjamin Catherine
   Charles Christina Christopher Daniel David Elizabeth Emily Emma
   George Helen James Jennifer John Jonathan Julia Katherine
@@ -57,7 +56,7 @@ IO.puts("\n🏥 Starting development seed (600 doctors)...\n")
 )
 
 # English last names (common)
-@last_names ~w(
+last_names = ~w(
   Anderson Brown Campbell Clark Davis Evans Garcia Green
   Hall Harris Jackson Johnson Jones King Lee Lewis
   Martin Martinez Miller Mitchell Moore Nelson Parker Perez
@@ -66,7 +65,7 @@ IO.puts("\n🏥 Starting development seed (600 doctors)...\n")
 )
 
 # Specialty distribution (higher weight = more doctors)
-@specialty_weights %{
+specialty_weights = %{
   "general-practice" => 15,
   "internal-medicine" => 12,
   "family-medicine" => 10,
@@ -133,22 +132,23 @@ defmodule DevSeeds do
   end
 
   def random_specialty_id(weights, specialties) do
-    available_ids = Enum.map(specialties, & &1.id)
+    available_slugs = Enum.map(specialties, & &1.slug)
 
     weights
-    |> Enum.filter(fn {id, _} -> id in available_ids end)
-    |> Enum.flat_map(fn {id, weight} -> List.duplicate(id, weight) end)
-    |> random_item()
+    |> Enum.filter(fn {slug, _} -> slug in available_slugs end)
+    |> Enum.flat_map(fn {slug, weight} -> List.duplicate(slug, weight) end)
+    |> case do
+      [] -> Enum.random(available_slugs)
+      list -> random_item(list)
+    end
   end
 
   def random_rating do
-    # Weighted towards higher ratings (realistic)
     base = Enum.random(35..50) / 10.0
     Float.round(base, 1)
   end
 
   def random_review_count do
-    # Exponential distribution (most have few, some have many)
     case Enum.random(1..100) do
       n when n <= 50 -> Enum.random(0..20)
       n when n <= 80 -> Enum.random(20..100)
@@ -158,7 +158,6 @@ defmodule DevSeeds do
   end
 
   def random_fee do
-    # Realistic consultation fees in euros
     Enum.random([30, 40, 50, 60, 70, 80, 100, 120, 150, 200])
   end
 
@@ -184,156 +183,135 @@ defmodule DevSeeds do
   end
 
   def add_location_jitter(lat, lng) do
-    # Add small random offset (within ~5km)
     lat_offset = (:rand.uniform() - 0.5) * 0.05
     lng_offset = (:rand.uniform() - 0.5) * 0.05
     {lat + lat_offset, lng + lng_offset}
   end
 end
 
-# --- Seed Specialties from Taxonomy ---
+# --- Seed Specialties from Taxonomy (if not already done by prod.exs) ---
 
-IO.puts("📋 Seeding specialties from taxonomy...")
+IO.puts("📋 Checking specialties...")
 
 taxonomy_specialties = MedicalTaxonomy.specialties()
 
-specialties_created =
-  for spec <- taxonomy_specialties do
-    case Doctors.get_specialty_by_slug(spec.id) do
-      nil ->
-        {:ok, specialty} =
-          Doctors.create_specialty(%{
-            name_en: spec.name,
-            name_el: spec.name_el,
-            slug: spec.id,
-            icon: spec.icon
-          })
-        specialty
-
-      existing ->
-        existing
-    end
+for spec <- taxonomy_specialties do
+  case Doctors.get_specialty_by_slug(spec.id) do
+    nil ->
+      Doctors.create_specialty(%{
+        name_en: spec.name,
+        name_el: spec.name_el,
+        slug: spec.id,
+        icon: spec.icon
+      })
+    _ -> :ok
   end
+end
 
-IO.puts("  ✓ #{length(specialties_created)} specialties ready")
+# Get all specialties for doctor creation
+all_specialties = Repo.all(from s in Specialty, select: s)
+specialty_map = Map.new(all_specialties, fn s -> {s.slug, s} end)
 
-# Build specialty map for quick lookup
-specialty_map =
-  specialties_created
-  |> Enum.map(fn s -> {s.slug, s} end)
-  |> Map.new()
+IO.puts("  ✓ #{length(all_specialties)} specialties ready")
 
 # --- Seed Doctors ---
 
-IO.puts("\n👨‍⚕️ Seeding #{@doctor_count} doctors...")
+IO.puts("\n👨‍⚕️ Seeding #{doctor_count} doctors...")
 
-existing_doctor_count =
-  Repo.one(from d in Doctor, select: count(d.id))
+existing_doctor_count = Repo.one(from d in Doctor, select: count(d.id))
+doctors_to_create = max(0, doctor_count - existing_doctor_count)
 
-doctors_to_create = max(0, @doctor_count - existing_doctor_count)
+if doctors_to_create > 0 do
+  for i <- 1..doctors_to_create do
+    # Pick specialty based on weights
+    specialty_slug = DevSeeds.random_specialty_id(specialty_weights, all_specialties)
+    specialty = Map.get(specialty_map, specialty_slug) || Enum.random(all_specialties)
 
-doctors_created =
-  if doctors_to_create > 0 do
-    for i <- 1..doctors_to_create do
-      # Pick specialty based on weights
-      specialty_id = DevSeeds.random_specialty_id(@specialty_weights, specialties_created)
-      specialty = Map.get(specialty_map, specialty_id)
+    # Pick city based on population
+    city = DevSeeds.random_city(cities)
+    {lat, lng} = DevSeeds.add_location_jitter(city.lat, city.lng)
 
-      # Pick city based on population
-      city = DevSeeds.random_city(@cities)
-      {lat, lng} = DevSeeds.add_location_jitter(city.lat, city.lng)
+    first_name = DevSeeds.random_item(first_names)
+    last_name = DevSeeds.random_item(last_names)
+    email = "doctor#{existing_doctor_count + i}@demo.medic.gr"
 
-      first_name = DevSeeds.random_item(@first_names)
-      last_name = DevSeeds.random_item(@last_names)
-      email = "doctor#{existing_doctor_count + i}@demo.medic.gr"
+    # Create user
+    {:ok, user} =
+      Accounts.register_user(%{
+        email: email,
+        password: demo_password,
+        role: "doctor"
+      })
 
-      # Create user
-      {:ok, user} =
-        Accounts.register_user(%{
-          email: email,
-          password: @demo_password,
-          role: "doctor"
-        })
+    # Create doctor profile
+    {:ok, doctor} =
+      Doctors.create_doctor(user, %{
+        first_name: first_name,
+        last_name: last_name,
+        specialty_id: specialty.id,
+        bio: DevSeeds.random_bio(specialty.name_en),
+        city: city.name,
+        address: "#{Enum.random(1..999)} Main Street, #{city.name}",
+        location_lat: lat,
+        location_lng: lng,
+        consultation_fee: DevSeeds.random_fee(),
+        cal_com_username: if(Enum.random(1..100) > 30, do: "dr-#{String.downcase(last_name)}-#{i}")
+      })
 
-      # Create doctor profile
-      {:ok, doctor} =
-        Doctors.create_doctor(user, %{
-          first_name: first_name,
-          last_name: last_name,
-          specialty_id: specialty.id,
-          bio: DevSeeds.random_bio(specialty.name_en),
-          city: city.name,
-          address: "#{Enum.random(1..999)} Main Street, #{city.name}",
-          location_lat: lat,
-          location_lng: lng,
-          consultation_fee: DevSeeds.random_fee(),
-          cal_com_username: if(Enum.random(1..100) > 30, do: "dr-#{String.downcase(last_name)}-#{i}")
-        })
+    # Verify 70% of doctors
+    if Enum.random(1..100) <= 70 do
+      {:ok, doctor} = Doctors.verify_doctor(doctor)
 
-      # Verify 70% of doctors
-      if Enum.random(1..100) <= 70 do
-        {:ok, doctor} = Doctors.verify_doctor(doctor)
-
-        # Update rating for verified doctors
-        doctor
-        |> Doctor.rating_changeset(%{
-          rating: DevSeeds.random_rating(),
-          review_count: DevSeeds.random_review_count()
-        })
-        |> Repo.update!()
-      end
-
-      if rem(i, 50) == 0 do
-        IO.puts("  ... created #{existing_doctor_count + i} doctors")
-      end
-
+      # Update rating for verified doctors
       doctor
+      |> Doctor.rating_changeset(%{
+        rating: DevSeeds.random_rating(),
+        review_count: DevSeeds.random_review_count()
+      })
+      |> Repo.update!()
     end
-  else
-    IO.puts("  • #{existing_doctor_count} doctors already exist, skipping creation")
-    []
+
+    if rem(i, 100) == 0 do
+      IO.puts("  ... created #{existing_doctor_count + i} doctors")
+    end
   end
+else
+  IO.puts("  • #{existing_doctor_count} doctors already exist, skipping creation")
+end
 
 total_doctors = Repo.one(from d in Doctor, select: count(d.id))
 IO.puts("  ✓ #{total_doctors} doctors total")
 
 # --- Seed Patients ---
 
-IO.puts("\n🏃 Seeding #{@patient_count} patients...")
+IO.puts("\n🏃 Seeding #{patient_count} patients...")
 
-existing_patient_count =
-  Repo.one(from p in Patient, select: count(p.id))
+existing_patient_count = Repo.one(from p in Patient, select: count(p.id))
+patients_to_create = max(0, patient_count - existing_patient_count)
 
-patients_to_create = max(0, @patient_count - existing_patient_count)
+if patients_to_create > 0 do
+  for i <- 1..patients_to_create do
+    first_name = DevSeeds.random_item(first_names)
+    last_name = DevSeeds.random_item(last_names)
+    email = "patient#{existing_patient_count + i}@demo.medic.gr"
 
-patients_created =
-  if patients_to_create > 0 do
-    for i <- 1..patients_to_create do
-      first_name = DevSeeds.random_item(@first_names)
-      last_name = DevSeeds.random_item(@last_names)
-      email = "patient#{existing_patient_count + i}@demo.medic.gr"
+    {:ok, user} =
+      Accounts.register_user(%{
+        email: email,
+        password: demo_password,
+        role: "patient"
+      })
 
-      {:ok, user} =
-        Accounts.register_user(%{
-          email: email,
-          password: @demo_password,
-          role: "patient"
-        })
-
-      {:ok, patient} =
-        Patients.create_patient(user, %{
-          first_name: first_name,
-          last_name: last_name,
-          phone: "+30 69#{:rand.uniform(99999999) |> Integer.to_string() |> String.pad_leading(8, "0")}",
-          date_of_birth: Date.add(Date.utc_today(), -Enum.random(18..80) * 365)
-        })
-
-      patient
-    end
-  else
-    IO.puts("  • #{existing_patient_count} patients already exist")
-    Repo.all(from p in Patient, limit: @patient_count)
+    Patients.create_patient(user, %{
+      first_name: first_name,
+      last_name: last_name,
+      phone: "+30 69#{:rand.uniform(99999999) |> Integer.to_string() |> String.pad_leading(8, "0")}",
+      date_of_birth: Date.add(Date.utc_today(), -Enum.random(18..80) * 365)
+    })
   end
+else
+  IO.puts("  • #{existing_patient_count} patients already exist")
+end
 
 total_patients = Repo.one(from p in Patient, select: count(p.id))
 IO.puts("  ✓ #{total_patients} patients total")
@@ -447,14 +425,14 @@ IO.puts("""
 ✅ Development seeding complete!
 
 📊 Statistics:
-   Specialties: #{length(specialties_created)}
+   Specialties: #{length(all_specialties)}
    Doctors: #{total_doctors}
    Patients: #{total_patients}
 
 📧 Demo Accounts:
    Doctors:  doctor1@demo.medic.gr ... doctor#{total_doctors}@demo.medic.gr
    Patients: patient1@demo.medic.gr ... patient#{total_patients}@demo.medic.gr
-   Password: #{@demo_password}
+   Password: #{demo_password}
 
 🔍 Search Examples:
    - "heart" → Cardiology, Cardiac Surgery, etc.

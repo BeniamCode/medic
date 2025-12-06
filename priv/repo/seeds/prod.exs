@@ -7,6 +7,8 @@ alias Medic.Doctors
 alias Medic.Doctors.Specialty
 alias Medic.MedicalTaxonomy
 
+import Ecto.Query
+
 IO.puts("🏥 Seeding production data (specialties from taxonomy)...")
 
 # Seed all specialties from the MedicalTaxonomy module
