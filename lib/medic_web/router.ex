@@ -21,10 +21,14 @@ defmodule MedicWeb.Router do
   scope "/", MedicWeb do
     pipe_through :browser
 
-    live "/", HomeLive
-    live "/search", SearchLive
-    live "/doctors/:id", DoctorLive.Show
+    live_session :public,
+      on_mount: [{MedicWeb.UserAuth, :mount_current_user}] do
+      live "/", HomeLive
+      live "/search", SearchLive
+      live "/doctors/:id", DoctorLive.Show
+    end
   end
+
 
   # Routes that require user to NOT be logged in
   scope "/", MedicWeb do
