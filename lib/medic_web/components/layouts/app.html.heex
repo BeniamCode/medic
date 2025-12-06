@@ -7,8 +7,25 @@
       <span class="font-bold">Medic</span>
     </a>
   </div>
+
+  <%!-- Center navigation --%>
+  <div class="flex-none hidden sm:flex gap-2">
+    <a href="/" class="btn btn-ghost btn-sm gap-1">
+      <.icon name="hero-home" class="w-4 h-4" />
+      Home
+    </a>
+    <a href="/search" class="btn btn-ghost btn-sm gap-1">
+      <.icon name="hero-magnifying-glass" class="w-4 h-4" />
+      Find Doctors
+    </a>
+  </div>
+
   <div class="flex-none gap-2">
     <%= if @current_user do %>
+      <a href="/dashboard" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
+        <.icon name="hero-calendar" class="w-4 h-4" />
+        My Appointments
+      </a>
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
           <div class="w-10 rounded-full bg-primary/10 text-primary">
@@ -17,16 +34,22 @@
         </div>
         <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
           <li class="menu-title">{@current_user.email}</li>
-          <li><a href="/dashboard">Dashboard</a></li>
-          <li><a href="/settings">Ρυθμίσεις</a></li>
+          <li><a href="/"><.icon name="hero-home" class="w-4 h-4" /> Home</a></li>
+          <li><a href="/search"><.icon name="hero-magnifying-glass" class="w-4 h-4" /> Find Doctors</a></li>
+          <li><a href="/dashboard"><.icon name="hero-calendar" class="w-4 h-4" /> Dashboard</a></li>
+          <li><a href="/settings"><.icon name="hero-cog-6-tooth" class="w-4 h-4" /> Settings</a></li>
+          <li class="divider"></li>
           <li>
-            <.link href="/logout" method="delete">Αποσύνδεση</.link>
+            <.link href="/logout" method="delete" class="text-error">
+              <.icon name="hero-arrow-right-on-rectangle" class="w-4 h-4" />
+              Sign Out
+            </.link>
           </li>
         </ul>
       </div>
     <% else %>
-      <a href="/login" class="btn btn-ghost">Σύνδεση</a>
-      <a href="/register" class="btn btn-primary">Εγγραφή</a>
+      <a href="/login" class="btn btn-ghost btn-sm">Sign In</a>
+      <a href="/register" class="btn btn-primary btn-sm">Sign Up</a>
     <% end %>
   </div>
 </header>
@@ -42,7 +65,7 @@
       <.icon name="hero-heart" class="w-6 h-6 text-primary" />
     </div>
     <p class="font-bold">Medic</p>
-    <p>Βρείτε τον γιατρό που χρειάζεστε</p>
-    <p class="text-sm text-base-content/70">© 2024 Medic. Με επιφύλαξη παντός δικαιώματος.</p>
+    <p>Find the doctor you need</p>
+    <p class="text-sm text-base-content/70">© 2024 Medic. All rights reserved.</p>
   </div>
 </footer>
