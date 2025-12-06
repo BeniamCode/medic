@@ -1,6 +1,6 @@
 defmodule MedicWeb.SearchLive do
   @moduledoc """
-  Doctor search LiveView with instant search.
+  Doctor search LiveView with industry-standard filters.
   """
   use MedicWeb, :live_view
 
@@ -11,161 +11,356 @@ defmodule MedicWeb.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-6xl mx-auto py-8 px-4">
-      <div class="mb-8">
+    <div class="max-w-7xl mx-auto py-6 px-4">
+      <%!-- Header with Search --%>
+      <div class="mb-6">
         <h1 class="text-2xl font-bold mb-4">Find a Doctor</h1>
-
-        <%!-- Search Form --%>
-        <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4">
           <div class="flex-1 relative">
             <.icon name="hero-magnifying-glass" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/50" />
             <input
               type="text"
               id="search-input"
               value={@query}
-              placeholder="Search by doctor name, specialty, or body part..."
+              placeholder="Search by name, specialty, or body part..."
               phx-keyup="search"
               phx-debounce="200"
               class="input input-bordered w-full pl-12"
               autofocus
             />
           </div>
-          <select
-            class="select select-bordered w-full md:w-64"
-            phx-change="filter_specialty"
-          >
-            <option value="">All Specialties</option>
-            <%= for specialty <- @specialties do %>
-              <option value={specialty.slug} selected={@selected_specialty == specialty.slug}>
-                <%= specialty.name_en %>
-              </option>
-            <% end %>
-          </select>
-          <select
-            class="select select-bordered w-full md:w-48"
-            phx-change="filter_city"
-          >
-            <option value="">All Cities</option>
-            <%= for city <- @cities do %>
-              <option value={city} selected={@selected_city == city}>
-                <%= city %>
-              </option>
-            <% end %>
-          </select>
-        </div>
-
-        <%!-- Organ Search Hints --%>
-        <%= if @organ_matches != [] do %>
-          <div class="mb-4 p-3 bg-info/10 rounded-lg">
-            <p class="text-sm text-info font-medium mb-2">
-              <.icon name="hero-light-bulb" class="w-4 h-4 inline-block mr-1" />
-              Searching for "<%= @query %>"? Try these specialties:
-            </p>
-            <div class="flex flex-wrap gap-2">
-              <%= for specialty <- @organ_matches do %>
-                <button
-                  phx-click="filter_specialty"
-                  phx-value-value={specialty.id}
-                  class="badge badge-primary badge-outline cursor-pointer hover:badge-primary"
-                >
-                  <%= specialty.name %>
-                </button>
+          <div class="flex gap-2">
+            <select class="select select-bordered" phx-change="sort">
+              <option value="rating" selected={@sort_by == "rating"}>Highest Rated</option>
+              <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
+              <option value="price_high" selected={@sort_by == "price_high"}>Price: High to Low</option>
+              <option value="reviews" selected={@sort_by == "reviews"}>Most Reviews</option>
+            </select>
+            <button
+              class="btn btn-outline lg:hidden"
+              phx-click="toggle_filters"
+            >
+              <.icon name="hero-adjustments-horizontal" class="w-5 h-5" />
+              Filters
+              <%= if active_filter_count(assigns) > 0 do %>
+                <span class="badge badge-primary badge-sm"><%= active_filter_count(assigns) %></span>
               <% end %>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Active Filters Chips --%>
+      <%= if has_active_filters?(assigns) do %>
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+          <span class="text-sm text-base-content/70">Active filters:</span>
+
+          <%= if @selected_specialty do %>
+            <button phx-click="remove_filter" phx-value-filter="specialty" class="badge badge-primary gap-1">
+              <%= get_specialty_name(@specialties, @selected_specialty) %>
+              <.icon name="hero-x-mark" class="w-3 h-3" />
+            </button>
+          <% end %>
+
+          <%= if @selected_city do %>
+            <button phx-click="remove_filter" phx-value-filter="city" class="badge badge-primary gap-1">
+              <%= @selected_city %>
+              <.icon name="hero-x-mark" class="w-3 h-3" />
+            </button>
+          <% end %>
+
+          <%= if @min_rating do %>
+            <button phx-click="remove_filter" phx-value-filter="rating" class="badge badge-primary gap-1">
+              <%= @min_rating %>+ ★
+              <.icon name="hero-x-mark" class="w-3 h-3" />
+            </button>
+          <% end %>
+
+          <%= if @max_price do %>
+            <button phx-click="remove_filter" phx-value-filter="price" class="badge badge-primary gap-1">
+              ≤ €<%= @max_price %>
+              <.icon name="hero-x-mark" class="w-3 h-3" />
+            </button>
+          <% end %>
+
+          <%= if @online_booking_only do %>
+            <button phx-click="remove_filter" phx-value-filter="online_booking" class="badge badge-primary gap-1">
+              Online Booking
+              <.icon name="hero-x-mark" class="w-3 h-3" />
+            </button>
+          <% end %>
+
+          <button phx-click="clear_filters" class="btn btn-ghost btn-xs">
+            Clear all
+          </button>
+        </div>
+      <% end %>
+
+      <%!-- Organ Search Hints --%>
+      <%= if @organ_matches != [] do %>
+        <div class="mb-4 p-3 bg-info/10 rounded-lg">
+          <p class="text-sm text-info font-medium mb-2">
+            <.icon name="hero-light-bulb" class="w-4 h-4 inline-block mr-1" />
+            Searching for "<%= @query %>"? Try these specialties:
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <%= for specialty <- @organ_matches do %>
+              <button
+                phx-click="filter_specialty"
+                phx-value-value={specialty.id}
+                class="badge badge-outline cursor-pointer hover:badge-primary"
+              >
+                <%= specialty.name %>
+              </button>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%!-- Main Content: Sidebar + Results --%>
+      <div class="flex gap-6">
+        <%!-- Filter Sidebar --%>
+        <aside class={"w-64 shrink-0 space-y-6 #{if @show_filters, do: "block", else: "hidden lg:block"}"}>
+          <div class="card bg-base-100 shadow-sm">
+            <div class="card-body p-4 space-y-5">
+
+              <%!-- Specialty Filter --%>
+              <div>
+                <h3 class="font-semibold text-sm mb-2">Specialty</h3>
+                <select
+                  class="select select-bordered select-sm w-full"
+                  phx-change="filter_specialty"
+                >
+                  <option value="">All Specialties</option>
+                  <%= for specialty <- @specialties do %>
+                    <option value={specialty.slug} selected={@selected_specialty == specialty.slug}>
+                      <%= specialty.name_en %>
+                    </option>
+                  <% end %>
+                </select>
+              </div>
+
+              <%!-- City Filter --%>
+              <div>
+                <h3 class="font-semibold text-sm mb-2">City</h3>
+                <select
+                  class="select select-bordered select-sm w-full"
+                  phx-change="filter_city"
+                >
+                  <option value="">All Cities</option>
+                  <%= for city <- @cities do %>
+                    <option value={city} selected={@selected_city == city}>
+                      <%= city %>
+                    </option>
+                  <% end %>
+                </select>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <%!-- Rating Filter --%>
+              <div>
+                <h3 class="font-semibold text-sm mb-2">
+                  <.icon name="hero-star" class="w-4 h-4 inline text-warning" />
+                  Rating
+                </h3>
+                <div class="space-y-1">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rating"
+                      class="radio radio-sm radio-primary"
+                      checked={@min_rating == nil}
+                      phx-click="filter_rating"
+                      phx-value-value=""
+                    />
+                    <span class="text-sm">Any rating</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rating"
+                      class="radio radio-sm radio-primary"
+                      checked={@min_rating == 4.0}
+                      phx-click="filter_rating"
+                      phx-value-value="4.0"
+                    />
+                    <span class="text-sm">4.0+ ★</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="rating"
+                      class="radio radio-sm radio-primary"
+                      checked={@min_rating == 4.5}
+                      phx-click="filter_rating"
+                      phx-value-value="4.5"
+                    />
+                    <span class="text-sm">4.5+ ★</span>
+                  </label>
+                </div>
+              </div>
+
+              <%!-- Price Filter --%>
+              <div>
+                <h3 class="font-semibold text-sm mb-2">
+                  <.icon name="hero-currency-euro" class="w-4 h-4 inline text-success" />
+                  Max Price
+                </h3>
+                <input
+                  type="range"
+                  min="30"
+                  max="200"
+                  step="10"
+                  value={@max_price || 200}
+                  class="range range-sm range-primary"
+                  phx-change="filter_price"
+                />
+                <div class="flex justify-between text-xs text-base-content/60 mt-1">
+                  <span>€30</span>
+                  <span class="font-medium text-primary">
+                    <%= if @max_price, do: "≤ €#{@max_price}", else: "Any" %>
+                  </span>
+                  <span>€200</span>
+                </div>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <%!-- Toggle Filters --%>
+              <div class="space-y-3">
+                <label class="flex items-center justify-between cursor-pointer">
+                  <span class="text-sm">
+                    <.icon name="hero-calendar" class="w-4 h-4 inline text-info mr-1" />
+                    Online Booking
+                  </span>
+                  <input
+                    type="checkbox"
+                    class="toggle toggle-sm toggle-primary"
+                    checked={@online_booking_only}
+                    phx-click="toggle_online_booking"
+                  />
+                </label>
+
+                <label class="flex items-center justify-between cursor-pointer">
+                  <span class="text-sm">
+                    <.icon name="hero-check-badge" class="w-4 h-4 inline text-success mr-1" />
+                    Verified Only
+                  </span>
+                  <input
+                    type="checkbox"
+                    class="toggle toggle-sm toggle-primary"
+                    checked={@verified_only}
+                    phx-click="toggle_verified"
+                  />
+                </label>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <button phx-click="clear_filters" class="btn btn-outline btn-sm w-full">
+                <.icon name="hero-x-mark" class="w-4 h-4" />
+                Clear All Filters
+              </button>
             </div>
           </div>
-        <% end %>
+        </aside>
 
-        <%!-- Results Count --%>
-        <div class="text-sm text-base-content/70 mb-4">
-          <%= if @total > 0 do %>
-            Found <span class="font-semibold"><%= @total %></span> doctors
-          <% else %>
-            <%= if @searching do %>
-              <span class="loading loading-spinner loading-xs"></span> Searching...
+        <%!-- Results --%>
+        <div class="flex-1">
+          <%!-- Results Count --%>
+          <div class="text-sm text-base-content/70 mb-4">
+            <%= if @total > 0 do %>
+              Found <span class="font-semibold"><%= @total %></span> doctors
             <% else %>
-              No results found
+              <%= if @searching do %>
+                <span class="loading loading-spinner loading-xs"></span> Searching...
+              <% else %>
+                No results found
+              <% end %>
             <% end %>
-          <% end %>
-        </div>
+          </div>
 
-        <%!-- Results Grid --%>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <%= for doctor <- @doctors do %>
-            <.link navigate={~p"/doctors/#{doctor.id}"} class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div class="card-body">
-                <div class="flex items-center gap-4">
-                  <div class="avatar placeholder">
-                    <div class="w-16 h-16 rounded-full bg-primary/10 text-primary">
-                      <span class="text-xl"><.icon name="hero-user" class="w-8 h-8" /></span>
+          <%!-- Results Grid --%>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <%= for doctor <- @doctors do %>
+              <.link navigate={~p"/doctors/#{doctor.id}"} class="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
+                <div class="card-body p-4">
+                  <div class="flex items-start gap-3">
+                    <div class="avatar placeholder">
+                      <div class="w-14 h-14 rounded-full bg-primary/10 text-primary">
+                        <.icon name="hero-user" class="w-7 h-7" />
+                      </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h3 class="font-semibold truncate">Dr. <%= doctor.first_name %> <%= doctor.last_name %></h3>
+                      <p class="text-sm text-base-content/70 truncate">
+                        <%= doctor.specialty_name || "General Practice" %>
+                      </p>
+                      <div class="flex items-center gap-2 mt-1">
+                        <%= if doctor.verified do %>
+                          <span class="badge badge-success badge-xs gap-0.5">
+                            <.icon name="hero-check-badge" class="w-2.5 h-2.5" />
+                            Verified
+                          </span>
+                        <% end %>
+                        <%= if doctor.has_cal_com do %>
+                          <span class="badge badge-info badge-xs gap-0.5">
+                            <.icon name="hero-calendar" class="w-2.5 h-2.5" />
+                            Book Online
+                          </span>
+                        <% end %>
+                      </div>
                     </div>
                   </div>
-                  <div class="flex-1">
-                    <h3 class="font-bold">Dr. <%= doctor.first_name %> <%= doctor.last_name %></h3>
-                    <p class="text-sm text-base-content/70">
-                      <%= doctor.specialty_name || "General Practice" %>
-                    </p>
-                    <%= if doctor.verified do %>
-                      <div class="badge badge-success badge-sm gap-1 mt-1">
-                        <.icon name="hero-check-badge" class="w-3 h-3" />
-                        Verified
+
+                  <div class="flex items-center justify-between mt-3 pt-3 border-t border-base-200">
+                    <div class="flex items-center gap-1">
+                      <.icon name="hero-star" class="w-4 h-4 text-warning" />
+                      <span class="font-medium"><%= Float.round(doctor.rating || 0.0, 1) %></span>
+                      <span class="text-xs text-base-content/60">(<%= doctor.review_count || 0 %>)</span>
+                    </div>
+
+                    <%= if doctor.city do %>
+                      <div class="flex items-center gap-1 text-xs text-base-content/60">
+                        <.icon name="hero-map-pin" class="w-3 h-3" />
+                        <%= doctor.city %>
                       </div>
                     <% end %>
-                  </div>
-                </div>
 
-                <div class="flex items-center justify-between mt-4">
-                  <div class="flex items-center gap-1">
-                    <.icon name="hero-star" class="w-4 h-4 text-warning" />
-                    <span class="font-medium"><%= Float.round(doctor.rating || 0.0, 1) %></span>
-                    <span class="text-xs text-base-content/70">(<%= doctor.review_count || 0 %>)</span>
-                  </div>
-
-                  <%= if doctor.city do %>
-                    <div class="flex items-center gap-1 text-sm text-base-content/70">
-                      <.icon name="hero-map-pin" class="w-4 h-4" />
-                      <%= doctor.city %>
-                    </div>
-                  <% end %>
-                </div>
-
-                <%= if doctor.consultation_fee do %>
-                  <div class="mt-2">
-                    <span class="badge badge-primary">€<%= doctor.consultation_fee %></span>
-                    <%= if doctor.has_cal_com do %>
-                      <span class="badge badge-ghost badge-sm ml-2">
-                        <.icon name="hero-calendar" class="w-3 h-3 mr-1" />
-                        Online booking
-                      </span>
+                    <%= if doctor.consultation_fee do %>
+                      <span class="badge badge-primary badge-sm">€<%= trunc(doctor.consultation_fee) %></span>
                     <% end %>
                   </div>
-                <% end %>
-              </div>
-            </.link>
+                </div>
+              </.link>
+            <% end %>
+          </div>
+
+          <%!-- Empty State --%>
+          <%= if @doctors == [] && !@searching do %>
+            <div class="text-center py-16">
+              <.icon name="hero-magnifying-glass" class="w-16 h-16 mx-auto text-base-content/20 mb-4" />
+              <h3 class="text-lg font-semibold mb-2">No doctors found</h3>
+              <p class="text-base-content/70 mb-4">
+                Try adjusting your filters or search terms
+              </p>
+              <button phx-click="clear_filters" class="btn btn-primary btn-sm">
+                Clear all filters
+              </button>
+            </div>
+          <% end %>
+
+          <%!-- Load More --%>
+          <%= if @has_more do %>
+            <div class="text-center mt-8">
+              <button phx-click="load_more" class="btn btn-outline btn-primary">
+                <.icon name="hero-arrow-down" class="w-4 h-4" />
+                Load more results
+              </button>
+            </div>
           <% end %>
         </div>
-
-        <%!-- Empty State --%>
-        <%= if @doctors == [] && !@searching do %>
-          <div class="text-center py-16">
-            <.icon name="hero-magnifying-glass" class="w-20 h-20 mx-auto text-base-content/20 mb-4" />
-            <h3 class="text-lg font-semibold mb-2">No doctors found</h3>
-            <p class="text-base-content/70 mb-4">
-              Try changing your search criteria
-            </p>
-            <button phx-click="clear_filters" class="btn btn-outline">
-              Clear filters
-            </button>
-          </div>
-        <% end %>
-
-        <%!-- Load More --%>
-        <%= if @has_more do %>
-          <div class="text-center mt-8">
-            <button phx-click="load_more" class="btn btn-outline btn-primary">
-              Load more results
-            </button>
-          </div>
-        <% end %>
       </div>
     </div>
     """
@@ -175,8 +370,6 @@ defmodule MedicWeb.SearchLive do
   def mount(params, _session, socket) do
     specialties = Doctors.list_specialties()
     cities = get_cities()
-    selected_specialty = params["specialty"]
-    query = params["q"] || ""
 
     socket =
       socket
@@ -184,30 +377,57 @@ defmodule MedicWeb.SearchLive do
         page_title: "Find a Doctor",
         specialties: specialties,
         cities: cities,
-        selected_specialty: selected_specialty,
-        selected_city: nil,
-        query: query,
+        # Search
+        query: params["q"] || "",
+        # Filters
+        selected_specialty: params["specialty"],
+        selected_city: params["city"],
+        min_rating: parse_float(params["rating"]),
+        max_price: parse_int(params["max_price"]),
+        online_booking_only: params["online"] == "true",
+        verified_only: true,
+        # Sort
+        sort_by: params["sort"] || "rating",
+        # UI State
+        show_filters: false,
+        organ_matches: [],
+        # Results
         doctors: [],
         total: 0,
         page: 1,
         has_more: false,
         searching: false,
-        organ_matches: [],
         use_typesense: typesense_available?()
       )
 
-    # Perform initial search
     socket = if connected?(socket), do: perform_search(socket), else: socket
-
     {:ok, socket}
   end
 
   @impl true
+  def handle_params(params, _uri, socket) do
+    socket =
+      socket
+      |> assign(
+        query: params["q"] || socket.assigns.query,
+        selected_specialty: params["specialty"] || socket.assigns.selected_specialty,
+        selected_city: params["city"] || socket.assigns.selected_city,
+        min_rating: parse_float(params["rating"]) || socket.assigns.min_rating,
+        max_price: parse_int(params["max_price"]) || socket.assigns.max_price,
+        online_booking_only: params["online"] == "true" || socket.assigns.online_booking_only,
+        sort_by: params["sort"] || socket.assigns.sort_by
+      )
+      |> perform_search()
+
+    {:noreply, socket}
+  end
+
+  # Event Handlers
+
+  @impl true
   def handle_event("search", %{"value" => query}, socket) do
-    # Check for organ matches
     organ_matches = if String.length(query) >= 3 do
-      MedicalTaxonomy.search_specialties_by_organ(query)
-      |> Enum.take(5)
+      MedicalTaxonomy.search_specialties_by_organ(query) |> Enum.take(5)
     else
       []
     end
@@ -216,28 +436,108 @@ defmodule MedicWeb.SearchLive do
       socket
       |> assign(query: query, page: 1, searching: true, organ_matches: organ_matches)
       |> perform_search()
+      |> push_url_params()
 
     {:noreply, socket}
   end
 
-  def handle_event("filter_specialty", %{"value" => specialty}, socket) do
-    specialty = if specialty == "", do: nil, else: specialty
+  def handle_event("filter_specialty", %{"value" => value}, socket) do
+    specialty = if value == "", do: nil, else: value
 
     socket =
       socket
       |> assign(selected_specialty: specialty, page: 1, searching: true, organ_matches: [])
       |> perform_search()
+      |> push_url_params()
 
     {:noreply, socket}
   end
 
-  def handle_event("filter_city", %{"value" => city}, socket) do
-    city = if city == "", do: nil, else: city
+  def handle_event("filter_city", %{"value" => value}, socket) do
+    city = if value == "", do: nil, else: value
 
     socket =
       socket
       |> assign(selected_city: city, page: 1, searching: true)
       |> perform_search()
+      |> push_url_params()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("filter_rating", %{"value" => value}, socket) do
+    rating = parse_float(value)
+
+    socket =
+      socket
+      |> assign(min_rating: rating, page: 1, searching: true)
+      |> perform_search()
+      |> push_url_params()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("filter_price", %{"value" => value}, socket) do
+    price = parse_int(value)
+    # Only set filter if less than max
+    max_price = if price && price < 200, do: price, else: nil
+
+    socket =
+      socket
+      |> assign(max_price: max_price, page: 1, searching: true)
+      |> perform_search()
+      |> push_url_params()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("toggle_online_booking", _, socket) do
+    socket =
+      socket
+      |> assign(online_booking_only: !socket.assigns.online_booking_only, page: 1, searching: true)
+      |> perform_search()
+      |> push_url_params()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("toggle_verified", _, socket) do
+    socket =
+      socket
+      |> assign(verified_only: !socket.assigns.verified_only, page: 1, searching: true)
+      |> perform_search()
+      |> push_url_params()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("toggle_filters", _, socket) do
+    {:noreply, assign(socket, show_filters: !socket.assigns.show_filters)}
+  end
+
+  def handle_event("sort", %{"value" => sort_by}, socket) do
+    socket =
+      socket
+      |> assign(sort_by: sort_by, page: 1, searching: true)
+      |> perform_search()
+      |> push_url_params()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove_filter", %{"filter" => filter}, socket) do
+    socket =
+      case filter do
+        "specialty" -> assign(socket, selected_specialty: nil)
+        "city" -> assign(socket, selected_city: nil)
+        "rating" -> assign(socket, min_rating: nil)
+        "price" -> assign(socket, max_price: nil)
+        "online_booking" -> assign(socket, online_booking_only: false)
+        _ -> socket
+      end
+      |> assign(page: 1, searching: true)
+      |> perform_search()
+      |> push_url_params()
 
     {:noreply, socket}
   end
@@ -245,8 +545,20 @@ defmodule MedicWeb.SearchLive do
   def handle_event("clear_filters", _, socket) do
     socket =
       socket
-      |> assign(query: "", selected_specialty: nil, selected_city: nil, page: 1, organ_matches: [])
+      |> assign(
+        query: "",
+        selected_specialty: nil,
+        selected_city: nil,
+        min_rating: nil,
+        max_price: nil,
+        online_booking_only: false,
+        verified_only: true,
+        sort_by: "rating",
+        page: 1,
+        organ_matches: []
+      )
       |> perform_search()
+      |> push_url_params()
 
     {:noreply, socket}
   end
@@ -260,6 +572,8 @@ defmodule MedicWeb.SearchLive do
     {:noreply, socket}
   end
 
+  # Private Functions
+
   defp perform_search(socket, opts \\ []) do
     append = Keyword.get(opts, :append, false)
 
@@ -271,49 +585,48 @@ defmodule MedicWeb.SearchLive do
   end
 
   defp search_with_typesense(socket, append) do
-    %{query: query, selected_specialty: specialty, selected_city: city, page: page} = socket.assigns
+    assigns = socket.assigns
 
     search_opts = [
-      query: if(query == "", do: "*", else: query),
-      specialty: specialty,
-      city: city,
-      page: page,
+      query: if(assigns.query == "", do: "*", else: assigns.query),
+      specialty: assigns.selected_specialty,
+      city: assigns.selected_city,
+      min_rating: assigns.min_rating,
+      max_price: assigns.max_price,
+      has_cal_com: if(assigns.online_booking_only, do: true, else: nil),
+      verified_only: assigns.verified_only,
+      page: assigns.page,
       per_page: 12,
-      verified_only: true
+      sort_by: assigns.sort_by
     ]
 
     case Search.search_doctors(search_opts) do
       {:ok, %{results: results, total: total}} ->
-        doctors = if append, do: socket.assigns.doctors ++ results, else: results
+        doctors = if append, do: assigns.doctors ++ results, else: results
         has_more = length(doctors) < total
 
-        assign(socket,
-          doctors: doctors,
-          total: total,
-          has_more: has_more,
-          searching: false
-        )
+        assign(socket, doctors: doctors, total: total, has_more: has_more, searching: false)
 
       {:error, _reason} ->
-        # Fallback to Ecto search on error
         search_with_ecto(socket, append)
     end
   end
 
   defp search_with_ecto(socket, append) do
-    %{selected_specialty: specialty_slug, selected_city: city} = socket.assigns
+    assigns = socket.assigns
+    opts = [preload: [:specialty]]
 
-    opts = [preload: [:specialty], verified: true]
+    opts = if assigns.verified_only, do: Keyword.put(opts, :verified, true), else: opts
 
     opts =
-      if specialty_slug do
-        specialty = Doctors.get_specialty_by_slug(specialty_slug)
+      if assigns.selected_specialty do
+        specialty = Doctors.get_specialty_by_slug(assigns.selected_specialty)
         if specialty, do: Keyword.put(opts, :specialty_id, specialty.id), else: opts
       else
         opts
       end
 
-    opts = if city, do: Keyword.put(opts, :city, city), else: opts
+    opts = if assigns.selected_city, do: Keyword.put(opts, :city, assigns.selected_city), else: opts
 
     doctors =
       Doctors.list_doctors(opts)
@@ -331,8 +644,12 @@ defmodule MedicWeb.SearchLive do
           has_cal_com: d.cal_com_username != nil
         }
       end)
+      |> maybe_filter_rating(assigns.min_rating)
+      |> maybe_filter_price(assigns.max_price)
+      |> maybe_filter_online(assigns.online_booking_only)
+      |> sort_doctors(assigns.sort_by)
 
-    all_doctors = if append, do: socket.assigns.doctors ++ doctors, else: doctors
+    all_doctors = if append, do: assigns.doctors ++ doctors, else: doctors
 
     assign(socket,
       doctors: all_doctors,
@@ -342,8 +659,37 @@ defmodule MedicWeb.SearchLive do
     )
   end
 
+  defp maybe_filter_rating(doctors, nil), do: doctors
+  defp maybe_filter_rating(doctors, min), do: Enum.filter(doctors, &(&1.rating >= min))
+
+  defp maybe_filter_price(doctors, nil), do: doctors
+  defp maybe_filter_price(doctors, max), do: Enum.filter(doctors, &(&1.consultation_fee && &1.consultation_fee <= max))
+
+  defp maybe_filter_online(doctors, false), do: doctors
+  defp maybe_filter_online(doctors, true), do: Enum.filter(doctors, &(&1.has_cal_com))
+
+  defp sort_doctors(doctors, "rating"), do: Enum.sort_by(doctors, &(&1.rating || 0), :desc)
+  defp sort_doctors(doctors, "reviews"), do: Enum.sort_by(doctors, &(&1.review_count || 0), :desc)
+  defp sort_doctors(doctors, "price_low"), do: Enum.sort_by(doctors, &(&1.consultation_fee || 999))
+  defp sort_doctors(doctors, "price_high"), do: Enum.sort_by(doctors, &(&1.consultation_fee || 0), :desc)
+  defp sort_doctors(doctors, _), do: doctors
+
+  defp push_url_params(socket) do
+    params = %{}
+    assigns = socket.assigns
+
+    params = if assigns.query != "", do: Map.put(params, "q", assigns.query), else: params
+    params = if assigns.selected_specialty, do: Map.put(params, "specialty", assigns.selected_specialty), else: params
+    params = if assigns.selected_city, do: Map.put(params, "city", assigns.selected_city), else: params
+    params = if assigns.min_rating, do: Map.put(params, "rating", assigns.min_rating), else: params
+    params = if assigns.max_price, do: Map.put(params, "max_price", assigns.max_price), else: params
+    params = if assigns.online_booking_only, do: Map.put(params, "online", "true"), else: params
+    params = if assigns.sort_by != "rating", do: Map.put(params, "sort", assigns.sort_by), else: params
+
+    push_patch(socket, to: ~p"/search?#{params}", replace: true)
+  end
+
   defp get_cities do
-    # Cities matching seed data (English names)
     ["Athens", "Thessaloniki", "Patras", "Heraklion", "Larissa", "Volos", "Ioannina", "Chania", "Rhodes", "Alexandroupoli", "Kalamata", "Kavala", "Serres", "Corfu"]
   end
 
@@ -354,5 +700,48 @@ defmodule MedicWeb.SearchLive do
     end
   rescue
     _ -> false
+  end
+
+  defp parse_float(nil), do: nil
+  defp parse_float(""), do: nil
+  defp parse_float(val) when is_binary(val) do
+    case Float.parse(val) do
+      {f, _} -> f
+      :error -> nil
+    end
+  end
+  defp parse_float(val) when is_number(val), do: val
+
+  defp parse_int(nil), do: nil
+  defp parse_int(""), do: nil
+  defp parse_int(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {i, _} -> i
+      :error -> nil
+    end
+  end
+  defp parse_int(val) when is_integer(val), do: val
+
+  defp has_active_filters?(assigns) do
+    assigns.selected_specialty || assigns.selected_city || assigns.min_rating ||
+      assigns.max_price || assigns.online_booking_only
+  end
+
+  defp active_filter_count(assigns) do
+    [
+      assigns.selected_specialty,
+      assigns.selected_city,
+      assigns.min_rating,
+      assigns.max_price,
+      assigns.online_booking_only && true
+    ]
+    |> Enum.count(&(&1))
+  end
+
+  defp get_specialty_name(specialties, slug) do
+    case Enum.find(specialties, &(&1.slug == slug)) do
+      nil -> slug
+      s -> s.name_en
+    end
   end
 end
