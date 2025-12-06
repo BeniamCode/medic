@@ -26,10 +26,39 @@ import {hooks as colocatedHooks} from "phoenix-colocated/medic"
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+// Custom Hooks
+const Hooks = {
+  CalEmbed: {
+    mounted() {
+      const username = this.el.dataset.username;
+      if (!username) return;
+
+      // Load Cal.com embed script
+      if (!window.Cal) {
+        const script = document.createElement('script');
+        script.src = 'https://app.cal.com/embed/embed.js';
+        script.async = true;
+        script.onload = () => this.initCal(username);
+        document.head.appendChild(script);
+      } else {
+        this.initCal(username);
+      }
+    },
+    initCal(username) {
+      Cal("init", {origin: "https://cal.com"});
+      Cal("inline", {
+        elementOrSelector: "#cal-embed",
+        calLink: username
+      });
+    }
+  }
+};
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, ...Hooks},
 })
 
 // Show progress bar on live navigation and form submits
