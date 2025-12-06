@@ -14,8 +14,8 @@ defmodule Medic.Application do
        repos: Application.fetch_env!(:medic, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:medic, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Medic.PubSub},
-      # Start a worker by calling: Medic.Worker.start_link(arg)
-      # {Medic.Worker, arg},
+      # Oban for background jobs (reminders, search indexing)
+      {Oban, Application.fetch_env!(:medic, Oban)},
       # Start to serve requests, typically the last entry
       MedicWeb.Endpoint
     ]
@@ -35,7 +35,7 @@ defmodule Medic.Application do
   end
 
   defp skip_migrations?() do
-    # By default, sqlite migrations are run when using a release
+    # By default, migrations are run when using a release
     System.get_env("RELEASE_NAME") == nil
   end
 end

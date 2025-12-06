@@ -18,7 +18,7 @@ defmodule Medic.Appointments do
     * `:preload` - list of associations to preload
   """
   def list_appointments(opts \\ []) do
-    query = from a in Appointment, order_by: [desc: a.scheduled_at]
+    query = from a in Appointment, order_by: [desc: a.starts_at]
 
     query
     |> maybe_filter_patient(opts[:patient_id])
@@ -50,7 +50,7 @@ defmodule Medic.Appointments do
   defp maybe_filter_upcoming(query, true) do
     now = DateTime.utc_now()
     from a in query,
-      where: a.scheduled_at > ^now,
+      where: a.starts_at > ^now,
       where: a.status in ["pending", "confirmed"]
   end
   defp maybe_filter_upcoming(query, _), do: query
@@ -66,13 +66,6 @@ defmodule Medic.Appointments do
   def get_appointment!(id), do: Repo.get!(Appointment, id)
 
   @doc """
-  Gets an appointment by Cal.com UID.
-  """
-  def get_appointment_by_cal_uid(uid) do
-    Repo.get_by(Appointment, cal_com_uid: uid)
-  end
-
-  @doc """
   Gets an appointment with preloaded associations.
   """
   def get_appointment_with_details!(id) do
@@ -83,33 +76,30 @@ defmodule Medic.Appointments do
 
   @doc """
   Creates an appointment.
+  The PostgreSQL exclusion constraint will reject double-bookings.
   """
   def create_appointment(attrs \\ %{}) do
     %Appointment{}
     |> Appointment.changeset(attrs)
     |> Repo.insert()
+    |> handle_constraint_error()
   end
 
   @doc """
-  Creates an appointment from a Cal.com booking.
+  Creates an appointment with starts_at and duration (calculates ends_at).
   """
-  def create_appointment_from_cal_com(doctor_id, patient_id, cal_data) do
-    attrs = %{
-      doctor_id: doctor_id,
-      patient_id: patient_id,
-      scheduled_at: cal_data["startTime"],
-      duration_minutes: cal_data["length"] || 30,
-      cal_com_booking_id: to_string(cal_data["id"]),
-      cal_com_uid: cal_data["uid"],
-      meeting_url: cal_data["meetingUrl"],
-      appointment_type: if(cal_data["meetingUrl"], do: "telemedicine", else: "in_person"),
-      status: "confirmed"
-    }
+  def create_appointment_with_duration(attrs) do
+    starts_at = attrs[:starts_at] || attrs["starts_at"]
+    duration = attrs[:duration_minutes] || attrs["duration_minutes"] || 30
 
-    %Appointment{}
-    |> Appointment.changeset(attrs)
-    |> Appointment.cal_com_changeset(attrs)
-    |> Repo.insert()
+    ends_at =
+      if starts_at do
+        DateTime.add(starts_at, duration * 60, :second)
+      end
+
+    attrs
+    |> Map.put(:ends_at, ends_at)
+    |> create_appointment()
   end
 
   @doc """
@@ -119,6 +109,7 @@ defmodule Medic.Appointments do
     appointment
     |> Appointment.changeset(attrs)
     |> Repo.update()
+    |> handle_constraint_error()
   end
 
   @doc """
@@ -179,7 +170,7 @@ defmodule Medic.Appointments do
 
     from(a in Appointment,
       where: a.doctor_id == ^doctor_id,
-      where: a.scheduled_at > ^now,
+      where: a.starts_at > ^now,
       where: a.status in ["pending", "confirmed"],
       select: count(a.id)
     )
@@ -195,11 +186,30 @@ defmodule Medic.Appointments do
 
     from(a in Appointment,
       where: a.doctor_id == ^doctor_id,
-      where: a.scheduled_at >= ^today_start,
-      where: a.scheduled_at < ^today_end,
-      order_by: a.scheduled_at,
+      where: a.starts_at >= ^today_start,
+      where: a.starts_at < ^today_end,
+      order_by: a.starts_at,
       preload: [:patient]
     )
     |> Repo.all()
+  end
+
+  # Handle exclusion constraint violations gracefully
+  defp handle_constraint_error({:ok, appointment}), do: {:ok, appointment}
+  defp handle_constraint_error({:error, %Ecto.Changeset{} = changeset}) do
+    if has_constraint_error?(changeset, :no_double_bookings) do
+      {:error, :slot_already_booked}
+    else
+      {:error, changeset}
+    end
+  end
+
+  defp has_constraint_error?(changeset, constraint_name) do
+    Enum.any?(changeset.errors, fn
+      {_field, {_msg, opts}} ->
+        Keyword.get(opts, :constraint) == constraint_name
+      _ ->
+        false
+    end)
   end
 end

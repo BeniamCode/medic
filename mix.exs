@@ -41,7 +41,7 @@ defmodule Medic.MixProject do
       {:phoenix, "~> 1.7.14"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
-      {:ecto_sqlite3, ">= 0.0.0"},
+      {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.20.17"},
@@ -60,7 +60,7 @@ defmodule Medic.MixProject do
       {:req, "~> 0.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 1.0"},
+      {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
@@ -68,7 +68,10 @@ defmodule Medic.MixProject do
       {:live_view_native_swiftui, "~> 0.3.0"},
       {:bcrypt_elixir, "~> 3.0"},
       {:faker, "~> 0.18", only: [:dev, :test]},
-      {:ex_typesense, "~> 0.7"}
+      {:ex_typesense, "~> 0.7"},
+      # Scheduling engine deps
+      {:timex, "~> 3.7"},
+      {:oban, "~> 2.17"}
     ]
   end
 

@@ -1,6 +1,6 @@
 defmodule Medic.Appointments.Appointment do
   @moduledoc """
-  Appointment schema with Cal.com integration and telemedicine support.
+  Appointment schema with PostgreSQL exclusion constraint for double-booking prevention.
   """
   use Ecto.Schema
   import Ecto.Changeset
@@ -15,13 +15,11 @@ defmodule Medic.Appointments.Appointment do
     belongs_to :patient, Medic.Patients.Patient
     belongs_to :doctor, Medic.Doctors.Doctor
 
-    field :scheduled_at, :utc_datetime
+    # Time range (enables PostgreSQL exclusion constraint)
+    field :starts_at, :utc_datetime
+    field :ends_at, :utc_datetime
     field :duration_minutes, :integer, default: 30
     field :status, :string, default: "pending"
-
-    # Cal.com integration
-    field :cal_com_booking_id, :string
-    field :cal_com_uid, :string
 
     # Telemedicine support
     field :meeting_url, :string
@@ -38,25 +36,20 @@ defmodule Medic.Appointments.Appointment do
   def changeset(appointment, attrs) do
     appointment
     |> cast(attrs, [
-      :scheduled_at, :duration_minutes, :appointment_type,
-      :notes, :doctor_id, :patient_id
+      :starts_at, :ends_at, :duration_minutes, :appointment_type,
+      :status, :notes, :doctor_id, :patient_id
     ])
-    |> validate_required([:scheduled_at, :duration_minutes, :doctor_id])
+    |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_inclusion(:appointment_type, @appointment_types)
     |> validate_number(:duration_minutes, greater_than: 0, less_than_or_equal_to: 240)
+    |> validate_time_order()
     |> validate_future_date()
     |> foreign_key_constraint(:patient_id)
     |> foreign_key_constraint(:doctor_id)
-  end
-
-  @doc """
-  Changeset for Cal.com integration (sets booking IDs after sync).
-  """
-  def cal_com_changeset(appointment, attrs) do
-    appointment
-    |> cast(attrs, [:cal_com_booking_id, :cal_com_uid, :meeting_url])
-    |> unique_constraint(:cal_com_uid)
+    |> exclusion_constraint(:no_double_bookings,
+      message: "This time slot is already booked"
+    )
   end
 
   @doc """
@@ -98,46 +91,59 @@ defmodule Medic.Appointments.Appointment do
   def seed_changeset(appointment, attrs) do
     appointment
     |> cast(attrs, [
-      :scheduled_at, :duration_minutes, :status, :appointment_type,
+      :starts_at, :ends_at, :duration_minutes, :status, :appointment_type,
       :notes, :doctor_id, :patient_id
     ])
-    |> validate_required([:scheduled_at, :duration_minutes, :doctor_id])
+    |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_inclusion(:appointment_type, @appointment_types)
     |> validate_number(:duration_minutes, greater_than: 0, less_than_or_equal_to: 240)
+    |> validate_time_order()
     |> foreign_key_constraint(:patient_id)
     |> foreign_key_constraint(:doctor_id)
   end
 
+  defp validate_time_order(changeset) do
+    starts_at = get_field(changeset, :starts_at)
+    ends_at = get_field(changeset, :ends_at)
+
+    if starts_at && ends_at && DateTime.compare(starts_at, ends_at) != :lt do
+      add_error(changeset, :ends_at, "must be after start time")
+    else
+      changeset
+    end
+  end
+
   defp validate_future_date(changeset) do
-    case get_change(changeset, :scheduled_at) do
+    case get_change(changeset, :starts_at) do
       nil ->
         changeset
 
-      scheduled_at ->
-        if DateTime.compare(scheduled_at, DateTime.utc_now()) == :gt do
+      starts_at ->
+        if DateTime.compare(starts_at, DateTime.utc_now()) == :gt do
           changeset
         else
-          add_error(changeset, :scheduled_at, "must be in the future")
+          add_error(changeset, :starts_at, "must be in the future")
         end
     end
   end
 
   @doc """
-  Returns the end time of the appointment.
+  Returns the duration in minutes.
   """
-  def ends_at(%__MODULE__{scheduled_at: start, duration_minutes: duration}) when not is_nil(start) do
-    DateTime.add(start, duration * 60, :second)
+  def duration(%__MODULE__{starts_at: starts_at, ends_at: ends_at})
+      when not is_nil(starts_at) and not is_nil(ends_at) do
+    DateTime.diff(ends_at, starts_at, :minute)
   end
 
-  def ends_at(_), do: nil
+  def duration(_), do: nil
 
   @doc """
   Checks if the appointment is upcoming.
   """
-  def upcoming?(%__MODULE__{scheduled_at: scheduled_at, status: status})
+  def upcoming?(%__MODULE__{starts_at: starts_at, status: status})
       when status in ["pending", "confirmed"] do
-    DateTime.compare(scheduled_at, DateTime.utc_now()) == :gt
+    DateTime.compare(starts_at, DateTime.utc_now()) == :gt
   end
 
   def upcoming?(_), do: false

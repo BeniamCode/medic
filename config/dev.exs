@@ -2,10 +2,19 @@ import Config
 
 # Configure your database
 config :medic, Medic.Repo,
-  database: Path.expand("../medic_dev.db", __DIR__),
-  pool_size: 5,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "medic_dev",
   stacktrace: true,
-  show_sensitive_data_on_connection_error: true
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+
+# Oban configuration for development
+config :medic, Oban,
+  repo: Medic.Repo,
+  plugins: [Oban.Plugins.Pruner],
+  queues: [default: 10, mailers: 5, search: 5]
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

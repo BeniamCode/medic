@@ -194,7 +194,8 @@ else
     doctor = DevSeeds.random_item(verified_doctors)
     
     # Past appointment (completed) - use seed_changeset to bypass future validation
-    past_date = DateTime.utc_now() |> DateTime.add(-Enum.random(1..30), :day) |> DateTime.truncate(:second)
+    past_start = DateTime.utc_now() |> DateTime.add(-Enum.random(1..30), :day) |> DateTime.truncate(:second)
+    past_end = DateTime.add(past_start, 30 * 60, :second)
     
     case Repo.get_by(Appointment, patient_id: patient.id, doctor_id: doctor.id, status: "completed") do
       nil ->
@@ -203,7 +204,8 @@ else
           |> Appointment.seed_changeset(%{
             patient_id: patient.id,
             doctor_id: doctor.id,
-            scheduled_at: past_date,
+            starts_at: past_start,
+            ends_at: past_end,
             duration_minutes: 30,
             status: "completed",
             appointment_type: "in_person"
@@ -215,19 +217,24 @@ else
     end
 
     # Future appointment (confirmed)
-    future_date = DateTime.utc_now() |> DateTime.add(Enum.random(1..14), :day) |> DateTime.truncate(:second)
+    future_start = DateTime.utc_now() |> DateTime.add(Enum.random(1..14), :day) |> DateTime.truncate(:second)
+    future_end = DateTime.add(future_start, 30 * 60, :second)
     doctor2 = DevSeeds.random_item(verified_doctors)
 
     case Repo.get_by(Appointment, patient_id: patient.id, doctor_id: doctor2.id, status: "confirmed") do
       nil ->
-        {:ok, _} = Appointments.create_appointment(%{
-          patient_id: patient.id,
-          doctor_id: doctor2.id,
-          scheduled_at: future_date,
-          duration_minutes: 30,
-          status: "confirmed",
-          appointment_type: Enum.random(["in_person", "telemedicine"])
-        })
+        {:ok, _} =
+          %Appointment{}
+          |> Appointment.changeset(%{
+            patient_id: patient.id,
+            doctor_id: doctor2.id,
+            starts_at: future_start,
+            ends_at: future_end,
+            duration_minutes: 30,
+            status: "confirmed",
+            appointment_type: Enum.random(["in_person", "telemedicine"])
+          })
+          |> Repo.insert()
         IO.puts("  ✓ Future: #{patient.first_name} → Dr. #{doctor2.last_name}")
       _ ->
         IO.puts("  • Future appointment exists")
