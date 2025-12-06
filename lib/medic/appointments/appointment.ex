@@ -91,6 +91,24 @@ defmodule Medic.Appointments.Appointment do
     change(appointment, status: "no_show")
   end
 
+  @doc """
+  Changeset for seeding (bypasses future date validation).
+  Use only in seeds for creating historical test data.
+  """
+  def seed_changeset(appointment, attrs) do
+    appointment
+    |> cast(attrs, [
+      :scheduled_at, :duration_minutes, :status, :appointment_type,
+      :notes, :doctor_id, :patient_id
+    ])
+    |> validate_required([:scheduled_at, :duration_minutes, :doctor_id])
+    |> validate_inclusion(:status, @statuses)
+    |> validate_inclusion(:appointment_type, @appointment_types)
+    |> validate_number(:duration_minutes, greater_than: 0, less_than_or_equal_to: 240)
+    |> foreign_key_constraint(:patient_id)
+    |> foreign_key_constraint(:doctor_id)
+  end
+
   defp validate_future_date(changeset) do
     case get_change(changeset, :scheduled_at) do
       nil ->

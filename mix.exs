@@ -66,7 +66,8 @@ defmodule Medic.MixProject do
       {:bandit, "~> 1.5"},
       {:live_view_native, "~> 0.3.0"},
       {:live_view_native_swiftui, "~> 0.3.0"},
-      {:bcrypt_elixir, "~> 3.0"}
+      {:bcrypt_elixir, "~> 3.0"},
+      {:faker, "~> 0.18", only: [:dev, :test]}
     ]
   end
 
@@ -81,6 +82,8 @@ defmodule Medic.MixProject do
       setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "seed.prod": ["run priv/repo/seeds/prod.exs"],
+      "seed.dev": ["run priv/repo/seeds/dev.exs"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": ["compile", "tailwind medic", "esbuild medic"],
