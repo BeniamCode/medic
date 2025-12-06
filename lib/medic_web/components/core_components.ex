@@ -88,10 +88,11 @@ defmodule MedicWeb.CoreComponents do
       <.button phx-click="go" variant="primary">Send!</.button>
       <.button navigate={~p"/"}>Home</.button>
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled type form)
   attr :class, :any
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
+
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
@@ -182,7 +183,8 @@ defmodule MedicWeb.CoreComponents do
                 multiple pattern placeholder readonly required rows size step)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
-    errors = if Phoenix.Component.used_input?(field), do: field.errors, else: []
+    # For LiveView 0.20 compatibility, always show errors if present
+    errors = field.errors
 
     assigns
     |> assign(field: nil, id: assigns.id || field.id)
@@ -191,6 +193,7 @@ defmodule MedicWeb.CoreComponents do
     |> assign_new(:value, fn -> field.value end)
     |> input()
   end
+
 
   def input(%{type: "hidden"} = assigns) do
     ~H"""

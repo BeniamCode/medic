@@ -23,9 +23,17 @@ defmodule MedicWeb.UserLoginLive do
           for={@form}
           id="login_form"
           action={~p"/login"}
-          phx-update="ignore"
+          phx-submit="login"
+          phx-trigger-action={@trigger_submit}
           class="mt-8 space-y-6"
         >
+          <%= if @error_message do %>
+            <div class="alert alert-error">
+              <.icon name="hero-exclamation-circle" class="w-5 h-5" />
+              <span><%= @error_message %></span>
+            </div>
+          <% end %>
+
           <div class="space-y-4">
             <.input
               field={@form[:email]}
@@ -83,6 +91,27 @@ defmodule MedicWeb.UserLoginLive do
   def mount(_params, _session, socket) do
     email = Phoenix.Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
-    {:ok, assign(socket, form: form, page_title: "Sign In"), temporary_assigns: [form: form]}
+
+    {:ok,
+     assign(socket,
+       form: form,
+       page_title: "Sign In",
+       trigger_submit: false,
+       error_message: nil
+     )}
+  end
+
+  def handle_event("login", %{"user" => user_params}, socket) do
+    %{"email" => email, "password" => password} = user_params
+
+    if Medic.Accounts.get_user_by_email_and_password(email, password) do
+      # Valid credentials - trigger the form to submit to the controller
+      form = to_form(user_params, as: "user")
+      {:noreply, assign(socket, form: form, trigger_submit: true)}
+    else
+      # Invalid credentials
+      form = to_form(user_params, as: "user")
+      {:noreply, assign(socket, form: form, error_message: "Invalid email or password")}
+    end
   end
 end
