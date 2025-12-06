@@ -1,0 +1,48 @@
+<header class="navbar bg-base-100 shadow-sm sticky top-0 z-50">
+  <div class="flex-1">
+    <a href="/" class="btn btn-ghost text-xl gap-2">
+      <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+        <.icon name="hero-heart" class="w-5 h-5 text-primary" />
+      </div>
+      <span class="font-bold">Medic</span>
+    </a>
+  </div>
+  <div class="flex-none gap-2">
+    <%= if @current_user do %>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
+          <div class="w-10 rounded-full bg-primary/10 text-primary">
+            <span><.icon name="hero-user" class="w-5 h-5" /></span>
+          </div>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+          <li class="menu-title">{@current_user.email}</li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/settings">Ρυθμίσεις</a></li>
+          <li>
+            <.link href="/logout" method="delete">Αποσύνδεση</.link>
+          </li>
+        </ul>
+      </div>
+    <% else %>
+      <a href="/login" class="btn btn-ghost">Σύνδεση</a>
+      <a href="/register" class="btn btn-primary">Εγγραφή</a>
+    <% end %>
+  </div>
+</header>
+
+<main class="min-h-screen">
+  <.flash_group flash={@flash} />
+  {@inner_content}
+</main>
+
+<footer class="footer footer-center p-10 bg-base-200 text-base-content">
+  <div>
+    <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+      <.icon name="hero-heart" class="w-6 h-6 text-primary" />
+    </div>
+    <p class="font-bold">Medic</p>
+    <p>Βρείτε τον γιατρό που χρειάζεστε</p>
+    <p class="text-sm text-base-content/70">© 2024 Medic. Με επιφύλαξη παντός δικαιώματος.</p>
+  </div>
+</footer>
