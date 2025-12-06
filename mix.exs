@@ -67,7 +67,8 @@ defmodule Medic.MixProject do
       {:live_view_native, "~> 0.3.0"},
       {:live_view_native_swiftui, "~> 0.3.0"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:faker, "~> 0.18", only: [:dev, :test]}
+      {:faker, "~> 0.18", only: [:dev, :test]},
+      {:ex_typesense, "~> 0.7"}
     ]
   end
 
