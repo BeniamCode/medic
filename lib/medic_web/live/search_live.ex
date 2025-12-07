@@ -316,13 +316,15 @@ defmodule MedicWeb.SearchLive do
               <.link navigate={~p"/doctors/#{doctor.id}"} class="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
                 <div class="card-body p-4">
                   <div class="flex items-start gap-3">
-                    <div class="avatar placeholder">
+                    <div class="avatar placeholder" style={"view-transition-name: doctor-avatar-#{doctor.id}"}>
                       <div class="w-14 h-14 rounded-full bg-primary/10 text-primary">
                         <.icon name="hero-user" class="w-7 h-7" />
                       </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <h3 class="font-semibold truncate">Dr. <%= doctor.first_name %> <%= doctor.last_name %></h3>
+                      <h3 class="font-semibold truncate" style={"view-transition-name: doctor-name-#{doctor.id}"}>
+                        Dr. <%= doctor.first_name %> <%= doctor.last_name %>
+                      </h3>
                       <p class="text-sm text-base-content/70 truncate">
                         <%= doctor.specialty_name || "General Practice" %>
                       </p>

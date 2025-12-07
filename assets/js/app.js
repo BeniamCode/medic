@@ -58,6 +58,18 @@ const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
   hooks: Hooks,
+  dom: {
+    onBeforeElUpdated(from, to) {
+      if (from._x_dataStack) { window.Alpine.clone(from, to) }
+    },
+    render(message, root, patch) {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => patch())
+      } else {
+        patch()
+      }
+    }
+  }
 })
 
 // Show progress bar on live navigation and form submits

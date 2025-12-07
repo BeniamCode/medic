@@ -22,7 +22,7 @@ defmodule MedicWeb.DoctorLive.Show do
 
           <div class="flex flex-col md:flex-row items-start gap-6">
             <%!-- Doctor Avatar --%>
-            <div class="avatar placeholder">
+            <div class="avatar placeholder" style={"view-transition-name: doctor-avatar-#{@doctor.id}"}>
               <div class="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary ring-2 ring-primary/20">
                 <span class="text-4xl"><.icon name="hero-user" class="w-14 h-14" /></span>
               </div>
@@ -32,7 +32,7 @@ defmodule MedicWeb.DoctorLive.Show do
             <div class="flex-1">
               <div class="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                  <h1 class="text-3xl font-bold tracking-tight">
+                  <h1 class="text-3xl font-bold tracking-tight" style={"view-transition-name: doctor-name-#{@doctor.id}"}>
                     Dr. <%= @doctor.first_name %> <%= @doctor.last_name %>
                   </h1>
                   <p class="text-lg text-primary font-medium mt-1">
