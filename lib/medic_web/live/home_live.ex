@@ -3,6 +3,7 @@ defmodule MedicWeb.HomeLive do
 
   alias Medic.Doctors
   alias Medic.MedicalTaxonomy
+  alias Medic.Hospitals
 
   def render(assigns) do
     ~H"""
@@ -43,6 +44,55 @@ defmodule MedicWeb.HomeLive do
           </div>
         </div>
       </section>
+
+      <%!-- On Duty Hospitals Section --%>
+      <%= if @on_duty_hospitals != [] do %>
+        <section class="py-12 px-4 bg-secondary/5">
+          <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-3 mb-8">
+              <div class="p-2 rounded-lg bg-secondary/10 text-secondary">
+                <.icon name="hero-building-office-2" class="w-6 h-6" />
+              </div>
+              <div>
+                <h2 class="text-2xl font-bold text-base-content">Hospitals On Duty Today</h2>
+                <p class="text-sm text-base-content/60"><%= Calendar.strftime(Date.utc_today(), "%A, %d %B %Y") %></p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <%= for hospital <- @on_duty_hospitals do %>
+                <div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow border border-base-200">
+                  <div class="card-body p-5">
+                    <div class="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 class="font-semibold text-lg leading-snug mb-1"><%= hospital.name %></h3>
+                        <div class="flex items-center gap-1 text-xs text-base-content/60">
+                          <.icon name="hero-map-pin" class="w-3 h-3" />
+                          <%= hospital.city %>
+                        </div>
+                      </div>
+                      <div class="badge badge-sm badge-outline text-xs">On Call</div>
+                    </div>
+                    
+                    <div class="mt-4">
+                      <div class="text-xs font-medium text-base-content/50 mb-2 uppercase tracking-wider">Departments</div>
+                      <div class="flex flex-wrap gap-1.5">
+                        <%= for schedule <- hospital.hospital_schedules do %>
+                          <%= for specialty <- schedule.specialties do %>
+                            <span class="badge badge-primary badge-soft badge-sm text-xs font-normal">
+                              <%= specialty %>
+                            </span>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </section>
+      <% end %>
 
       <%!-- Specialties Grid --%>
       <section class="py-16 px-4 bg-base-200/30">
@@ -154,6 +204,12 @@ defmodule MedicWeb.HomeLive do
   def mount(_params, _session, socket) do
     # Use popular specialties from taxonomy
     specialties = MedicalTaxonomy.popular_specialties()
-    {:ok, assign(socket, specialties: specialties, page_title: "Find a Doctor")}
+    on_duty_hospitals = Hospitals.list_on_duty_hospitals(Date.utc_today())
+    
+    {:ok, assign(socket, 
+      specialties: specialties, 
+      on_duty_hospitals: on_duty_hospitals,
+      page_title: "Find a Doctor"
+    )}
   end
 end

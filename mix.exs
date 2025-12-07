@@ -71,7 +71,8 @@ defmodule Medic.MixProject do
       {:ex_typesense, "~> 0.7"},
       # Scheduling engine deps
       {:timex, "~> 3.7"},
-      {:oban, "~> 2.17"}
+      {:oban, "~> 2.17"},
+      {:nimble_csv, "~> 1.2"}
     ]
   end
 
