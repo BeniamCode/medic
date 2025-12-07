@@ -22,10 +22,17 @@
 
   <div class="flex-none flex items-center gap-2">
     <%= if @current_user do %>
-      <a href="/dashboard" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
-        <.icon name="hero-calendar" class="w-4 h-4" />
-        My Appointments
-      </a>
+      <%= if @current_user.role == "doctor" do %>
+        <a href="/dashboard/doctor" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
+          <.icon name="hero-briefcase" class="w-4 h-4" />
+          Doctor Dashboard
+        </a>
+      <% else %>
+        <a href="/dashboard" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
+          <.icon name="hero-calendar" class="w-4 h-4" />
+          My Appointments
+        </a>
+      <% end %>
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
           <div class="w-10 rounded-full bg-primary/10 text-primary">
@@ -36,7 +43,11 @@
           <li class="menu-title"><%= @current_user.email %></li>
           <li><a href="/"><.icon name="hero-home" class="w-4 h-4" /> Home</a></li>
           <li><a href="/search"><.icon name="hero-magnifying-glass" class="w-4 h-4" /> Find Doctors</a></li>
-          <li><a href="/dashboard"><.icon name="hero-calendar" class="w-4 h-4" /> Dashboard</a></li>
+          <%= if @current_user.role == "doctor" do %>
+            <li><a href="/dashboard/doctor"><.icon name="hero-briefcase" class="w-4 h-4" /> Dashboard</a></li>
+          <% else %>
+            <li><a href="/dashboard"><.icon name="hero-calendar" class="w-4 h-4" /> Dashboard</a></li>
+          <% end %>
           <li><a href="/settings"><.icon name="hero-cog-6-tooth" class="w-4 h-4" /> Settings</a></li>
           <li class="divider"></li>
           <li>

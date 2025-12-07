@@ -145,13 +145,34 @@ defmodule MedicWeb.DoctorLive.Profile do
   def handle_event("save", %{"doctor" => params}, socket) do
     case Doctors.update_doctor(socket.assigns.doctor, params) do
       {:ok, doctor} ->
+        # Check if profile is complete and verify if needed
+        doctor = maybe_verify_doctor(doctor)
+        
+        msg = if doctor.verified_at, do: "Το προφίλ ενημερώθηκε και επαληθεύτηκε!", else: "Το προφίλ ενημερώθηκε!"
+
         {:noreply,
          socket
-         |> put_flash(:info, "Το προφίλ ενημερώθηκε επιτυχώς!")
+         |> put_flash(:info, msg)
          |> assign(doctor: doctor, form: to_form(Doctors.change_doctor(doctor)))}
 
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
+  end
+
+  defp maybe_verify_doctor(doctor) do
+    if is_nil(doctor.verified_at) && profile_complete?(doctor) do
+      {:ok, verified_doctor} = Doctors.verify_doctor(doctor)
+      verified_doctor
+    else
+      doctor
+    end
+  end
+
+  defp profile_complete?(doctor) do
+    !is_nil(doctor.first_name) && doctor.first_name != "" &&
+    !is_nil(doctor.last_name) && doctor.last_name != "" &&
+    !is_nil(doctor.specialty_id) &&
+    !is_nil(doctor.city) && doctor.city != ""
   end
 end
