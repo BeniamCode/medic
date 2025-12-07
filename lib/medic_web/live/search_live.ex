@@ -7,6 +7,7 @@ defmodule MedicWeb.SearchLive do
   alias Medic.Doctors
   alias Medic.Search
   alias Medic.MedicalTaxonomy
+  alias Medic.Hospitals
 
   @impl true
   def render(assigns) do
@@ -121,6 +122,34 @@ defmodule MedicWeb.SearchLive do
       <div class="flex gap-6">
         <%!-- Filter Sidebar --%>
         <aside class={"w-64 shrink-0 space-y-6 #{if @show_filters, do: "block", else: "hidden lg:block"}"}>
+          
+          <%!-- On Duty Accordion --%>
+          <%= if @on_duty_hospitals != [] do %>
+            <div class="collapse collapse-arrow bg-secondary/10 border border-secondary/20">
+              <input type="checkbox" /> 
+              <div class="collapse-title text-sm font-semibold text-secondary-content flex items-center gap-2">
+                <.icon name="hero-building-office-2" class="w-4 h-4" />
+                On Duty Today
+              </div>
+              <div class="collapse-content text-xs"> 
+                <ul class="space-y-3 pt-2">
+                  <%= for hospital <- @on_duty_hospitals do %>
+                    <li class="border-b border-secondary/10 last:border-0 pb-2 last:pb-0">
+                      <div class="font-bold text-base-content"><%= hospital.name %></div>
+                      <div class="text-base-content/60 mt-1 flex flex-wrap gap-1">
+                        <%= for schedule <- hospital.hospital_schedules do %>
+                          <%= for specialty <- schedule.specialties do %>
+                            <span class="badge badge-xs badge-ghost"><%= specialty %></span>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          <% end %>
+
           <div class="card bg-base-100 shadow-sm">
             <div class="card-body p-4 space-y-5">
 
@@ -370,6 +399,7 @@ defmodule MedicWeb.SearchLive do
   def mount(params, _session, socket) do
     specialties = Doctors.list_specialties()
     cities = get_cities()
+    on_duty_hospitals = Hospitals.list_on_duty_hospitals(Date.utc_today())
 
     socket =
       socket
@@ -377,6 +407,7 @@ defmodule MedicWeb.SearchLive do
         page_title: "Find a Doctor",
         specialties: specialties,
         cities: cities,
+        on_duty_hospitals: on_duty_hospitals,
         # Search
         query: params["q"] || "",
         # Filters
