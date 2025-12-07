@@ -33,6 +33,9 @@
           My Appointments
         </a>
       <% end %>
+      
+      <%= live_render(@socket, MedicWeb.NotificationLive, id: "notifications", session: %{"user_id" => @current_user.id}) %>
+
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
           <div class="w-10 rounded-full bg-primary/10 text-primary">

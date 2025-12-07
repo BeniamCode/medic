@@ -6,6 +6,8 @@ defmodule Medic.Appointments do
   import Ecto.Query
   alias Medic.Repo
   alias Medic.Appointments.Appointment
+  alias Medic.Notifications
+  alias Medic.Doctors
 
   @doc """
   Returns the list of appointments.
@@ -79,10 +81,33 @@ defmodule Medic.Appointments do
   The PostgreSQL exclusion constraint will reject double-bookings.
   """
   def create_appointment(attrs \\ %{}) do
-    %Appointment{}
+    result = %Appointment{}
     |> Appointment.changeset(attrs)
     |> Repo.insert()
     |> handle_constraint_error()
+
+    case result do
+      {:ok, appointment} ->
+        notify_doctor_booking(appointment)
+        {:ok, appointment}
+      error -> error
+    end
+  end
+
+  defp notify_doctor_booking(appointment) do
+    # Preload patient and doctor to get names and user_id
+    appointment = Repo.preload(appointment, [:patient, :doctor])
+    
+    if appointment.doctor do
+      Notifications.create_notification(%{
+        user_id: appointment.doctor.user_id,
+        type: "booking",
+        title: "New Appointment Request",
+        message: "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
+        resource_id: appointment.id,
+        resource_type: "appointment"
+      })
+    end
   end
 
   @doc """
@@ -134,9 +159,32 @@ defmodule Medic.Appointments do
   Cancels an appointment.
   """
   def cancel_appointment(%Appointment{} = appointment, reason \\ nil) do
-    appointment
+    result = appointment
     |> Appointment.cancel_changeset(reason)
     |> Repo.update()
+
+    case result do
+      {:ok, updated_appointment} ->
+        notify_doctor_cancellation(updated_appointment)
+        {:ok, updated_appointment}
+      error -> error
+    end
+  end
+
+  defp notify_doctor_cancellation(appointment) do
+    # Preload patient and doctor
+    appointment = Repo.preload(appointment, [:patient, :doctor])
+    
+    if appointment.doctor do
+      Notifications.create_notification(%{
+        user_id: appointment.doctor.user_id,
+        type: "cancellation",
+        title: "Appointment Cancelled",
+        message: "Appointment with #{appointment.patient.first_name} #{appointment.patient.last_name} has been cancelled.",
+        resource_id: appointment.id,
+        resource_type: "appointment"
+      })
+    end
   end
 
   @doc """

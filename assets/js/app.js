@@ -28,6 +28,40 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 
 // Custom Hooks
 const Hooks = {
+  Notifications: {
+    mounted() {
+      this.handleEvent("show_toast", ({ title, message, type }) => {
+        this.showToast(title, message, type);
+      });
+    },
+    showToast(title, message, type) {
+      const toastContainer = document.getElementById("toast-container") || this.createToastContainer();
+      
+      const toast = document.createElement("div");
+      toast.className = `alert alert-${type || "info"} shadow-lg mb-2`;
+      toast.innerHTML = `
+        <div>
+          <h3 class="font-bold text-sm">${title}</h3>
+          <div class="text-xs">${message}</div>
+        </div>
+      `;
+      
+      toastContainer.appendChild(toast);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "transition-opacity", "duration-500");
+        setTimeout(() => toast.remove(), 500);
+      }, 5000);
+    },
+    createToastContainer() {
+      const container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast toast-end toast-bottom z-[1000]";
+      document.body.appendChild(container);
+      return container;
+    }
+  },
   CalEmbed: {
     mounted() {
       const username = this.el.dataset.username;
