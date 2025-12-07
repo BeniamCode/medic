@@ -6,6 +6,7 @@ defmodule Medic.Doctors do
   import Ecto.Query
   alias Medic.Repo
   alias Medic.Doctors.{Doctor, Specialty}
+  alias Medic.Search
 
   # --- Specialties ---
 
@@ -133,19 +134,33 @@ defmodule Medic.Doctors do
   Creates a doctor profile for a user.
   """
   def create_doctor(user, attrs \\ %{}) do
-    %Doctor{}
+    result = %Doctor{}
     |> Doctor.changeset(attrs)
     |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert()
+
+    case result do
+      {:ok, doctor} ->
+        Search.index_doctor(doctor)
+        {:ok, doctor}
+      error -> error
+    end
   end
 
   @doc """
   Updates a doctor.
   """
   def update_doctor(%Doctor{} = doctor, attrs) do
-    doctor
+    result = doctor
     |> Doctor.changeset(attrs)
     |> Repo.update()
+
+    case result do
+      {:ok, updated_doctor} ->
+        Search.index_doctor(updated_doctor)
+        {:ok, updated_doctor}
+      error -> error
+    end
   end
 
   @doc """
@@ -161,9 +176,16 @@ defmodule Medic.Doctors do
   Verifies a doctor.
   """
   def verify_doctor(%Doctor{} = doctor) do
-    doctor
+    result = doctor
     |> Doctor.verify_changeset()
     |> Repo.update()
+
+    case result do
+      {:ok, verified_doctor} ->
+        Search.index_doctor(verified_doctor)
+        {:ok, verified_doctor}
+      error -> error
+    end
   end
 
   @doc """
