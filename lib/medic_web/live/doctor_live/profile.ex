@@ -90,34 +90,6 @@ defmodule MedicWeb.DoctorLive.Profile do
           </div>
         </div>
 
-        <%!-- Cal.com Integration Card --%>
-        <div class="card bg-base-100 shadow-lg">
-          <div class="card-body">
-            <h2 class="card-title">
-              <.icon name="hero-calendar" class="w-5 h-5 text-primary" />
-              Cal.com Σύνδεση
-            </h2>
-            <p class="text-sm text-base-content/70 mb-4">
-              Συνδέστε τον λογαριασμό Cal.com σας για να διαχειρίζεστε τη διαθεσιμότητά σας
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input
-                field={@form[:cal_com_username]}
-                label="Cal.com Username"
-                placeholder="π.χ. dr-papadopoulos"
-              />
-              <.input
-                field={@form[:cal_com_event_type_id]}
-                label="Event Type ID"
-                placeholder="π.χ. 123456"
-              />
-            </div>
-            <div class="alert alert-info mt-4">
-              <.icon name="hero-information-circle" class="w-5 h-5" />
-              <span>Δημιουργήστε λογαριασμό στο <a href="https://cal.com" target="_blank" class="link">cal.com</a> και αντιγράψτε τα στοιχεία σας εδώ</span>
-            </div>
-          </div>
-        </div>
 
         <div class="flex justify-end gap-4">
           <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost">

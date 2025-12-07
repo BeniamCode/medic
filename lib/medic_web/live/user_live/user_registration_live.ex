@@ -100,22 +100,27 @@ defmodule MedicWeb.UserRegistrationLive do
     """
   end
 
-  def mount(params, _session, socket) do
-    role = if params["role"] == "doctor", do: "doctor", else: "patient"
+  def mount(_params, _session, socket) do
+    {:ok, socket, temporary_assigns: [form: nil]}
+  end
+
+  def handle_params(_params, _url, socket) do
+    # Check if this is doctor registration via live_action
+    role = if socket.assigns.live_action == :doctor, do: "doctor", else: "patient"
+
+    # Different redirect after login based on role
+    login_redirect = if role == "doctor", do: "/onboarding/doctor", else: "/dashboard"
+
     changeset = Accounts.change_user_registration(%User{}, %{"role" => role})
 
     socket =
       socket
       |> assign(trigger_submit: false, check_errors: false, role: role)
+      |> assign(login_redirect: login_redirect)
       |> assign(page_title: if(role == "doctor", do: "Doctor Registration", else: "Patient Registration"))
       |> assign_form(changeset)
 
-    {:ok, socket, temporary_assigns: [form: nil]}
-  end
-
-  def handle_params(params, _url, socket) do
-    role = if params["role"] == "doctor", do: "doctor", else: "patient"
-    {:noreply, assign(socket, role: role)}
+    {:noreply, socket}
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do

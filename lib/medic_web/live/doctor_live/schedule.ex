@@ -1,35 +1,250 @@
 defmodule MedicWeb.DoctorLive.Schedule do
   @moduledoc """
-  Doctor schedule management - stub for now.
+  Doctor schedule management using native availability rules.
   """
   use MedicWeb, :live_view
 
+  alias Medic.Repo
+  alias Medic.Scheduling
+  alias Medic.Scheduling.AvailabilityRule
+
+  @days_of_week 1..7
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div class="max-w-4xl mx-auto py-8 px-4">
       <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost btn-sm mb-4">
         <.icon name="hero-arrow-left" class="w-4 h-4" />
-        Πίσω στο Dashboard
+        Back to Dashboard
       </.link>
 
-      <h1 class="text-2xl font-bold mb-4">Διαχείριση Προγράμματος</h1>
-
-      <div class="alert alert-info">
-        <.icon name="hero-information-circle" class="w-6 h-6" />
+      <div class="flex items-center justify-between mb-8">
         <div>
-          <h3 class="font-bold">Σύντομα διαθέσιμο</h3>
-          <p>Η διαχείριση του προγράμματος γίνεται μέσω του Cal.com. Συνδέστε τον λογαριασμό σας στις ρυθμίσεις προφίλ.</p>
+          <h1 class="text-2xl font-bold">Manage Schedule</h1>
+          <p class="text-base-content/70">Set your weekly availability for appointments.</p>
         </div>
-        <a href="https://app.cal.com/availability" target="_blank" class="btn btn-primary">
-          Άνοιγμα Cal.com
-          <.icon name="hero-arrow-top-right-on-square" class="w-4 h-4" />
-        </a>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body p-0">
+          <div class="overflow-x-auto">
+            <table class="table w-full">
+              <thead>
+                <tr class="bg-base-200">
+                  <th class="w-32">Day</th>
+                  <th>Availability</th>
+                  <th class="w-24">Status</th>
+                  <th class="w-24">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <%= for day <- @days_of_week do %>
+                  <% rule = @rules[day] %>
+                  <tr class={if rule && rule.is_active, do: "hover", else: "bg-base-200/30 text-base-content/50"}>
+                    <td class="font-medium">
+                      <%= AvailabilityRule.day_name(day) %>
+                    </td>
+                    <td>
+                      <%= if rule && rule.is_active do %>
+                        <div class="flex flex-col gap-1">
+                          <div class="flex items-center gap-2">
+                            <.icon name="hero-clock" class="w-4 h-4 text-primary" />
+                            <span class="font-semibold">
+                              <%= Calendar.strftime(rule.start_time, "%H:%M") %> - <%= Calendar.strftime(rule.end_time, "%H:%M") %>
+                            </span>
+                          </div>
+                          <%= if rule.break_start && rule.break_end do %>
+                            <div class="text-xs text-base-content/60 flex items-center gap-2">
+                              <.icon name="hero-pause" class="w-3 h-3" />
+                              Break: <%= Calendar.strftime(rule.break_start, "%H:%M") %> - <%= Calendar.strftime(rule.break_end, "%H:%M") %>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% else %>
+                        <span class="italic text-base-content/50">Unavailable</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <%= if rule && rule.is_active do %>
+                        <div class="badge badge-success gap-1">
+                          Active
+                        </div>
+                      <% else %>
+                        <div class="badge badge-ghost gap-1">
+                          Off
+                        </div>
+                      <% end %>
+                    </td>
+                    <td>
+                      <button
+                        phx-click="edit_rule"
+                        phx-value-day={day}
+                        class="btn btn-sm btn-ghost btn-square"
+                      >
+                        <.icon name="hero-pencil-square" class="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
+
+    <.modal
+      :if={@editing_day}
+      id="edit-rule-modal"
+      show
+      on_cancel={JS.push("cancel_edit")}
+    >
+      <h3 class="font-bold text-lg mb-4">
+        Edit Availability: <%= AvailabilityRule.day_name(@editing_day) %>
+      </h3>
+
+      <.form
+        for={@form}
+        phx-submit="save_rule"
+        phx-change="validate_rule"
+        class="space-y-6"
+      >
+        <input type="hidden" name="rule[day_of_week]" value={@editing_day} />
+        <input type="hidden" name="rule[doctor_id]" value={@preloaded_user.doctor.id} />
+
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <span class="label-text font-medium">Available on this day</span>
+            <input
+              type="checkbox"
+              name="rule[is_active]"
+              class="toggle toggle-primary"
+              checked={Ecto.Changeset.get_field(@form.source, :is_active, true)}
+            />
+          </label>
+        </div>
+
+        <div class={if !Ecto.Changeset.get_field(@form.source, :is_active, true), do: "opacity-50 pointer-events-none"} >
+          <div class="grid grid-cols-2 gap-4">
+            <.input field={@form[:start_time]} type="time" label="Start Time" />
+            <.input field={@form[:end_time]} type="time" label="End Time" />
+          </div>
+
+          <div class="divider text-xs">Break (Optional)</div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <.input field={@form[:break_start]} type="time" label="Break Start" />
+            <.input field={@form[:break_end]} type="time" label="Break End" />
+          </div>
+
+          <div class="divider text-xs">Settings</div>
+
+          <.input
+            field={@form[:slot_duration_minutes]}
+            type="number"
+            label="Slot Duration (minutes)"
+            min="5"
+            step="5"
+          />
+        </div>
+
+        <div class="modal-action">
+          <button type="button" phx-click="cancel_edit" class="btn">Cancel</button>
+          <.button type="submit" class="btn btn-primary">Save Changes</.button>
+        </div>
+      </.form>
+    </.modal>
     """
   end
 
+  @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, page_title: "Πρόγραμμα")}
+    user = Repo.preload(socket.assigns.current_user, :doctor)
+    rules = Scheduling.list_availability_rules(user.doctor.id)
+    
+    # Map rules by day of week for easy access
+    rules_map = Map.new(rules, fn r -> {r.day_of_week, r} end)
+
+    {:ok,
+     assign(socket,
+       page_title: "Manage Schedule",
+       days_of_week: @days_of_week,
+       rules: rules_map,
+       editing_day: nil,
+       form: nil,
+       preloaded_user: user
+     )}
+  end
+
+  @impl true
+  def handle_event("edit_rule", %{"day" => day_str}, socket) do
+    day = String.to_integer(day_str)
+    rule = Map.get(socket.assigns.rules, day) || %AvailabilityRule{
+      doctor_id: socket.assigns.preloaded_user.doctor.id,
+      day_of_week: day,
+      start_time: ~T[09:00:00],
+      end_time: ~T[17:00:00],
+      slot_duration_minutes: 30,
+      is_active: false
+    }
+
+    changeset = Scheduling.change_availability_rule(rule)
+
+    {:noreply,
+     assign(socket,
+       editing_day: day,
+       editing_day: day,
+       form: to_form(changeset, as: "rule")
+     )}
+  end
+
+  def handle_event("cancel_edit", _, socket) do
+    {:noreply, assign(socket, editing_day: nil, form: nil)}
+  end
+
+  def handle_event("validate_rule", %{"rule" => params}, socket) do
+    rule = Map.get(socket.assigns.rules, socket.assigns.editing_day) || %AvailabilityRule{}
+    
+    changeset =
+      rule
+      |> Scheduling.change_availability_rule(params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, form: to_form(changeset, as: "rule"))}
+  end
+
+  def handle_event("test_click", _params, socket) do
+    IO.inspect("TEST CLICK RECEIVED", label: "TEST CLICK")
+    {:noreply, socket}
+  end
+
+  def handle_event("test_main", _params, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("save_rule", %{"rule" => params}, socket) do
+    day = socket.assigns.editing_day
+    existing_rule = Map.get(socket.assigns.rules, day)
+
+    result =
+      if existing_rule do
+        Scheduling.update_availability_rule(existing_rule, params)
+      else
+        Scheduling.create_availability_rule(params)
+      end
+
+    case result do
+      {:ok, rule} ->
+        rules = Map.put(socket.assigns.rules, rule.day_of_week, rule)
+        
+        {:noreply,
+         socket
+         |> assign(rules: rules, editing_day: nil, form: nil)
+         |> put_flash(:info, "Availability updated successfully")}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, form: to_form(changeset, as: "rule"))}
+    end
   end
 end

@@ -48,8 +48,7 @@ defmodule Medic.Search do
       %{"name" => "review_count", "type" => "int32", "optional" => true},
       %{"name" => "consultation_fee", "type" => "float", "optional" => true},
       %{"name" => "location", "type" => "geopoint", "optional" => true},
-      %{"name" => "verified", "type" => "bool"},
-      %{"name" => "has_cal_com", "type" => "bool"}
+      %{"name" => "verified", "type" => "bool"}
     ],
     "default_sorting_field" => "rating"
   }
@@ -231,8 +230,7 @@ defmodule Medic.Search do
       rating: doc["rating"],
       review_count: doc["review_count"],
       consultation_fee: doc["consultation_fee"],
-      verified: doc["verified"],
-      has_cal_com: doc["has_cal_com"]
+      verified: doc["verified"]
     }
   end
 
@@ -248,8 +246,7 @@ defmodule Medic.Search do
       "rating" => doctor.rating || 0.0,
       "review_count" => doctor.review_count || 0,
       "consultation_fee" => if(doctor.consultation_fee, do: Decimal.to_float(doctor.consultation_fee), else: 0.0),
-      "verified" => doctor.verified_at != nil,
-      "has_cal_com" => doctor.cal_com_username != nil
+      "verified" => doctor.verified_at != nil
     }
 
     doc =
@@ -277,7 +274,7 @@ defmodule Medic.Search do
     filters = case Keyword.get(opts, :city), do: (nil -> filters; city -> ["city:=#{city}" | filters])
     filters = case Keyword.get(opts, :min_rating), do: (nil -> filters; rating -> ["rating:>=#{rating}" | filters])
     filters = case Keyword.get(opts, :max_price), do: (nil -> filters; price -> ["consultation_fee:<=#{price}" | filters])
-    filters = case Keyword.get(opts, :has_cal_com), do: (true -> ["has_cal_com:=true" | filters]; _ -> filters)
+
 
     Enum.join(filters, " && ")
   end

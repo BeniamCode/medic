@@ -22,6 +22,7 @@ defmodule MedicWeb.Router do
     pipe_through :browser
 
     live_session :public,
+      layout: {MedicWeb.Layouts, :app},
       on_mount: [{MedicWeb.UserAuth, :mount_current_user}] do
       live "/", HomeLive
       live "/search", SearchLive
@@ -35,6 +36,7 @@ defmodule MedicWeb.Router do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
     live_session :redirect_if_user_is_authenticated,
+      layout: {MedicWeb.Layouts, :app},
       on_mount: [{MedicWeb.UserAuth, :redirect_if_user_is_authenticated}] do
       live "/login", UserLoginLive
       live "/register", UserRegistrationLive
@@ -49,10 +51,13 @@ defmodule MedicWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :require_authenticated_user,
+      layout: {MedicWeb.Layouts, :app},
       on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}] do
       live "/dashboard", DashboardLive
       live "/appointments/:id", AppointmentLive.Show
       live "/settings", SettingsLive
+      live "/onboarding/doctor", DoctorOnboardingLive
+      live "/doctor/schedule", DoctorLive.Schedule
     end
 
     delete "/logout", UserSessionController, :delete
@@ -63,10 +68,10 @@ defmodule MedicWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :doctor_dashboard,
+      layout: {MedicWeb.Layouts, :app},
       on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}] do
       live "/doctor", DoctorDashboardLive
       live "/doctor/profile", DoctorLive.Profile
-      live "/doctor/schedule", DoctorLive.Schedule
     end
   end
 

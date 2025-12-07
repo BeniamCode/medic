@@ -67,8 +67,8 @@ defmodule MedicWeb.CoreComponents do
         <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
+          <p :if={@title} class="font-semibold"><%= @title %></p>
+          <p><%= msg %></p>
         </div>
         <div class="flex-1" />
         <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
@@ -105,13 +105,13 @@ defmodule MedicWeb.CoreComponents do
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
       <.link class={@class} {@rest}>
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </.link>
       """
     else
       ~H"""
       <button class={@class} {@rest}>
-        {render_slot(@inner_block)}
+        <%= render_slot(@inner_block) %>
       </button>
       """
     end
@@ -226,10 +226,10 @@ defmodule MedicWeb.CoreComponents do
             checked={@checked}
             class={@class || "checkbox checkbox-sm"}
             {@rest}
-          />{@label}
+          /><%= @label %>
         </span>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
@@ -238,7 +238,7 @@ defmodule MedicWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1"><%= @label %></span>
         <select
           id={@id}
           name={@name}
@@ -246,11 +246,11 @@ defmodule MedicWeb.CoreComponents do
           multiple={@multiple}
           {@rest}
         >
-          <option :if={@prompt} value="">{@prompt}</option>
-          {Phoenix.HTML.Form.options_for_select(@options, @value)}
+          <option :if={@prompt} value=""><%= @prompt %></option>
+          <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
@@ -259,7 +259,7 @@ defmodule MedicWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1"><%= @label %></span>
         <textarea
           id={@id}
           name={@name}
@@ -268,9 +268,9 @@ defmodule MedicWeb.CoreComponents do
             @errors != [] && (@error_class || "textarea-error")
           ]}
           {@rest}
-        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+        ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
@@ -280,7 +280,7 @@ defmodule MedicWeb.CoreComponents do
     ~H"""
     <div class="fieldset mb-2">
       <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
+        <span :if={@label} class="label mb-1"><%= @label %></span>
         <input
           type={@type}
           name={@name}
@@ -293,7 +293,7 @@ defmodule MedicWeb.CoreComponents do
           {@rest}
         />
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
   end
@@ -303,7 +303,7 @@ defmodule MedicWeb.CoreComponents do
     ~H"""
     <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
       <.icon name="hero-exclamation-circle" class="size-5" />
-      {render_slot(@inner_block)}
+      <%= render_slot(@inner_block) %>
     </p>
     """
   end
@@ -320,13 +320,13 @@ defmodule MedicWeb.CoreComponents do
     <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
       <div>
         <h1 class="text-lg font-semibold leading-8">
-          {render_slot(@inner_block)}
+          <%= render_slot(@inner_block) %>
         </h1>
         <p :if={@subtitle != []} class="text-sm text-base-content/70">
-          {render_slot(@subtitle)}
+          <%= render_slot(@subtitle) %>
         </p>
       </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
+      <div class="flex-none"><%= render_slot(@actions) %></div>
     </header>
     """
   end
@@ -379,12 +379,12 @@ defmodule MedicWeb.CoreComponents do
             phx-click={@row_click && @row_click.(row)}
             class={@row_click && "hover:cursor-pointer"}
           >
-            {render_slot(col, @row_item.(row))}
+            <%= render_slot(col, @row_item.(row)) %>
           </td>
           <td :if={@action != []} class="w-0 font-semibold">
             <div class="flex gap-4">
               <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
+                <%= render_slot(action, @row_item.(row)) %>
               <% end %>
             </div>
           </td>
@@ -414,7 +414,7 @@ defmodule MedicWeb.CoreComponents do
       <li :for={item <- @item} class="list-row">
         <div class="list-col-grow">
           <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
+          <div><%= render_slot(item) %></div>
         </div>
       </li>
     </ul>
@@ -446,6 +446,88 @@ defmodule MedicWeb.CoreComponents do
     ~H"""
     <span class={[@name, @class]} />
     """
+  end
+
+  @doc """
+  Renders a modal.
+
+  ## Examples
+
+      <.modal id="confirm-modal">
+        Are you sure?
+        <:confirm>OK</:confirm>
+        <:cancel>Cancel</:cancel>
+      </.modal>
+
+  JS commands may be passed to the `:on_cancel` to configure
+  the closing/cancel event, for example:
+
+      <.modal id="confirm" on_cancel={JS.navigate(~p"/posts")}>
+        Are you sure?
+      </.modal>
+
+  """
+  attr :id, :string, required: true
+  attr :show, :boolean, default: false
+  attr :on_cancel, JS, default: %JS{}
+  slot :inner_block, required: true
+
+  def modal(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      phx-mounted={@show && show_modal(@id)}
+      phx-remove={hide_modal(@id)}
+      data-cancel={JS.exec(@on_cancel, "phx-remove")}
+      class="relative z-50 hidden"
+    >
+      <div id={"#{@id}-bg"} class="fixed inset-0 bg-base-300/80 transition-opacity" aria-hidden="true" />
+      <div
+        class="fixed inset-0 overflow-y-auto"
+        aria-labelledby={"#{@id}-title"}
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+      >
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+          <div class="w-full max-w-lg transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
+            <.button
+              phx-click={JS.exec("data-cancel", to: "##{@id}")}
+              type="button"
+              class="absolute right-4 top-4 btn btn-sm btn-circle btn-ghost"
+              aria-label={gettext("close")}
+            >
+              <.icon name="hero-x-mark" class="w-5 h-5" />
+            </.button>
+            <div id={"#{@id}-content"}>
+              <%= render_slot(@inner_block) %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  def show_modal(js \\ %JS{}, id) when is_binary(id) do
+    js
+    |> JS.show(to: "##{id}")
+    |> JS.show(
+      to: "##{id}-bg",
+      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
+    )
+    |> show("##{id}-content")
+  end
+
+  def hide_modal(js \\ %JS{}, id) do
+    js
+    |> JS.hide(
+      to: "##{id}-bg",
+      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
+    )
+    |> hide("##{id}-content")
+    |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
   end
 
   ## JS Commands

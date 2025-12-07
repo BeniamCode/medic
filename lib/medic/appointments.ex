@@ -71,7 +71,7 @@ defmodule Medic.Appointments do
   def get_appointment_with_details!(id) do
     Appointment
     |> Repo.get!(id)
-    |> Repo.preload([:patient, :doctor])
+    |> Repo.preload([:patient, doctor: [:specialty]])
   end
 
   @doc """

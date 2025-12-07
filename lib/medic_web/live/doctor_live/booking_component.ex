@@ -6,7 +6,7 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
   use MedicWeb, :live_component
 
   alias Medic.Scheduling
-  alias Medic.Scheduling.AvailabilityRule
+  alias Medic.Patients
 
   @impl true
   def render(assigns) do
@@ -285,9 +285,12 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
   end
 
   def handle_event("select_slot", %{"starts_at" => starts_at, "ends_at" => ends_at}, socket) do
+    {:ok, starts_at_dt, _} = DateTime.from_iso8601(starts_at)
+    {:ok, ends_at_dt, _} = DateTime.from_iso8601(ends_at)
+
     slot = %{
-      starts_at: DateTime.from_iso8601!(starts_at) |> elem(1),
-      ends_at: DateTime.from_iso8601!(ends_at) |> elem(1),
+      starts_at: starts_at_dt,
+      ends_at: ends_at_dt,
       status: :free
     }
 
@@ -303,9 +306,22 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
 
     socket = assign(socket, booking: true, booking_error: nil)
 
+    # Get or create patient for this user
+    patient = case Patients.get_patient_by_user_id(user.id) do
+      nil ->
+        # Create a patient profile for new users
+        {:ok, patient} = Patients.create_patient(user, %{
+          first_name: user.email |> String.split("@") |> hd(),
+          last_name: "User"
+        })
+        patient
+
+      patient -> patient
+    end
+
     case Scheduling.book_slot(
       doctor.id,
-      user.id,
+      patient.id,
       slot.starts_at,
       slot.ends_at,
       notes: notes

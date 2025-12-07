@@ -1,6 +1,6 @@
 defmodule MedicWeb.DashboardLive do
   @moduledoc """
-  Patient dashboard showing upcoming appointments.
+  Patient dashboard showing upcoming and past appointments.
   """
   use MedicWeb, :live_view
 
@@ -27,7 +27,7 @@ defmodule MedicWeb.DashboardLive do
           <div class="stat-figure text-primary">
             <.icon name="hero-calendar" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Upcoming Appointments</div>
+          <div class="stat-title">Upcoming</div>
           <div class="stat-value text-primary"><%= length(@upcoming_appointments) %></div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
@@ -38,16 +38,16 @@ defmodule MedicWeb.DashboardLive do
           <div class="stat-value text-secondary"><%= @completed_count %></div>
         </div>
         <div class="stat bg-base-100 rounded-box shadow">
-          <div class="stat-figure text-accent">
-            <.icon name="hero-heart" class="w-8 h-8" />
+          <div class="stat-figure text-error">
+            <.icon name="hero-x-circle" class="w-8 h-8" />
           </div>
-          <div class="stat-title">Favorite Doctors</div>
-          <div class="stat-value">3</div>
+          <div class="stat-title">Cancelled</div>
+          <div class="stat-value text-error"><%= @cancelled_count %></div>
         </div>
       </div>
 
       <%!-- Upcoming Appointments --%>
-      <div class="card bg-base-100 shadow-lg">
+      <div class="card bg-base-100 shadow-lg mb-8">
         <div class="card-body">
           <h2 class="card-title">
             <.icon name="hero-calendar-days" class="w-6 h-6 text-primary" />
@@ -65,32 +65,58 @@ defmodule MedicWeb.DashboardLive do
           <% else %>
             <div class="space-y-4">
               <%= for appointment <- @upcoming_appointments do %>
-                <div class="flex items-center gap-4 p-4 bg-base-200/50 rounded-lg">
-                  <div class="avatar placeholder">
-                    <div class="w-12 h-12 rounded-full bg-primary/10 text-primary">
-                      <span><.icon name="hero-user" class="w-6 h-6" /></span>
-                    </div>
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="font-medium">
-                      Dr. <%= appointment.doctor.first_name %> <%= appointment.doctor.last_name %>
-                    </h3>
-                    <p class="text-sm text-base-content/70">
-                      <%= Calendar.strftime(appointment.starts_at, "%m/%d/%Y at %H:%M") %>
-                    </p>
-                  </div>
-                  <div class={"badge badge-#{status_color(appointment.status)}"}>
-                    <%= status_text(appointment.status) %>
-                  </div>
-                  <.link navigate={~p"/appointments/#{appointment.id}"} class="btn btn-ghost btn-sm">
-                    Details
-                  </.link>
-                </div>
+                <.appointment_card appointment={appointment} />
               <% end %>
             </div>
           <% end %>
         </div>
       </div>
+
+      <%!-- Appointment History --%>
+      <%= if @past_appointments != [] do %>
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title">
+              <.icon name="hero-clock" class="w-6 h-6 text-base-content/70" />
+              Appointment History
+            </h2>
+
+            <div class="space-y-4">
+              <%= for appointment <- @past_appointments do %>
+                <.appointment_card appointment={appointment} />
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
+  attr :appointment, :map, required: true
+
+  defp appointment_card(assigns) do
+    ~H"""
+    <div class="flex items-center gap-4 p-4 bg-base-200/50 rounded-lg">
+      <div class="avatar placeholder">
+        <div class="w-12 h-12 rounded-full bg-primary/10 text-primary">
+          <span><.icon name="hero-user" class="w-6 h-6" /></span>
+        </div>
+      </div>
+      <div class="flex-1">
+        <h3 class="font-medium">
+          Dr. <%= @appointment.doctor.first_name %> <%= @appointment.doctor.last_name %>
+        </h3>
+        <p class="text-sm text-base-content/70">
+          <%= Calendar.strftime(@appointment.starts_at, "%B %d, %Y at %H:%M") %>
+        </p>
+      </div>
+      <div class={"badge badge-#{status_color(@appointment.status)}"}>
+        <%= status_text(@appointment.status) %>
+      </div>
+      <.link navigate={~p"/appointments/#{@appointment.id}"} class="btn btn-ghost btn-sm">
+        Details
+      </.link>
     </div>
     """
   end
@@ -99,33 +125,42 @@ defmodule MedicWeb.DashboardLive do
     user = socket.assigns.current_user
     patient = Patients.get_patient_by_user_id(user.id)
 
-    upcoming_appointments =
+    {upcoming, past, completed_count, cancelled_count} =
       if patient do
-        Appointments.list_appointments(
+        upcoming = Appointments.list_appointments(
           patient_id: patient.id,
           upcoming: true,
           preload: [:doctor]
         )
-      else
-        []
-      end
 
-    completed_count =
-      if patient do
-        Appointments.list_appointments(
+        past = Appointments.list_appointments(
+          patient_id: patient.id,
+          status: ["completed", "cancelled", "no_show"],
+          preload: [:doctor]
+        )
+
+        completed = Appointments.list_appointments(
           patient_id: patient.id,
           status: "completed"
-        )
-        |> length()
+        ) |> length()
+
+        cancelled = Appointments.list_appointments(
+          patient_id: patient.id,
+          status: "cancelled"
+        ) |> length()
+
+        {upcoming, past, completed, cancelled}
       else
-        0
+        {[], [], 0, 0}
       end
 
     {:ok,
      assign(socket,
        page_title: "Dashboard",
-       upcoming_appointments: upcoming_appointments,
-       completed_count: completed_count
+       upcoming_appointments: upcoming,
+       past_appointments: past,
+       completed_count: completed_count,
+       cancelled_count: cancelled_count
      )}
   end
 
@@ -133,11 +168,13 @@ defmodule MedicWeb.DashboardLive do
   defp status_color("confirmed"), do: "success"
   defp status_color("completed"), do: "info"
   defp status_color("cancelled"), do: "error"
+  defp status_color("no_show"), do: "ghost"
   defp status_color(_), do: "ghost"
 
   defp status_text("pending"), do: "Pending"
   defp status_text("confirmed"), do: "Confirmed"
   defp status_text("completed"), do: "Completed"
   defp status_text("cancelled"), do: "Cancelled"
+  defp status_text("no_show"), do: "No Show"
   defp status_text(_), do: "Unknown"
 end

@@ -32,10 +32,7 @@ defmodule Medic.Doctors.Doctor do
     field :review_count, :integer, default: 0
     field :consultation_fee, :decimal
 
-    # Cal.com integration
-    field :cal_com_user_id, :string
-    field :cal_com_event_type_id, :string
-    field :cal_com_username, :string
+
 
     # Cached availability for fast search
     field :next_available_slot, :utc_datetime
@@ -51,8 +48,7 @@ defmodule Medic.Doctors.Doctor do
     |> cast(attrs, [
       :first_name, :last_name, :bio, :bio_el, :profile_image_url,
       :location_lat, :location_lng, :address, :city,
-      :consultation_fee, :specialty_id,
-      :cal_com_user_id, :cal_com_event_type_id, :cal_com_username
+      :consultation_fee, :specialty_id
     ])
     |> validate_required([:first_name, :last_name])
     |> validate_number(:consultation_fee, greater_than_or_equal_to: 0)

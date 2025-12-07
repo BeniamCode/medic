@@ -121,7 +121,7 @@ defmodule MedicWeb.DoctorDashboardLive do
             <div class="card-body">
               <h2 class="card-title text-lg">Quick Actions</h2>
               <div class="space-y-2">
-                <.link navigate={~p"/dashboard/doctor/schedule"} class="btn btn-block btn-outline justify-start">
+                <.link navigate={~p"/doctor/schedule"} class="btn btn-block btn-outline justify-start">
                   <.icon name="hero-calendar" class="w-5 h-5" />
                   Manage Availability
                 </.link>

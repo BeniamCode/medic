@@ -20,7 +20,7 @@
     </a>
   </div>
 
-  <div class="flex-none gap-2">
+  <div class="flex-none flex items-center gap-2">
     <%= if @current_user do %>
       <a href="/dashboard" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
         <.icon name="hero-calendar" class="w-4 h-4" />
@@ -33,7 +33,7 @@
           </div>
         </div>
         <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-          <li class="menu-title">{@current_user.email}</li>
+          <li class="menu-title"><%= @current_user.email %></li>
           <li><a href="/"><.icon name="hero-home" class="w-4 h-4" /> Home</a></li>
           <li><a href="/search"><.icon name="hero-magnifying-glass" class="w-4 h-4" /> Find Doctors</a></li>
           <li><a href="/dashboard"><.icon name="hero-calendar" class="w-4 h-4" /> Dashboard</a></li>
@@ -56,7 +56,7 @@
 
 <main class="min-h-screen">
   <.flash_group flash={@flash} />
-  {@inner_content}
+  <%= @inner_content %>
 </main>
 
 <footer class="footer footer-center p-10 bg-base-200 text-base-content">
