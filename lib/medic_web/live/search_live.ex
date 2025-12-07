@@ -641,7 +641,7 @@ defmodule MedicWeb.SearchLive do
           review_count: d.review_count || 0,
           consultation_fee: d.consultation_fee && Decimal.to_float(d.consultation_fee),
           verified: d.verified_at != nil,
-          has_cal_com: d.cal_com_username != nil
+          has_cal_com: false
         }
       end)
       |> maybe_filter_rating(assigns.min_rating)
