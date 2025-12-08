@@ -2,7 +2,8 @@ defmodule Medic.Repo.Migrations.CreateNotifications do
   use Ecto.Migration
 
   def change do
-    create table(:notifications) do
+    create table(:notifications, primary_key: false) do
+      add :id, :binary_id, primary_key: true
       add :type, :string
       add :title, :string
       add :message, :text

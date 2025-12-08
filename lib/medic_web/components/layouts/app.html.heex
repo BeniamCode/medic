@@ -1,85 +1,140 @@
-<header class="navbar bg-base-100 shadow-sm sticky top-0 z-50">
-  <div class="flex-1">
-    <a href="/" class="btn btn-ghost text-xl gap-2">
-      <div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-        <.icon name="hero-heart" class="w-5 h-5 text-primary" />
-      </div>
-      <span class="font-bold">Medic</span>
-    </a>
-  </div>
-
-  <%!-- Center navigation --%>
-  <div class="flex-none hidden sm:flex gap-2">
-    <a href="/" class="btn btn-ghost btn-sm gap-1">
-      <.icon name="hero-home" class="w-4 h-4" />
-      Home
-    </a>
-    <a href="/search" class="btn btn-ghost btn-sm gap-1">
-      <.icon name="hero-magnifying-glass" class="w-4 h-4" />
-      Find Doctors
-    </a>
-  </div>
-
-  <div class="flex-none flex items-center gap-2">
-    <%= if @current_user do %>
-      <%= if @current_user.role == "doctor" do %>
-        <a href="/dashboard/doctor" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
-          <.icon name="hero-briefcase" class="w-4 h-4" />
-          Doctor Dashboard
-        </a>
-      <% else %>
-        <a href="/dashboard" class="btn btn-ghost btn-sm gap-1 hidden sm:flex">
-          <.icon name="hero-calendar" class="w-4 h-4" />
-          My Appointments
-        </a>
-      <% end %>
-      
-      <%= live_render(@socket, MedicWeb.NotificationLive, id: "notifications", session: %{"user_id" => @current_user.id}) %>
-
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
-          <div class="w-10 rounded-full bg-primary/10 text-primary">
-            <span><.icon name="hero-user" class="w-5 h-5" /></span>
-          </div>
+<div class="flex min-h-screen w-full bg-muted/40">
+  <%!-- Sidebar --%>
+  <aside class="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-background sm:flex">
+    <div class="flex h-14 items-center border-b px-6">
+      <a href="/" class="flex items-center gap-2 font-semibold">
+        <div class="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <.icon name="hero-heart" class="size-4" />
         </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-          <li class="menu-title"><%= @current_user.email %></li>
-          <li><a href="/"><.icon name="hero-home" class="w-4 h-4" /> Home</a></li>
-          <li><a href="/search"><.icon name="hero-magnifying-glass" class="w-4 h-4" /> Find Doctors</a></li>
-          <%= if @current_user.role == "doctor" do %>
-            <li><a href="/dashboard/doctor"><.icon name="hero-briefcase" class="w-4 h-4" /> Dashboard</a></li>
-          <% else %>
-            <li><a href="/dashboard"><.icon name="hero-calendar" class="w-4 h-4" /> Dashboard</a></li>
-          <% end %>
-          <li><a href="/settings"><.icon name="hero-cog-6-tooth" class="w-4 h-4" /> Settings</a></li>
-          <li class="divider"></li>
-          <li>
-            <.link href="/logout" method="delete" class="text-error">
-              <.icon name="hero-arrow-right-on-rectangle" class="w-4 h-4" />
-              Sign Out
-            </.link>
-          </li>
-        </ul>
-      </div>
-    <% else %>
-      <a href="/login" class="btn btn-ghost btn-sm">Sign In</a>
-      <a href="/register" class="btn btn-primary btn-sm">Sign Up</a>
-    <% end %>
-  </div>
-</header>
-
-<main class="min-h-screen">
-  <.flash_group flash={@flash} />
-  <%= @inner_content %>
-</main>
-
-<footer class="footer footer-center p-10 bg-base-200 text-base-content">
-  <div>
-    <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
-      <.icon name="hero-heart" class="w-6 h-6 text-primary" />
+        <span class="">Medic</span>
+      </a>
     </div>
-    <p class="font-bold">Medic</p>
-    <p>Find the doctor you need</p>
-    <p class="text-sm text-base-content/70">© 2024 Medic. All rights reserved.</p>
+    <div class="flex-1 overflow-auto py-2">
+      <nav class="grid items-start px-4 text-sm font-medium">
+        <a href="/" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+          <.icon name="hero-home" class="size-4" />
+          Home
+        </a>
+        
+        <%= if @current_user do %>
+          <%= if @current_user.role == "doctor" do %>
+            <a href="/dashboard/doctor" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+              <.icon name="hero-squares-2x2" class="size-4" />
+              Dashboard
+            </a>
+            <a href="/doctor/schedule" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+              <.icon name="hero-calendar-days" class="size-4" />
+              Schedule
+            </a>
+            <a href="/dashboard/doctor/profile" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+              <.icon name="hero-user-circle" class="size-4" />
+              Profile
+            </a>
+          <% else %>
+            <a href="/dashboard" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+              <.icon name="hero-calendar" class="size-4" />
+              Appointments
+            </a>
+          <% end %>
+        <% end %>
+
+        <a href="/search" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+          <.icon name="hero-magnifying-glass" class="size-4" />
+          Find Doctors
+        </a>
+      </nav>
+    </div>
+    <div class="mt-auto border-t p-4">
+      <a href="/settings" class="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
+        <.icon name="hero-cog-6-tooth" class="size-4" />
+        Settings
+      </a>
+    </div>
+  </aside>
+
+  <%!-- Main Content Wrapper --%>
+  <div class="flex flex-col sm:gap-4 sm:py-4 sm:pl-64 w-full">
+    <%!-- Header --%>
+    <header class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
+      <%!-- Mobile Menu Toggle --%>
+      <div class="sheet sm:hidden">
+        <label for="mobile-menu-toggle" class="btn btn-ghost btn-icon sm:hidden">
+          <.icon name="hero-bars-3" class="size-5" />
+        </label>
+        <input type="checkbox" id="mobile-menu-toggle" class="modal-toggle" />
+        <div class="modal" role="dialog">
+          <div class="modal-box h-full w-3/4 max-w-sm rounded-r-xl rounded-l-none p-0">
+            <nav class="grid gap-2 text-lg font-medium p-6">
+              <a href="#" class="flex items-center gap-2 text-lg font-semibold mb-4">
+                <div class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                  <.icon name="hero-heart" class="size-5" />
+                </div>
+                <span class="sr-only">Medic</span>
+              </a>
+              <a href="/" class="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground">
+                <.icon name="hero-home" class="size-5" />
+                Home
+              </a>
+              <a href="/search" class="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground">
+                <.icon name="hero-magnifying-glass" class="size-5" />
+                Find Doctors
+              </a>
+            </nav>
+          </div>
+          <label class="modal-backdrop" for="mobile-menu-toggle">Close</label>
+        </div>
+      </div>
+
+      <%!-- Breadcrumbs (Placeholder) --%>
+      <div class="flex-1">
+        <%!-- <h1 class="text-lg font-semibold">Dashboard</h1> --%>
+      </div>
+
+      <%!-- Search --%>
+      <div class="relative ml-auto flex-1 md:grow-0">
+        <.icon name="hero-magnifying-glass" class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <input
+          type="search"
+          placeholder="Search..."
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+        />
+      </div>
+
+      <%!-- User Menu --%>
+      <%= if @current_user do %>
+        <%= live_render(@socket, MedicWeb.NotificationLive, id: "notifications", session: %{"user_id" => @current_user.id}) %>
+        
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
+            <div class="w-9 h-9 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
+              <span class="text-xs font-bold"><%= String.at(@current_user.email, 0) |> String.upcase() %></span>
+            </div>
+          </div>
+          <ul tabindex="0" class="menu menu-sm dropdown-content z-[1] mt-3 w-56 rounded-md border bg-popover p-2 text-popover-foreground shadow-md">
+            <li class="menu-title px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+              <%= @current_user.email %>
+            </li>
+            <li class="my-1 h-px bg-muted"></li>
+            <li><a href="/settings" class="flex items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground"><.icon name="hero-cog-6-tooth" class="mr-2 h-4 w-4" /> Settings</a></li>
+            <li class="my-1 h-px bg-muted"></li>
+            <li>
+              <.link href="/logout" method="delete" class="flex items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground">
+                <.icon name="hero-arrow-right-on-rectangle" class="mr-2 h-4 w-4" />
+                Sign Out
+              </.link>
+            </li>
+          </ul>
+        </div>
+      <% else %>
+        <a href="/login" class="text-sm font-medium text-muted-foreground hover:text-primary">Sign In</a>
+        <a href="/register" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">Sign Up</a>
+      <% end %>
+    </header>
+
+    <%!-- Main Content --%>
+    <main class="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+      <.flash_group flash={@flash} />
+      <%= @inner_content %>
+    </main>
   </div>
-</footer>
+</div>

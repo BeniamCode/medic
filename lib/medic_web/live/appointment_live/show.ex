@@ -9,185 +9,178 @@ defmodule MedicWeb.AppointmentLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-2xl mx-auto py-8 px-4">
-      <.link navigate={~p"/dashboard"} class="btn btn-ghost btn-sm mb-6">
-        <.icon name="hero-arrow-left" class="w-4 h-4" />
-        Back to Dashboard
-      </.link>
+    <div class="flex-1 space-y-4 p-8 pt-6">
+      <div class="flex items-center justify-between space-y-2">
+        <div>
+          <h2 class="text-3xl font-bold tracking-tight">Appointment Details</h2>
+          <p class="text-muted-foreground">
+            Booked on <%= Calendar.strftime(@appointment.inserted_at, "%B %d, %Y") %>
+          </p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <.link navigate={~p"/dashboard"} class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            <.icon name="hero-arrow-left" class="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </.link>
+        </div>
+      </div>
 
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <%!-- Header with Status --%>
-          <div class="flex items-start justify-between">
-            <div>
-              <h1 class="text-2xl font-bold">Appointment Details</h1>
-              <p class="text-base-content/70">
-                Booked on <%= Calendar.strftime(@appointment.inserted_at, "%B %d, %Y") %>
-              </p>
-            </div>
-            <div class={"badge badge-lg badge-#{status_color(@appointment.status)}"}>
-              <%= status_text(@appointment.status) %>
+      <div class="grid gap-6 md:grid-cols-2">
+        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
+          <div class="flex flex-col space-y-1.5 p-6">
+            <div class="flex items-center justify-between">
+              <h3 class="font-semibold leading-none tracking-tight">Status</h3>
+              <div class={"inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent " <> status_badge_class(@appointment.status)}>
+                <%= status_text(@appointment.status) %>
+              </div>
             </div>
           </div>
-
-          <div class="divider"></div>
-
-          <%!-- Doctor Info --%>
-          <div class="flex items-center gap-4 mb-6">
-            <div class="avatar placeholder">
-              <div class="w-16 h-16 rounded-full bg-primary/10 text-primary">
-                <span><.icon name="hero-user" class="w-8 h-8" /></span>
+          <div class="p-6 pt-0">
+            <div class="flex items-center gap-4">
+              <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <.icon name="hero-user" class="h-8 w-8 text-primary" />
               </div>
-            </div>
-            <div>
-              <h2 class="text-xl font-semibold">
-                Dr. <%= @appointment.doctor.first_name %> <%= @appointment.doctor.last_name %>
-              </h2>
-              <%= if @appointment.doctor.specialty do %>
-                <p class="text-primary"><%= @appointment.doctor.specialty.name_en %></p>
-              <% end %>
-            </div>
-          </div>
-
-          <%!-- Appointment Details --%>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="bg-base-200/50 rounded-lg p-4">
-              <div class="flex items-center gap-2 text-base-content/70 mb-1">
-                <.icon name="hero-calendar" class="w-4 h-4" />
-                <span class="text-sm">Date</span>
-              </div>
-              <p class="font-semibold">
-                <%= Calendar.strftime(@appointment.starts_at, "%A, %B %d, %Y") %>
-              </p>
-            </div>
-            <div class="bg-base-200/50 rounded-lg p-4">
-              <div class="flex items-center gap-2 text-base-content/70 mb-1">
-                <.icon name="hero-clock" class="w-4 h-4" />
-                <span class="text-sm">Time</span>
-              </div>
-              <p class="font-semibold">
-                <%= format_time(@appointment.starts_at) %> - <%= format_time(@appointment.ends_at) %>
-              </p>
-            </div>
-          </div>
-
-          <%!-- Notes --%>
-          <%= if @appointment.notes && @appointment.notes != "" do %>
-            <div class="bg-base-200/50 rounded-lg p-4 mb-6">
-              <div class="flex items-center gap-2 text-base-content/70 mb-2">
-                <.icon name="hero-document-text" class="w-4 h-4" />
-                <span class="text-sm">Notes</span>
-              </div>
-              <p><%= @appointment.notes %></p>
-            </div>
-          <% end %>
-
-          <%!-- Cancellation Info --%>
-          <%= if @appointment.status == "cancelled" do %>
-            <div class="alert alert-error mb-6">
-              <.icon name="hero-x-circle" class="w-5 h-5" />
               <div>
-                <p class="font-semibold">This appointment was cancelled</p>
-                <%= if @appointment.cancellation_reason do %>
-                  <p class="text-sm">Reason: <%= @appointment.cancellation_reason %></p>
-                <% end %>
-                <%= if @appointment.cancelled_at do %>
-                  <p class="text-sm">Cancelled on <%= Calendar.strftime(@appointment.cancelled_at, "%B %d, %Y at %H:%M") %></p>
+                <h4 class="text-lg font-semibold">
+                  Dr. <%= @appointment.doctor.first_name %> <%= @appointment.doctor.last_name %>
+                </h4>
+                <%= if @appointment.doctor.specialty do %>
+                  <p class="text-sm text-muted-foreground"><%= @appointment.doctor.specialty.name_en %></p>
                 <% end %>
               </div>
             </div>
-          <% end %>
+          </div>
+        </div>
 
-          <div class="divider"></div>
-
-          <%!-- Action Buttons --%>
-          <div class="flex flex-wrap gap-3 justify-end">
-            <%= if @appointment.status in ["pending", "confirmed"] do %>
-              <button
-                phx-click="show_cancel_modal"
-                class="btn btn-warning btn-outline"
-              >
-                <.icon name="hero-x-mark" class="w-4 h-4" />
-                Cancel Appointment
-              </button>
-            <% end %>
-            <button
-              phx-click="show_delete_modal"
-              class="btn btn-error btn-outline"
-            >
-              <.icon name="hero-trash" class="w-4 h-4" />
-              Delete
-            </button>
+        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
+          <div class="flex flex-col space-y-1.5 p-6">
+            <h3 class="font-semibold leading-none tracking-tight">Time & Date</h3>
+          </div>
+          <div class="p-6 pt-0 grid gap-4">
+            <div class="flex items-center gap-4 rounded-md border p-4">
+              <.icon name="hero-calendar" class="h-5 w-5 text-muted-foreground" />
+              <div class="flex-1">
+                <p class="text-sm font-medium leading-none">Date</p>
+                <p class="text-sm text-muted-foreground">
+                  <%= Calendar.strftime(@appointment.starts_at, "%A, %B %d, %Y") %>
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 rounded-md border p-4">
+              <.icon name="hero-clock" class="h-5 w-5 text-muted-foreground" />
+              <div class="flex-1">
+                <p class="text-sm font-medium leading-none">Time</p>
+                <p class="text-sm text-muted-foreground">
+                  <%= format_time(@appointment.starts_at) %> - <%= format_time(@appointment.ends_at) %>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <%!-- Cancel Modal --%>
-      <%= if @show_cancel_modal do %>
-        <div class="modal modal-open">
-          <div class="modal-box">
-            <h3 class="text-lg font-bold">Cancel Appointment?</h3>
-            <p class="py-4">
-              Are you sure you want to cancel your appointment with
-              <strong>Dr. <%= @appointment.doctor.last_name %></strong>
-              on <strong><%= Calendar.strftime(@appointment.starts_at, "%B %d at %H:%M") %></strong>?
-            </p>
-            <p class="text-sm text-base-content/70 mb-4">
-              The appointment will be marked as cancelled but will remain in your history.
-            </p>
-
-            <.form for={%{}} phx-submit="cancel_appointment" class="space-y-4">
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">Reason for cancellation (optional)</span>
-                </label>
-                <textarea
-                  name="reason"
-                  class="textarea textarea-bordered"
-                  placeholder="e.g., Schedule conflict, feeling better..."
-                ></textarea>
-              </div>
-
-              <div class="modal-action">
-                <button type="button" phx-click="hide_modal" class="btn">
-                  Keep Appointment
-                </button>
-                <button type="submit" class="btn btn-warning">
-                  Yes, Cancel
-                </button>
-              </div>
-            </.form>
+      <%= if @appointment.notes && @appointment.notes != "" do %>
+        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
+          <div class="flex flex-col space-y-1.5 p-6">
+            <h3 class="font-semibold leading-none tracking-tight">Notes</h3>
           </div>
-          <div class="modal-backdrop bg-base-300/80" phx-click="hide_modal"></div>
+          <div class="p-6 pt-0">
+            <div class="rounded-md bg-muted p-4 text-sm text-muted-foreground">
+              <%= @appointment.notes %>
+            </div>
+          </div>
         </div>
       <% end %>
+
+      <%= if @appointment.status == "cancelled" do %>
+        <div class="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-destructive">
+          <div class="flex items-center gap-2">
+            <.icon name="hero-x-circle" class="h-5 w-5" />
+            <h5 class="font-medium leading-none tracking-tight">Appointment Cancelled</h5>
+          </div>
+          <div class="mt-2 text-sm opacity-90">
+            <%= if @appointment.cancellation_reason do %>
+              <p>Reason: <%= @appointment.cancellation_reason %></p>
+            <% end %>
+            <%= if @appointment.cancelled_at do %>
+              <p>Cancelled on <%= Calendar.strftime(@appointment.cancelled_at, "%B %d, %Y at %H:%M") %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="flex items-center justify-end gap-2">
+        <%= if @appointment.status in ["pending", "confirmed"] do %>
+          <button
+            phx-click="show_cancel_modal"
+            class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-yellow-600 hover:text-yellow-700"
+          >
+            <.icon name="hero-x-mark" class="mr-2 h-4 w-4" />
+            Cancel Appointment
+          </button>
+        <% end %>
+        <button
+          phx-click="show_delete_modal"
+          class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
+        >
+          <.icon name="hero-trash" class="mr-2 h-4 w-4" />
+          Delete
+        </button>
+      </div>
+
+      <%!-- Cancel Modal --%>
+      <.modal :if={@show_cancel_modal} id="cancel-modal" show on_cancel={JS.push("hide_modal")}>
+        <div class="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
+          <h3 class="text-lg font-semibold leading-none tracking-tight">Cancel Appointment?</h3>
+          <p class="text-sm text-muted-foreground">
+            Are you sure you want to cancel your appointment with
+            <strong>Dr. <%= @appointment.doctor.last_name %></strong>
+            on <strong><%= Calendar.strftime(@appointment.starts_at, "%B %d at %H:%M") %></strong>?
+          </p>
+        </div>
+
+        <.form for={%{}} phx-submit="cancel_appointment" class="space-y-4">
+          <div class="grid w-full gap-1.5">
+            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Reason for cancellation (optional)
+            </label>
+            <textarea
+              name="reason"
+              class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="e.g., Schedule conflict, feeling better..."
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-end space-x-2">
+            <button type="button" phx-click="hide_modal" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+              Keep Appointment
+            </button>
+            <button type="submit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2">
+              Yes, Cancel
+            </button>
+          </div>
+        </.form>
+      </.modal>
 
       <%!-- Delete Modal --%>
-      <%= if @show_delete_modal do %>
-        <div class="modal modal-open">
-          <div class="modal-box">
-            <h3 class="text-lg font-bold text-error">Delete Appointment?</h3>
-            <p class="py-4">
-              Are you sure you want to permanently delete this appointment record?
-            </p>
-            <div class="alert alert-warning mb-4">
-              <.icon name="hero-exclamation-triangle" class="w-5 h-5" />
-              <span>This action cannot be undone.</span>
-            </div>
-
-            <div class="modal-action">
-              <button type="button" phx-click="hide_modal" class="btn">
-                Cancel
-              </button>
-              <button phx-click="delete_appointment" class="btn btn-error">
-                <.icon name="hero-trash" class="w-4 h-4" />
-                Delete Permanently
-              </button>
-            </div>
-          </div>
-          <div class="modal-backdrop bg-base-300/80" phx-click="hide_modal"></div>
+      <.modal :if={@show_delete_modal} id="delete-modal" show on_cancel={JS.push("hide_modal")}>
+        <div class="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
+          <h3 class="text-lg font-semibold leading-none tracking-tight text-destructive">Delete Appointment?</h3>
+          <p class="text-sm text-muted-foreground">
+            Are you sure you want to permanently delete this appointment record?
+            This action cannot be undone.
+          </p>
         </div>
-      <% end %>
+
+        <div class="flex items-center justify-end space-x-2 pt-4">
+          <button type="button" phx-click="hide_modal" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            Cancel
+          </button>
+          <button phx-click="delete_appointment" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2">
+            Delete Permanently
+          </button>
+        </div>
+      </.modal>
     </div>
     """
   end
@@ -252,11 +245,11 @@ defmodule MedicWeb.AppointmentLive.Show do
     end
   end
 
-  defp status_color("pending"), do: "warning"
-  defp status_color("confirmed"), do: "success"
-  defp status_color("completed"), do: "info"
-  defp status_color("cancelled"), do: "error"
-  defp status_color(_), do: "ghost"
+  defp status_badge_class("pending"), do: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80"
+  defp status_badge_class("confirmed"), do: "bg-green-100 text-green-800 hover:bg-green-100/80"
+  defp status_badge_class("completed"), do: "bg-blue-100 text-blue-800 hover:bg-blue-100/80"
+  defp status_badge_class("cancelled"), do: "bg-red-100 text-red-800 hover:bg-red-100/80"
+  defp status_badge_class(_), do: "bg-gray-100 text-gray-800 hover:bg-gray-100/80"
 
   defp status_text("pending"), do: "Pending"
   defp status_text("confirmed"), do: "Confirmed"

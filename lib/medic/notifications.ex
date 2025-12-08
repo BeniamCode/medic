@@ -7,6 +7,7 @@ defmodule Medic.Notifications do
   alias Medic.Repo
 
   alias Medic.Notifications.Notification
+  require Logger
 
   @doc """
   Returns the list of notifications.
@@ -83,6 +84,7 @@ defmodule Medic.Notifications do
   end
 
   defp broadcast_notification(notification) do
+    Logger.info("Broadcasting notification to user_notifications:#{notification.user_id}")
     Phoenix.PubSub.broadcast(
       Medic.PubSub,
       "user_notifications:#{notification.user_id}",

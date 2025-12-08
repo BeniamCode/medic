@@ -2,10 +2,12 @@ defmodule MedicWeb.NotificationLive do
   use MedicWeb, :live_view
 
   alias Medic.Notifications
+  require Logger
 
   def mount(_params, session, socket) do
     if user_id = session["user_id"] do
       if connected?(socket) do
+        Logger.info("Subscribing to notifications for user #{user_id}")
         Notifications.subscribe(user_id)
       end
       
@@ -94,6 +96,7 @@ defmodule MedicWeb.NotificationLive do
   end
 
   def handle_info({:new_notification, notification}, socket) do
+    Logger.info("Received new notification in LiveView: #{inspect(notification)}")
     # Show toast
     
     # Update count

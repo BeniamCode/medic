@@ -95,11 +95,22 @@ defmodule MedicWeb.CoreComponents do
 
 
   def button(%{rest: rest} = assigns) do
-    variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
+    variants = %{
+      "primary" => "bg-primary text-primary-foreground hover:bg-primary/90",
+      "secondary" => "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      "destructive" => "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+      "outline" => "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+      "ghost" => "hover:bg-accent hover:text-accent-foreground",
+      "link" => "text-primary underline-offset-4 hover:underline",
+      nil => "bg-primary text-primary-foreground hover:bg-primary/90"
+    }
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
+        [
+          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2",
+          Map.fetch!(variants, assigns[:variant])
+        ]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
@@ -208,8 +219,8 @@ defmodule MedicWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
+    <div class="mb-4">
+      <label class="flex items-center space-x-2">
         <input
           type="hidden"
           name={@name}
@@ -217,16 +228,17 @@ defmodule MedicWeb.CoreComponents do
           disabled={@rest[:disabled]}
           form={@rest[:form]}
         />
-        <span class="label">
-          <input
-            type="checkbox"
-            id={@id}
-            name={@name}
-            value="true"
-            checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
-            {@rest}
-          /><%= @label %>
+        <input
+          type="checkbox"
+          id={@id}
+          name={@name}
+          value="true"
+          checked={@checked}
+          class="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+          {@rest}
+        />
+        <span class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <%= @label %>
         </span>
       </label>
       <.error :for={msg <- @errors}><%= msg %></.error>
@@ -236,20 +248,20 @@ defmodule MedicWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1"><%= @label %></span>
-        <select
-          id={@id}
-          name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
-          multiple={@multiple}
-          {@rest}
-        >
-          <option :if={@prompt} value=""><%= @prompt %></option>
-          <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
-        </select>
+    <div class="grid w-full max-w-sm items-center gap-1.5 mb-4">
+      <label :if={@label} for={@id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <%= @label %>
       </label>
+      <select
+        id={@id}
+        name={@name}
+        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        multiple={@multiple}
+        {@rest}
+      >
+        <option :if={@prompt} value=""><%= @prompt %></option>
+        <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
+      </select>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
@@ -257,19 +269,19 @@ defmodule MedicWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1"><%= @label %></span>
-        <textarea
-          id={@id}
-          name={@name}
-          class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
-          ]}
-          {@rest}
-        ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
+    <div class="grid w-full gap-1.5 mb-4">
+      <label :if={@label} for={@id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <%= @label %>
       </label>
+      <textarea
+        id={@id}
+        name={@name}
+        class={[
+          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          @errors != [] && "border-destructive focus-visible:ring-destructive"
+        ]}
+        {@rest}
+      ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
@@ -278,21 +290,21 @@ defmodule MedicWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1"><%= @label %></span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
-          ]}
-          {@rest}
-        />
+    <div class="grid w-full max-w-sm items-center gap-1.5 mb-4">
+      <label :if={@label} for={@id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <%= @label %>
       </label>
+      <input
+        type={@type}
+        name={@name}
+        id={@id}
+        value={Phoenix.HTML.Form.normalize_value(@type, @value)}
+        class={[
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          @errors != [] && "border-destructive focus-visible:ring-destructive"
+        ]}
+        {@rest}
+      />
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """
@@ -301,8 +313,7 @@ defmodule MedicWeb.CoreComponents do
   # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
+    <p class="text-sm font-medium text-destructive">
       <%= render_slot(@inner_block) %>
     </p>
     """
@@ -363,34 +374,38 @@ defmodule MedicWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td
-            :for={col <- @col}
-            phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
-          >
-            <%= render_slot(col, @row_item.(row)) %>
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                <%= render_slot(action, @row_item.(row)) %>
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="relative w-full overflow-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="[&_tr]:border-b">
+          <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <th :for={col <- @col} class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+              {col[:label]}
+            </th>
+            <th :if={@action != []} class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+              <span class="sr-only">{gettext("Actions")}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"} class="[&_tr:last-child]:border-0">
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+            <td
+              :for={col <- @col}
+              phx-click={@row_click && @row_click.(row)}
+              class={["p-4 align-middle [&:has([role=checkbox])]:pr-0", @row_click && "cursor-pointer"]}
+            >
+              <%= render_slot(col, @row_item.(row)) %>
+            </td>
+            <td :if={@action != []} class="p-4 align-middle">
+              <div class="flex gap-2">
+                <%= for action <- @action do %>
+                  <%= render_slot(action, @row_item.(row)) %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     """
   end
 
@@ -481,29 +496,32 @@ defmodule MedicWeb.CoreComponents do
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
       class="relative z-50 hidden"
     >
-      <div id={"#{@id}-bg"} class="fixed inset-0 bg-base-300/80 transition-opacity" aria-hidden="true" />
+      <div id={"#{@id}-bg"} class="fixed inset-0 bg-background/80 backdrop-blur-sm transition-all duration-100 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" aria-hidden="true" />
       <div
-        class="fixed inset-0 overflow-y-auto"
-        aria-labelledby={"#{@id}-title"}
-        aria-describedby={"#{@id}-description"}
+        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6"
         role="dialog"
         aria-modal="true"
         tabindex="0"
       >
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-          <div class="w-full max-w-lg transform overflow-hidden rounded-2xl bg-base-100 p-6 text-left align-middle shadow-xl transition-all">
-            <.button
-              phx-click={JS.exec("data-cancel", to: "##{@id}")}
-              type="button"
-              class="absolute right-4 top-4 btn btn-sm btn-circle btn-ghost"
-              aria-label={gettext("close")}
-            >
-              <.icon name="hero-x-mark" class="w-5 h-5" />
-            </.button>
-            <div id={"#{@id}-content"}>
-              <%= render_slot(@inner_block) %>
-            </div>
+        <div
+          id={"#{@id}-content"}
+          class="w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg"
+        >
+          <div class="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
+             <%!-- Header content usually goes here --%>
           </div>
+          
+          <%= render_slot(@inner_block) %>
+
+          <button
+            phx-click={JS.exec("data-cancel", to: "##{@id}")}
+            type="button"
+            class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+            aria-label={gettext("close")}
+          >
+            <.icon name="hero-x-mark" class="h-4 w-4" />
+            <span class="sr-only">Close</span>
+          </button>
         </div>
       </div>
     </div>

@@ -13,83 +13,85 @@ defmodule MedicWeb.DoctorLive.Schedule do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-4xl mx-auto py-8 px-4">
-      <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost btn-sm mb-4">
-        <.icon name="hero-arrow-left" class="w-4 h-4" />
-        Back to Dashboard
-      </.link>
-
-      <div class="flex items-center justify-between mb-8">
+    <div class="flex-1 space-y-4 p-8 pt-6">
+      <div class="flex items-center justify-between space-y-2">
         <div>
-          <h1 class="text-2xl font-bold">Manage Schedule</h1>
-          <p class="text-base-content/70">Set your weekly availability for appointments.</p>
+          <h2 class="text-3xl font-bold tracking-tight">Manage Schedule</h2>
+          <p class="text-muted-foreground">
+            Set your weekly availability for appointments.
+          </p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <.link navigate={~p"/dashboard/doctor"} class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            <.icon name="hero-arrow-left" class="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </.link>
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow-lg">
-        <div class="card-body p-0">
-          <div class="overflow-x-auto">
-            <table class="table w-full">
-              <thead>
-                <tr class="bg-base-200">
-                  <th class="w-32">Day</th>
-                  <th>Availability</th>
-                  <th class="w-24">Status</th>
-                  <th class="w-24">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <%= for day <- @days_of_week do %>
-                  <% rule = @rules[day] %>
-                  <tr class={if rule && rule.is_active, do: "hover", else: "bg-base-200/30 text-base-content/50"}>
-                    <td class="font-medium">
-                      <%= AvailabilityRule.day_name(day) %>
-                    </td>
-                    <td>
-                      <%= if rule && rule.is_active do %>
-                        <div class="flex flex-col gap-1">
-                          <div class="flex items-center gap-2">
-                            <.icon name="hero-clock" class="w-4 h-4 text-primary" />
-                            <span class="font-semibold">
-                              <%= Calendar.strftime(rule.start_time, "%H:%M") %> - <%= Calendar.strftime(rule.end_time, "%H:%M") %>
-                            </span>
+      <div class="rounded-md border">
+        <div class="relative w-full overflow-auto">
+          <table class="w-full caption-bottom text-sm">
+            <thead class="[&_tr]:border-b">
+              <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-32">Day</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Availability</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-24">Status</th>
+                <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-24">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="[&_tr:last-child]:border-0">
+              <%= for day <- @days_of_week do %>
+                <% rule = @rules[day] %>
+                <tr class={if rule && rule.is_active, do: "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted", else: "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted bg-muted/20 text-muted-foreground"}>
+                  <td class="p-4 align-middle font-medium">
+                    <%= AvailabilityRule.day_name(day) %>
+                  </td>
+                  <td class="p-4 align-middle">
+                    <%= if rule && rule.is_active do %>
+                      <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                          <.icon name="hero-clock" class="h-4 w-4 text-primary" />
+                          <span class="font-semibold">
+                            <%= Calendar.strftime(rule.start_time, "%H:%M") %> - <%= Calendar.strftime(rule.end_time, "%H:%M") %>
+                          </span>
+                        </div>
+                        <%= if rule.break_start && rule.break_end do %>
+                          <div class="text-xs text-muted-foreground flex items-center gap-2">
+                            <.icon name="hero-pause" class="h-3 w-3" />
+                            Break: <%= Calendar.strftime(rule.break_start, "%H:%M") %> - <%= Calendar.strftime(rule.break_end, "%H:%M") %>
                           </div>
-                          <%= if rule.break_start && rule.break_end do %>
-                            <div class="text-xs text-base-content/60 flex items-center gap-2">
-                              <.icon name="hero-pause" class="w-3 h-3" />
-                              Break: <%= Calendar.strftime(rule.break_start, "%H:%M") %> - <%= Calendar.strftime(rule.break_end, "%H:%M") %>
-                            </div>
-                          <% end %>
-                        </div>
-                      <% else %>
-                        <span class="italic text-base-content/50">Unavailable</span>
-                      <% end %>
-                    </td>
-                    <td>
-                      <%= if rule && rule.is_active do %>
-                        <div class="badge badge-success gap-1">
-                          Active
-                        </div>
-                      <% else %>
-                        <div class="badge badge-ghost gap-1">
-                          Off
-                        </div>
-                      <% end %>
-                    </td>
-                    <td>
-                      <button
-                        phx-click="edit_rule"
-                        phx-value-day={day}
-                        class="btn btn-sm btn-ghost btn-square"
-                      >
-                        <.icon name="hero-pencil-square" class="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                <% end %>
-              </tbody>
-            </table>
-          </div>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <span class="italic text-muted-foreground/50">Unavailable</span>
+                    <% end %>
+                  </td>
+                  <td class="p-4 align-middle">
+                    <%= if rule && rule.is_active do %>
+                      <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
+                        Active
+                      </div>
+                    <% else %>
+                      <div class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
+                        Off
+                      </div>
+                    <% end %>
+                  </td>
+                  <td class="p-4 align-middle">
+                    <button
+                      phx-click="edit_rule"
+                      phx-value-day={day}
+                      class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                    >
+                      <.icon name="hero-pencil-square" class="h-4 w-4" />
+                      <span class="sr-only">Edit</span>
+                    </button>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -100,9 +102,14 @@ defmodule MedicWeb.DoctorLive.Schedule do
       show
       on_cancel={JS.push("cancel_edit")}
     >
-      <h3 class="font-bold text-lg mb-4">
-        Edit Availability: <%= AvailabilityRule.day_name(@editing_day) %>
-      </h3>
+      <div class="flex flex-col space-y-1.5 text-center sm:text-left mb-6">
+        <h3 class="text-lg font-semibold leading-none tracking-tight">
+          Edit Availability: <%= AvailabilityRule.day_name(@editing_day) %>
+        </h3>
+        <p class="text-sm text-muted-foreground">
+          Configure your working hours for this day.
+        </p>
+      </div>
 
       <.form
         for={@form}
@@ -113,32 +120,51 @@ defmodule MedicWeb.DoctorLive.Schedule do
         <input type="hidden" name="rule[day_of_week]" value={@editing_day} />
         <input type="hidden" name="rule[doctor_id]" value={@preloaded_user.doctor.id} />
 
-        <div class="form-control">
-          <label class="label cursor-pointer justify-start gap-4">
-            <span class="label-text font-medium">Available on this day</span>
-            <input
-              type="checkbox"
-              name="rule[is_active]"
-              class="toggle toggle-primary"
-              checked={Ecto.Changeset.get_field(@form.source, :is_active, true)}
-            />
-          </label>
+        <div class="flex items-center space-x-2 rounded-md border p-4">
+          <input
+            type="checkbox"
+            name="rule[is_active]"
+            id="rule_is_active"
+            class="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+            checked={Ecto.Changeset.get_field(@form.source, :is_active, true)}
+            value="true"
+          />
+          <input type="hidden" name="rule[is_active]" value="false" />
+          <div class="flex-1 space-y-1">
+            <label for="rule_is_active" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Available on this day
+            </label>
+          </div>
         </div>
 
-        <div class={if !Ecto.Changeset.get_field(@form.source, :is_active, true), do: "opacity-50 pointer-events-none"} >
+        <div class={if !Ecto.Changeset.get_field(@form.source, :is_active, true), do: "opacity-50 pointer-events-none space-y-4", else: "space-y-4"} >
           <div class="grid grid-cols-2 gap-4">
             <.input field={@form[:start_time]} type="time" label="Start Time" />
             <.input field={@form[:end_time]} type="time" label="End Time" />
           </div>
 
-          <div class="divider text-xs">Break (Optional)</div>
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t"></span>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="bg-background px-2 text-muted-foreground">Break (Optional)</span>
+            </div>
+          </div>
 
           <div class="grid grid-cols-2 gap-4">
             <.input field={@form[:break_start]} type="time" label="Break Start" />
             <.input field={@form[:break_end]} type="time" label="Break End" />
           </div>
 
-          <div class="divider text-xs">Settings</div>
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t"></span>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="bg-background px-2 text-muted-foreground">Settings</span>
+            </div>
+          </div>
 
           <.input
             field={@form[:slot_duration_minutes]}
@@ -149,9 +175,9 @@ defmodule MedicWeb.DoctorLive.Schedule do
           />
         </div>
 
-        <div class="modal-action">
-          <button type="button" phx-click="cancel_edit" class="btn">Cancel</button>
-          <.button type="submit" class="btn btn-primary">Save Changes</.button>
+        <div class="flex items-center justify-end space-x-2 pt-4">
+          <button type="button" phx-click="cancel_edit" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">Cancel</button>
+          <.button type="submit" class="bg-primary text-primary-foreground hover:bg-primary/90">Save Changes</.button>
         </div>
       </.form>
     </.modal>

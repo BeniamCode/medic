@@ -31,12 +31,13 @@ const Hooks = {
   Notifications: {
     mounted() {
       this.handleEvent("show_toast", ({ title, message, type }) => {
+        console.log("Received show_toast event", { title, message, type });
         this.showToast(title, message, type);
       });
     },
     showToast(title, message, type) {
       const toastContainer = document.getElementById("toast-container") || this.createToastContainer();
-      
+
       const toast = document.createElement("div");
       toast.className = `alert alert-${type || "info"} shadow-lg mb-2`;
       toast.innerHTML = `
@@ -45,9 +46,9 @@ const Hooks = {
           <div class="text-xs">${message}</div>
         </div>
       `;
-      
+
       toastContainer.appendChild(toast);
-      
+
       // Remove after 5 seconds
       setTimeout(() => {
         toast.classList.add("opacity-0", "transition-opacity", "duration-500");

@@ -5,7 +5,7 @@ defmodule Medic.Hospitals.HospitalSchedule do
   schema "hospital_schedules" do
     field :date, :date
     field :specialties, {:array, :string}
-    field :hospital_id, :id
+    belongs_to :hospital, Medic.Hospitals.Hospital
 
     timestamps(type: :utc_datetime)
   end
@@ -13,7 +13,7 @@ defmodule Medic.Hospitals.HospitalSchedule do
   @doc false
   def changeset(hospital_schedule, attrs) do
     hospital_schedule
-    |> cast(attrs, [:date, :specialties])
-    |> validate_required([:date, :specialties])
+    |> cast(attrs, [:date, :specialties, :hospital_id])
+    |> validate_required([:date, :specialties, :hospital_id])
   end
 end

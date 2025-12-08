@@ -10,6 +10,7 @@ defmodule Medic.Scheduling do
   alias Medic.Scheduling.AvailabilityRule
   alias Medic.Appointments.Appointment
   alias Medic.Doctors.Doctor
+  alias Medic.Notifications
 
   use Timex
 
@@ -144,6 +145,7 @@ defmodule Medic.Scheduling do
     |> Repo.insert()
     |> case do
       {:ok, appointment} ->
+        notify_doctor_booking(appointment)
         {:ok, appointment}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -258,5 +260,21 @@ defmodule Medic.Scheduling do
       {_, {_, [constraint: ^constraint_name, constraint_name: _]}} -> true
       _ -> false
     end)
+  end
+
+  defp notify_doctor_booking(appointment) do
+    # Preload patient and doctor to get names and user_id
+    appointment = Repo.preload(appointment, [:patient, :doctor])
+
+    if appointment.doctor do
+      Notifications.create_notification(%{
+        user_id: appointment.doctor.user_id,
+        type: "booking",
+        title: "New Appointment Request",
+        message: "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
+        resource_id: appointment.id,
+        resource_type: "appointment"
+      })
+    end
   end
 end

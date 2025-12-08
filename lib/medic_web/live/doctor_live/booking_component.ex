@@ -42,7 +42,7 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
             phx-click="prev_week"
             phx-target={@myself}
             class="btn btn-ghost btn-sm"
-            disabled={Date.compare(@week_start, Date.utc_today()) <= 0}
+            disabled={Date.compare(@week_start, Date.utc_today()) in [:lt, :eq]}
           >
             <.icon name="hero-chevron-left" class="w-4 h-4" />
           </button>
@@ -60,7 +60,7 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
             <% is_today = Date.compare(date, Date.utc_today()) == :eq %>
             <% is_selected = @selected_date && Date.compare(date, @selected_date) == :eq %>
             <% has_slots = length(Enum.filter(day_slots, & &1.status == :free)) > 0 %>
-            <% is_past = Date.compare(date, Date.utc_today()) < 0 %>
+            <% is_past = Date.compare(date, Date.utc_today()) == :lt %>
 
             <button
               phx-click="select_date"
@@ -248,7 +248,7 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
     new_start = Date.add(socket.assigns.week_start, -7)
 
     # Don't go before today
-    new_start = if Date.compare(new_start, Date.utc_today()) < 0 do
+    new_start = if Date.compare(new_start, Date.utc_today()) == :lt do
       Date.utc_today()
     else
       new_start

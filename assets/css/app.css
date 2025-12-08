@@ -10,89 +10,61 @@
   --font-sans: "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-/* A Tailwind plugin that makes "hero-#{ICON}" classes available.
-   The heroicons installation itself is managed by your mix.exs */
-@plugin "../vendor/heroicons";
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
 
-/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
-   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
-   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
-@plugin "../vendor/daisyui" {
-  themes: false;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
 }
 
-/* daisyUI theme plugin. You can update this file by fetching the latest version with:
-  curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.js
-  We ship with two themes, a light one inspired on Phoenix colors and a dark one inspired
-  on Elixir colors. Build your own at: https://daisyui.com/theme-generator/ */
-@plugin "../vendor/daisyui-theme" {
-  name: "dark";
-  default: false;
-  prefersdark: true;
-  color-scheme: "dark";
-  --color-base-100: oklch(28% 0.03 270);
-  --color-base-200: oklch(24% 0.03 270);
-  --color-base-300: oklch(20% 0.03 270);
-  --color-base-content: oklch(98% 0 0);
-  --color-primary: oklch(70% 0.1 240);
-  --color-primary-content: oklch(20% 0.05 240);
-  --color-secondary: oklch(75% 0.1 330);
-  --color-secondary-content: oklch(20% 0.05 330);
-  --color-accent: oklch(78% 0.1 160);
-  --color-accent-content: oklch(20% 0.05 160);
-  --color-neutral: oklch(85% 0.03 270);
-  --color-neutral-content: oklch(20% 0.03 270);
-  --color-info: oklch(70% 0.1 240);
-  --color-info-content: oklch(20% 0.05 240);
-  --color-success: oklch(65% 0.1 140);
-  --color-success-content: oklch(15% 0.05 140);
-  --color-warning: oklch(70% 0.12 60);
-  --color-warning-content: oklch(15% 0.05 60);
-  --color-error: oklch(65% 0.12 20);
-  --color-error-content: oklch(98% 0 0);
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.21875rem;
-  --size-field: 0.21875rem;
-  --border: 1px;
-  --depth: 1;
-  --noise: 0;
-}
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-@plugin "../vendor/daisyui-theme" {
-  name: "light";
-  default: true;
-  prefersdark: false;
-  color-scheme: "light";
-  --color-base-100: oklch(99.5% 0 0);
-  --color-base-200: oklch(98% 0 0);
-  --color-base-300: oklch(96% 0 0);
-  --color-base-content: oklch(20% 0 0);
-  --color-primary: oklch(65% 0.11 240);
-  --color-primary-content: oklch(98% 0 0);
-  --color-secondary: oklch(72% 0.12 330);
-  --color-secondary-content: oklch(98% 0 0);
-  --color-accent: oklch(75% 0.13 160);
-  --color-accent-content: oklch(20% 0.05 160);
-  --color-neutral: oklch(45% 0.05 270);
-  --color-neutral-content: oklch(98% 0 0);
-  --color-info: oklch(65% 0.11 240);
-  --color-info-content: oklch(98% 0 0);
-  --color-success: oklch(70% 0.1 140);
-  --color-success-content: oklch(20% 0.05 140);
-  --color-warning: oklch(75% 0.12 60);
-  --color-warning-content: oklch(20% 0.05 60);
-  --color-error: oklch(70% 0.12 20);
-  --color-error-content: oklch(98% 0 0);
-  --radius-selector: 0.25rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
-  --size-selector: 0.21875rem;
-  --size-field: 0.21875rem;
-  --border: 1px;
-  --depth: 1;
-  --noise: 0;
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 /* Add variants based on LiveView classes */
@@ -104,6 +76,9 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 /* Make LiveView wrapper divs transparent for layout */
-[data-phx-session], [data-phx-teleported-src] { display: contents }
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents
+}
 
 /* This file is for your main application CSS */
