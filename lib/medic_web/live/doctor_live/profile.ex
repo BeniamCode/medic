@@ -5,7 +5,6 @@ defmodule MedicWeb.DoctorLive.Profile do
   use MedicWeb, :live_view
 
   alias Medic.Doctors
-  alias Medic.Doctors.Doctor
 
   def render(assigns) do
     ~H"""
@@ -19,21 +18,36 @@ defmodule MedicWeb.DoctorLive.Profile do
         </div>
         <div>
           <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost">
-            <.icon name="hero-arrow-left" class="size-4 mr-2" />
-            Πίσω στο Dashboard
+            <.icon name="hero-arrow-left" class="size-4 mr-2" /> Πίσω στο Dashboard
           </.link>
         </div>
       </div>
 
-      <.form for={@form} id="doctor-profile-form" phx-change="validate" phx-submit="save" class="space-y-8">
+      <.form
+        for={@form}
+        id="doctor-profile-form"
+        phx-change="validate"
+        phx-submit="save"
+        class="space-y-8"
+      >
         <%!-- Basic Info Card --%>
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
             <h3 class="card-title mb-4">Βασικές Πληροφορίες</h3>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input field={@form[:first_name]} label="Όνομα" placeholder="π.χ. Γιώργος" required />
-              <.input field={@form[:last_name]} label="Επώνυμο" placeholder="π.χ. Παπαδόπουλος" required />
+              <.input
+                field={@form[:first_name]}
+                label="Όνομα"
+                placeholder="π.χ. Γιώργος"
+                required
+              />
+              <.input
+                field={@form[:last_name]}
+                label="Επώνυμο"
+                placeholder="π.χ. Παπαδόπουλος"
+                required
+              />
             </div>
 
             <.input
@@ -66,9 +80,13 @@ defmodule MedicWeb.DoctorLive.Profile do
               <.icon name="hero-map-pin" class="size-5 text-primary" />
               <h3 class="card-title">Τοποθεσία</h3>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input field={@form[:address]} label="Διεύθυνση" placeholder="π.χ. Λεωφ. Αλεξάνδρας 15" />
+              <.input
+                field={@form[:address]}
+                label="Διεύθυνση"
+                placeholder="π.χ. Λεωφ. Αλεξάνδρας 15"
+              />
               <.input field={@form[:city]} label="Πόλη" placeholder="π.χ. Αθήνα" />
             </div>
             <p class="text-sm text-base-content/70 flex items-center gap-2 mt-2">
@@ -85,7 +103,7 @@ defmodule MedicWeb.DoctorLive.Profile do
               <.icon name="hero-currency-euro" class="size-5 text-primary" />
               <h3 class="card-title">Τιμολόγηση</h3>
             </div>
-            
+
             <.input
               field={@form[:consultation_fee]}
               type="number"
@@ -102,8 +120,7 @@ defmodule MedicWeb.DoctorLive.Profile do
             Ακύρωση
           </.link>
           <.button type="submit" class="btn btn-primary" phx-disable-with="Αποθήκευση...">
-            <.icon name="hero-check" class="size-4 mr-2" />
-            Αποθήκευση
+            <.icon name="hero-check" class="size-4 mr-2" /> Αποθήκευση
           </.button>
         </div>
       </.form>
@@ -153,8 +170,11 @@ defmodule MedicWeb.DoctorLive.Profile do
       {:ok, doctor} ->
         # Check if profile is complete and verify if needed
         doctor = maybe_verify_doctor(doctor)
-        
-        msg = if doctor.verified_at, do: "Το προφίλ ενημερώθηκε και επαληθεύτηκε!", else: "Το προφίλ ενημερώθηκε!"
+
+        msg =
+          if doctor.verified_at,
+            do: "Το προφίλ ενημερώθηκε και επαληθεύτηκε!",
+            else: "Το προφίλ ενημερώθηκε!"
 
         {:noreply,
          socket
@@ -177,8 +197,8 @@ defmodule MedicWeb.DoctorLive.Profile do
 
   defp profile_complete?(doctor) do
     !is_nil(doctor.first_name) && doctor.first_name != "" &&
-    !is_nil(doctor.last_name) && doctor.last_name != "" &&
-    !is_nil(doctor.specialty_id) &&
-    !is_nil(doctor.city) && doctor.city != ""
+      !is_nil(doctor.last_name) && doctor.last_name != "" &&
+      !is_nil(doctor.specialty_id) &&
+      !is_nil(doctor.city) && doctor.city != ""
   end
 end

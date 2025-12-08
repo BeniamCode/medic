@@ -81,9 +81,14 @@ defmodule MedicWeb.CoreComponents do
   @doc """
   Renders a button with navigation support.
   """
-  attr :rest, :global, include: ~w(href navigate patch method download name value disabled type form)
+  attr :rest, :global,
+    include: ~w(href navigate patch method download name value disabled type form)
+
   attr :class, :any, default: nil
-  attr :variant, :string, values: ~w(primary secondary accent ghost link outline error warning info success)
+
+  attr :variant, :string,
+    values: ~w(primary secondary accent ghost link outline error warning info success)
+
   attr :size, :string, values: ~w(lg md sm xs)
   slot :inner_block, required: true
 
@@ -305,20 +310,25 @@ defmodule MedicWeb.CoreComponents do
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th :for={col <- @col}>{col[:label]}</th>
+            <%= for col <- @col do %>
+              <th><%= col[:label] %></th>
+            <% end %>
             <th :if={@action != []}>
               <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
         </thead>
         <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class={@row_click && "hover cursor-pointer"}>
-            <td
-              :for={col <- @col}
-              phx-click={@row_click && @row_click.(row)}
-            >
-              <%= render_slot(col, @row_item.(row)) %>
-            </td>
+          <tr
+            :for={row <- @rows}
+            id={@row_id && @row_id.(row)}
+            class={@row_click && "hover cursor-pointer"}
+          >
+            <%= for col <- @col do %>
+              <td phx-click={@row_click && @row_click.(row)}>
+                <%= render_slot(col, @row_item.(row)) %>
+              </td>
+            <% end %>
             <td :if={@action != []}>
               <div class="flex gap-2">
                 <%= for action <- @action do %>

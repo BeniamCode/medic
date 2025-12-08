@@ -1,15 +1,17 @@
-<div class="drawer lg:drawer-open">
+<div class="drawer lg:drawer-open bg-gradient-to-br from-base-100 via-base-200 to-secondary/20">
   <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
-  <div class="drawer-content flex flex-col min-h-screen bg-base-100">
+  <div class="drawer-content flex flex-col min-h-screen">
     <%!-- Navbar --%>
-    <div class="navbar bg-base-100 border-b border-base-200 lg:hidden">
+    <div class="navbar bg-base-100/80 border-b border-base-200 backdrop-blur lg:hidden">
       <div class="flex-none">
         <label for="my-drawer-2" class="btn btn-square btn-ghost drawer-button lg:hidden">
           <.icon name="hero-bars-3" class="size-6" />
         </label>
       </div>
       <div class="flex-1">
-        <a href="/" class="btn btn-ghost text-xl">Medic</a>
+        <a href="/" class="btn btn-ghost text-xl font-black tracking-tight">
+          <span class="text-primary">Medic</span>
+        </a>
       </div>
       <div class="flex-none">
         <%= if @current_user do %>
@@ -19,7 +21,10 @@
                 <span><%= String.at(@current_user.email, 0) |> String.upcase() %></span>
               </div>
             </div>
-            <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+            <ul
+              tabindex="0"
+              class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
+            >
               <li><a href="/settings">Settings</a></li>
               <li><.link href="/logout" method="delete">Logout</.link></li>
             </ul>
@@ -31,100 +36,125 @@
     </div>
 
     <%!-- Main Content --%>
-    <main class="flex-1 p-6">
-      <.flash_group flash={@flash} />
-      <%= @inner_content %>
+    <main class="flex-1 p-4 md:p-8">
+      <div class="rounded-[2rem] border border-base-200/80 bg-base-100/90 shadow-2xl backdrop-blur-xl p-4 md:p-8 space-y-6">
+        <.flash_group flash={@flash} />
+        <div class="space-y-12">
+          <%= @inner_content %>
+        </div>
+      </div>
     </main>
-  </div> 
-  
+  </div>
+
   <%!-- Sidebar --%>
   <div class="drawer-side z-20">
-    <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label> 
-    <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
-      <%!-- Sidebar Content --%>
-      <li class="mb-4">
-        <a href="/" class="text-xl font-bold px-2 gap-2 hover:bg-transparent">
-          <.icon name="hero-heart-solid" class="size-8 text-primary" />
-          Medic
-        </a>
-      </li>
-      
-      <li>
-        <a href="/" class={if @socket.view == MedicWeb.HomeLive, do: "active"}>
-          <.icon name="hero-home" class="size-5" />
-          Home
-        </a>
-      </li>
+    <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="w-80 min-h-full bg-base-100/90 border-r border-base-200/70 backdrop-blur-xl">
+      <ul class="menu p-6 text-base-content gap-1">
+        <%!-- Sidebar Content --%>
+        <li class="mb-4">
+          <a href="/" class="text-2xl font-black px-2 gap-3 hover:bg-transparent tracking-tight">
+            <.icon name="hero-heart-solid" class="size-8 text-secondary" /> Medic
+          </a>
+        </li>
 
-      <%= if @current_user do %>
-        <%= if @current_user.role == "doctor" do %>
-          <li class="menu-title mt-4">Doctor</li>
+        <li>
+          <a href="/" class={["rounded-xl", @socket.view == MedicWeb.HomeLive && "active"]}>
+            <.icon name="hero-home" class="size-5" /> Home
+          </a>
+        </li>
+
+        <%= if @current_user do %>
+          <%= if @current_user.role == "doctor" do %>
+            <li class="menu-title mt-4 text-base-content/60">Doctor</li>
+            <li>
+              <a
+                href="/dashboard/doctor"
+                class={[
+                  "rounded-xl",
+                  String.contains?(@socket.view |> to_string(), "DoctorDashboard") && "active"
+                ]}
+              >
+                <.icon name="hero-squares-2x2" class="size-5" /> Dashboard
+              </a>
+            </li>
+            <li>
+              <a
+                href="/doctor/schedule"
+                class={[
+                  "rounded-xl",
+                  String.contains?(@socket.view |> to_string(), "Schedule") && "active"
+                ]}
+              >
+                <.icon name="hero-calendar-days" class="size-5" /> Schedule
+              </a>
+            </li>
+            <li>
+              <a
+                href="/dashboard/doctor/profile"
+                class={[
+                  "rounded-xl",
+                  String.contains?(@socket.view |> to_string(), "Profile") && "active"
+                ]}
+              >
+                <.icon name="hero-user-circle" class="size-5" /> Profile
+              </a>
+            </li>
+          <% else %>
+            <li class="menu-title mt-4 text-base-content/60">Patient</li>
+            <li>
+              <a
+                href="/dashboard"
+                class={[
+                  "rounded-xl",
+                  String.contains?(@socket.view |> to_string(), "PatientDashboard") && "active"
+                ]}
+              >
+                <.icon name="hero-calendar" class="size-5" /> Appointments
+              </a>
+            </li>
+          <% end %>
+        <% end %>
+
+        <li class="menu-title mt-4 text-base-content/60">Explore</li>
+        <li>
+          <a
+            href="/search"
+            class={[
+              "rounded-xl",
+              String.contains?(@socket.view |> to_string(), "Search") && "active"
+            ]}
+          >
+            <.icon name="hero-magnifying-glass" class="size-5" /> Find Doctors
+          </a>
+        </li>
+
+        <li class="divider my-2"></li>
+
+        <%= if @current_user do %>
           <li>
-            <a href="/dashboard/doctor" class={if String.contains?(@socket.view |> to_string(), "DoctorDashboard"), do: "active"}>
-              <.icon name="hero-squares-2x2" class="size-5" />
-              Dashboard
+            <a href="/settings" class="rounded-xl">
+              <.icon name="hero-cog-6-tooth" class="size-5" /> Settings
             </a>
           </li>
           <li>
-            <a href="/doctor/schedule" class={if String.contains?(@socket.view |> to_string(), "Schedule"), do: "active"}>
-              <.icon name="hero-calendar-days" class="size-5" />
-              Schedule
-            </a>
-          </li>
-          <li>
-            <a href="/dashboard/doctor/profile" class={if String.contains?(@socket.view |> to_string(), "Profile"), do: "active"}>
-              <.icon name="hero-user-circle" class="size-5" />
-              Profile
-            </a>
+            <.link href="/logout" method="delete" class="text-error rounded-xl">
+              <.icon name="hero-arrow-right-on-rectangle" class="size-5" /> Sign Out
+            </.link>
           </li>
         <% else %>
-          <li class="menu-title mt-4">Patient</li>
           <li>
-            <a href="/dashboard" class={if String.contains?(@socket.view |> to_string(), "PatientDashboard"), do: "active"}>
-              <.icon name="hero-calendar" class="size-5" />
-              Appointments
+            <a href="/login" class="rounded-xl">
+              <.icon name="hero-arrow-right-end-on-rectangle" class="size-5" /> Sign In
+            </a>
+          </li>
+          <li>
+            <a href="/register" class="rounded-xl active">
+              <.icon name="hero-user-plus" class="size-5" /> Sign Up
             </a>
           </li>
         <% end %>
-      <% end %>
-
-      <li class="menu-title mt-4">Explore</li>
-      <li>
-        <a href="/search" class={if String.contains?(@socket.view |> to_string(), "Search"), do: "active"}>
-          <.icon name="hero-magnifying-glass" class="size-5" />
-          Find Doctors
-        </a>
-      </li>
-
-      <div class="divider"></div>
-
-      <%= if @current_user do %>
-        <li>
-          <a href="/settings">
-            <.icon name="hero-cog-6-tooth" class="size-5" />
-            Settings
-          </a>
-        </li>
-        <li>
-          <.link href="/logout" method="delete" class="text-error">
-            <.icon name="hero-arrow-right-on-rectangle" class="size-5" />
-            Sign Out
-          </.link>
-        </li>
-      <% else %>
-        <li>
-          <a href="/login">
-            <.icon name="hero-arrow-right-end-on-rectangle" class="size-5" />
-            Sign In
-          </a>
-        </li>
-        <li>
-          <a href="/register" class="active">
-            <.icon name="hero-user-plus" class="size-5" />
-            Sign Up
-          </a>
-        </li>
-      <% end %>
-    </ul>
+      </ul>
+    </div>
   </div>
 </div>

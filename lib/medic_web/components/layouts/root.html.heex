@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el" data-theme="corporate">
+<html lang="el" data-theme="cupcake">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -9,6 +9,39 @@
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    </script>
+    <script>
+      (() => {
+        const defaultTheme = "cupcake";
+        const setTheme = (theme) => {
+          const applied = theme === "system" ? defaultTheme : (theme || defaultTheme);
+
+          if (theme === "system") {
+            localStorage.removeItem("phx:theme");
+          } else if (theme) {
+            localStorage.setItem("phx:theme", theme);
+          } else {
+            localStorage.setItem("phx:theme", applied);
+          }
+
+          document.documentElement.setAttribute("data-theme", applied);
+          window.dispatchEvent(new CustomEvent("phx:theme-changed", { detail: { theme: applied } }));
+        };
+
+        if (!document.documentElement.hasAttribute("data-theme")) {
+          setTheme(localStorage.getItem("phx:theme") || defaultTheme);
+        } else {
+          const stored = localStorage.getItem("phx:theme");
+          document.documentElement.setAttribute("data-theme", stored || defaultTheme);
+          window.dispatchEvent(new CustomEvent("phx:theme-changed", { detail: { theme: stored || defaultTheme } }));
+        }
+
+        window.addEventListener("storage", (e) => {
+          if (e.key === "phx:theme") setTheme(e.newValue || defaultTheme);
+        });
+        
+        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+      })();
     </script>
   </head>
   <body>

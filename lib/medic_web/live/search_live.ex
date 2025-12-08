@@ -14,11 +14,11 @@ defmodule MedicWeb.SearchLive do
     ~H"""
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <%!-- Header with Search --%>
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-6 text-base-content">Find a Doctor</h1>
-        <div class="flex flex-col lg:flex-row gap-4">
-          <div class="join w-full lg:w-auto flex-1 shadow-sm">
-            <label class="input input-bordered flex items-center gap-2 join-item w-full">
+      <div class="mb-8 space-y-4">
+        <h1 class="text-3xl font-bold text-base-content">Find a Doctor</h1>
+        <.form for={%{}} action={~p"/search"} method="get" class="w-full">
+          <div class="flex flex-col sm:flex-row gap-3 items-center">
+            <label class="input input-lg input-bordered w-full bg-base-100 shadow-xl flex items-center gap-3">
               <.icon name="hero-magnifying-glass" class="w-5 h-5 text-base-content/50" />
               <input
                 type="text"
@@ -31,55 +31,32 @@ defmodule MedicWeb.SearchLive do
                 autofocus
               />
             </label>
-            
-            <%!-- Sort Dropdown --%>
-            <div class="dropdown dropdown-end join-item hidden sm:block">
-              <div tabindex="0" role="button" class="btn btn-outline join-item border-l-0">
-                <%= case @sort_by do
-                  "rating" -> "Highest Rated"
-                  "price_low" -> "Price: Low to High"
-                  "price_high" -> "Price: High to Low"
-                  "reviews" -> "Most Reviews"
-                  _ -> "Sort By"
-                end %>
-                <.icon name="hero-chevron-down" class="w-4 h-4 ml-2" />
-              </div>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm">
-                <li><a phx-click="sort" phx-value-value="rating" class={if @sort_by == "rating", do: "active"}>Highest Rated</a></li>
-                <li><a phx-click="sort" phx-value-value="price_low" class={if @sort_by == "price_low", do: "active"}>Price: Low to High</a></li>
-                <li><a phx-click="sort" phx-value-value="price_high" class={if @sort_by == "price_high", do: "active"}>Price: High to Low</a></li>
-                <li><a phx-click="sort" phx-value-value="reviews" class={if @sort_by == "reviews", do: "active"}>Most Reviews</a></li>
-              </ul>
-            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-full sm:w-auto gap-2 shadow-lg">
+              <.icon name="hero-arrow-path-rounded-square" class="w-5 h-5" /> Search
+            </button>
           </div>
-          
-          <div class="flex gap-2 lg:hidden">
-            <%!-- Mobile Sort Dropdown --%>
-            <div class="dropdown flex-1 sm:hidden">
-              <div tabindex="0" role="button" class="btn btn-outline w-full justify-between">
-                <%= case @sort_by do
-                  "rating" -> "Highest Rated"
-                  "price_low" -> "Price: Low to High"
-                  "price_high" -> "Price: High to Low"
-                  "reviews" -> "Most Reviews"
-                  _ -> "Sort By"
-                end %>
-                <.icon name="hero-chevron-down" class="w-4 h-4" />
-              </div>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow-sm">
-                <li><a phx-click="sort" phx-value-value="rating" class={if @sort_by == "rating", do: "active"}>Highest Rated</a></li>
-                <li><a phx-click="sort" phx-value-value="price_low" class={if @sort_by == "price_low", do: "active"}>Price: Low to High</a></li>
-                <li><a phx-click="sort" phx-value-value="price_high" class={if @sort_by == "price_high", do: "active"}>Price: High to Low</a></li>
-                <li><a phx-click="sort" phx-value-value="reviews" class={if @sort_by == "reviews", do: "active"}>Most Reviews</a></li>
-              </ul>
-            </div>
+        </.form>
 
-            <button
-              class="btn btn-outline"
-              phx-click="toggle_filters"
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
+            <span class="font-semibold uppercase tracking-wide">Sort by</span>
+            <select
+              name="value"
+              phx-change="sort"
+              class="select select-bordered select-sm sm:select-md bg-base-100 shadow"
             >
-              <.icon name="hero-adjustments-horizontal" class="w-5 h-5" />
-              Filters
+              <option value="rating" selected={@sort_by == "rating"}>Highest Rated</option>
+              <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
+              <option value="price_high" selected={@sort_by == "price_high"}>
+                Price: High to Low
+              </option>
+              <option value="reviews" selected={@sort_by == "reviews"}>Most Reviews</option>
+            </select>
+          </div>
+
+          <div class="flex gap-2 lg:hidden">
+            <button class="btn btn-outline w-full justify-center" phx-click="toggle_filters">
+              <.icon name="hero-adjustments-horizontal" class="w-5 h-5" /> Filters
               <%= if active_filter_count(assigns) > 0 do %>
                 <div class="badge badge-primary badge-sm"><%= active_filter_count(assigns) %></div>
               <% end %>
@@ -94,37 +71,55 @@ defmodule MedicWeb.SearchLive do
           <span class="text-sm text-base-content/70">Active filters:</span>
 
           <%= if @selected_specialty do %>
-            <button phx-click="remove_filter" phx-value-filter="specialty" class="badge badge-primary gap-1 p-3">
+            <button
+              phx-click="remove_filter"
+              phx-value-filter="specialty"
+              class="badge badge-primary gap-1 p-3"
+            >
               <%= get_specialty_name(@specialties, @selected_specialty) %>
               <.icon name="hero-x-mark" class="w-3 h-3" />
             </button>
           <% end %>
 
           <%= if @selected_city do %>
-            <button phx-click="remove_filter" phx-value-filter="city" class="badge badge-primary gap-1 p-3">
+            <button
+              phx-click="remove_filter"
+              phx-value-filter="city"
+              class="badge badge-primary gap-1 p-3"
+            >
               <%= @selected_city %>
               <.icon name="hero-x-mark" class="w-3 h-3" />
             </button>
           <% end %>
 
           <%= if @min_rating do %>
-            <button phx-click="remove_filter" phx-value-filter="rating" class="badge badge-primary gap-1 p-3">
-              <%= @min_rating %>+ ★
-              <.icon name="hero-x-mark" class="w-3 h-3" />
+            <button
+              phx-click="remove_filter"
+              phx-value-filter="rating"
+              class="badge badge-primary gap-1 p-3"
+            >
+              <%= @min_rating %>+ ★ <.icon name="hero-x-mark" class="w-3 h-3" />
             </button>
           <% end %>
 
           <%= if @max_price do %>
-            <button phx-click="remove_filter" phx-value-filter="price" class="badge badge-primary gap-1 p-3">
+            <button
+              phx-click="remove_filter"
+              phx-value-filter="price"
+              class="badge badge-primary gap-1 p-3"
+            >
               ≤ €<%= @max_price %>
               <.icon name="hero-x-mark" class="w-3 h-3" />
             </button>
           <% end %>
 
           <%= if @online_booking_only do %>
-            <button phx-click="remove_filter" phx-value-filter="online_booking" class="badge badge-primary gap-1 p-3">
-              Online Booking
-              <.icon name="hero-x-mark" class="w-3 h-3" />
+            <button
+              phx-click="remove_filter"
+              phx-value-filter="online_booking"
+              class="badge badge-primary gap-1 p-3"
+            >
+              Online Booking <.icon name="hero-x-mark" class="w-3 h-3" />
             </button>
           <% end %>
 
@@ -160,16 +155,14 @@ defmodule MedicWeb.SearchLive do
       <div class="flex flex-col lg:flex-row gap-8">
         <%!-- Filter Sidebar --%>
         <aside class={"w-full lg:w-72 shrink-0 space-y-6 #{if @show_filters, do: "block", else: "hidden lg:block"}"}>
-          
           <%!-- On Duty Accordion --%>
           <%= if @on_duty_hospitals != [] do %>
             <div class="collapse collapse-arrow bg-base-200 border border-base-300">
-              <input type="checkbox" /> 
+              <input type="checkbox" />
               <div class="collapse-title text-sm font-semibold flex items-center gap-2">
-                <.icon name="hero-building-office-2" class="w-4 h-4" />
-                On Duty Today
+                <.icon name="hero-building-office-2" class="w-4 h-4" /> On Duty Today
               </div>
-              <div class="collapse-content text-xs"> 
+              <div class="collapse-content text-xs">
                 <ul class="space-y-3 pt-2">
                   <%= for hospital <- @on_duty_hospitals do %>
                     <li class="border-b border-base-content/10 last:border-0 pb-2 last:pb-0">
@@ -198,14 +191,39 @@ defmodule MedicWeb.SearchLive do
                   <span class="label-text font-medium">Specialty</span>
                 </label>
                 <div class="dropdown w-full">
-                  <div tabindex="0" role="button" class="btn btn-outline w-full justify-between font-normal">
-                    <%= if @selected_specialty, do: get_specialty_name(@specialties, @selected_specialty), else: "All Specialties" %>
+                  <div
+                    tabindex="0"
+                    role="button"
+                    class="btn btn-outline w-full justify-between font-normal"
+                  >
+                    <%= if @selected_specialty,
+                      do: get_specialty_name(@specialties, @selected_specialty),
+                      else: "All Specialties" %>
                     <.icon name="hero-chevron-down" class="w-4 h-4" />
                   </div>
-                  <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow-sm max-h-60 overflow-y-auto block">
-                    <li><a phx-click="filter_specialty" phx-value-value="" class={if !@selected_specialty, do: "active"}>All Specialties</a></li>
+                  <ul
+                    tabindex="0"
+                    class="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow-sm max-h-60 overflow-y-auto block"
+                  >
+                    <li>
+                      <a
+                        phx-click="filter_specialty"
+                        phx-value-value=""
+                        class={if !@selected_specialty, do: "active"}
+                      >
+                        All Specialties
+                      </a>
+                    </li>
                     <%= for specialty <- @specialties do %>
-                      <li><a phx-click="filter_specialty" phx-value-value={specialty.slug} class={if @selected_specialty == specialty.slug, do: "active"}><%= specialty.name_en %></a></li>
+                      <li>
+                        <a
+                          phx-click="filter_specialty"
+                          phx-value-value={specialty.slug}
+                          class={if @selected_specialty == specialty.slug, do: "active"}
+                        >
+                          <%= specialty.name_en %>
+                        </a>
+                      </li>
                     <% end %>
                   </ul>
                 </div>
@@ -217,14 +235,37 @@ defmodule MedicWeb.SearchLive do
                   <span class="label-text font-medium">City</span>
                 </label>
                 <div class="dropdown w-full">
-                  <div tabindex="0" role="button" class="btn btn-outline w-full justify-between font-normal">
+                  <div
+                    tabindex="0"
+                    role="button"
+                    class="btn btn-outline w-full justify-between font-normal"
+                  >
                     <%= if @selected_city, do: @selected_city, else: "All Cities" %>
                     <.icon name="hero-chevron-down" class="w-4 h-4" />
                   </div>
-                  <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow-sm max-h-60 overflow-y-auto block">
-                    <li><a phx-click="filter_city" phx-value-value="" class={if !@selected_city, do: "active"}>All Cities</a></li>
+                  <ul
+                    tabindex="0"
+                    class="dropdown-content menu bg-base-100 rounded-box z-[1] w-full p-2 shadow-sm max-h-60 overflow-y-auto block"
+                  >
+                    <li>
+                      <a
+                        phx-click="filter_city"
+                        phx-value-value=""
+                        class={if !@selected_city, do: "active"}
+                      >
+                        All Cities
+                      </a>
+                    </li>
                     <%= for city <- @cities do %>
-                      <li><a phx-click="filter_city" phx-value-value={city} class={if @selected_city == city, do: "active"}><%= city %></a></li>
+                      <li>
+                        <a
+                          phx-click="filter_city"
+                          phx-value-value={city}
+                          class={if @selected_city == city, do: "active"}
+                        >
+                          <%= city %>
+                        </a>
+                      </li>
                     <% end %>
                   </ul>
                 </div>
@@ -235,8 +276,7 @@ defmodule MedicWeb.SearchLive do
               <%!-- Rating Filter --%>
               <div>
                 <h3 class="font-medium text-sm mb-3 flex items-center gap-2">
-                  <.icon name="hero-star" class="w-4 h-4 text-warning" />
-                  Rating
+                  <.icon name="hero-star" class="w-4 h-4 text-warning" /> Rating
                 </h3>
                 <div class="space-y-2">
                   <label class="label cursor-pointer justify-start gap-3 p-0">
@@ -278,8 +318,7 @@ defmodule MedicWeb.SearchLive do
               <%!-- Price Filter --%>
               <div>
                 <h3 class="font-medium text-sm mb-3 flex items-center gap-2">
-                  <.icon name="hero-currency-euro" class="w-4 h-4 text-success" />
-                  Max Price
+                  <.icon name="hero-currency-euro" class="w-4 h-4 text-success" /> Max Price
                 </h3>
                 <input
                   type="range"
@@ -306,8 +345,7 @@ defmodule MedicWeb.SearchLive do
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <span class="label-text flex items-center gap-2">
-                      <.icon name="hero-calendar" class="w-4 h-4 text-info" />
-                      Online Booking
+                      <.icon name="hero-calendar" class="w-4 h-4 text-info" /> Online Booking
                     </span>
                     <input
                       type="checkbox"
@@ -321,8 +359,7 @@ defmodule MedicWeb.SearchLive do
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <span class="label-text flex items-center gap-2">
-                      <.icon name="hero-check-badge" class="w-4 h-4 text-success" />
-                      Verified Only
+                      <.icon name="hero-check-badge" class="w-4 h-4 text-success" /> Verified Only
                     </span>
                     <input
                       type="checkbox"
@@ -361,16 +398,27 @@ defmodule MedicWeb.SearchLive do
           <%!-- Results Grid --%>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <%= for doctor <- @doctors do %>
-              <.link navigate={~p"/doctors/#{doctor.id}"} class="card card-bordered w-full bg-base-100 card-sm shadow-sm hover:shadow-md transition-all duration-300">
+              <.link
+                navigate={~p"/doctors/#{doctor.id}"}
+                class="card card-bordered w-full bg-base-100 card-compact shadow-sm hover:shadow-md transition-all duration-300"
+              >
                 <div class="card-body">
                   <div class="flex items-start gap-4 mb-2">
-                    <div class="avatar placeholder" style={"view-transition-name: doctor-avatar-#{doctor.id}"}>
+                    <div
+                      class="avatar placeholder"
+                      style={"view-transition-name: doctor-avatar-#{doctor.id}"}
+                    >
                       <div class="w-12 h-12 rounded-full bg-base-300 text-base-content">
-                        <span class="text-lg font-bold"><%= String.at(doctor.first_name, 0) %><%= String.at(doctor.last_name, 0) %></span>
+                        <span class="text-lg font-bold">
+                          <%= String.at(doctor.first_name, 0) %><%= String.at(doctor.last_name, 0) %>
+                        </span>
                       </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <h2 class="card-title text-base" style={"view-transition-name: doctor-name-#{doctor.id}"}>
+                      <h2
+                        class="card-title text-base"
+                        style={"view-transition-name: doctor-name-#{doctor.id}"}
+                      >
                         Dr. <%= doctor.first_name %> <%= doctor.last_name %>
                       </h2>
                       <p class="text-sm text-base-content/70 truncate">
@@ -382,14 +430,12 @@ defmodule MedicWeb.SearchLive do
                   <div class="flex flex-wrap gap-2 my-2">
                     <%= if doctor.verified do %>
                       <div class="badge badge-success gap-1 text-success-content">
-                        <.icon name="hero-check-badge" class="size-[1em]" />
-                        Verified
+                        <.icon name="hero-check-badge" class="size-[1em]" /> Verified
                       </div>
                     <% end %>
                     <%= if doctor.has_cal_com do %>
                       <div class="badge badge-info gap-1 text-info-content">
-                        <.icon name="hero-calendar" class="size-[1em]" />
-                        Online
+                        <.icon name="hero-calendar" class="size-[1em]" /> Online
                       </div>
                     <% end %>
                   </div>
@@ -398,9 +444,11 @@ defmodule MedicWeb.SearchLive do
                     <div class="flex items-center gap-2">
                       <.icon name="hero-star" class="size-[1.2em] text-warning" />
                       <span class="font-bold"><%= Float.round(doctor.rating || 0.0, 1) %></span>
-                      <span class="text-base-content/60">(<%= doctor.review_count || 0 %> reviews)</span>
+                      <span class="text-base-content/60">
+                        (<%= doctor.review_count || 0 %> reviews)
+                      </span>
                     </div>
-                    
+
                     <%= if doctor.city do %>
                       <div class="flex items-center gap-2">
                         <.icon name="hero-map-pin" class="size-[1.2em]" />
@@ -411,7 +459,10 @@ defmodule MedicWeb.SearchLive do
                     <%= if doctor.consultation_fee do %>
                       <div class="flex items-center gap-2">
                         <.icon name="hero-currency-euro" class="size-[1.2em]" />
-                        <span><span class="font-semibold">€<%= trunc(doctor.consultation_fee) %></span> / visit</span>
+                        <span>
+                          <span class="font-semibold">€<%= trunc(doctor.consultation_fee) %></span>
+                          / visit
+                        </span>
                       </div>
                     <% end %>
                   </div>
@@ -446,8 +497,7 @@ defmodule MedicWeb.SearchLive do
           <%= if @has_more do %>
             <div class="text-center mt-12">
               <button phx-click="load_more" class="btn btn-outline btn-primary btn-wide">
-                Load more results
-                <.icon name="hero-arrow-down" class="w-4 h-4" />
+                Load more results <.icon name="hero-arrow-down" class="w-4 h-4" />
               </button>
             </div>
           <% end %>
@@ -519,11 +569,12 @@ defmodule MedicWeb.SearchLive do
 
   @impl true
   def handle_event("search", %{"value" => query}, socket) do
-    organ_matches = if String.length(query) >= 3 do
-      MedicalTaxonomy.search_specialties_by_organ(query) |> Enum.take(5)
-    else
-      []
-    end
+    organ_matches =
+      if String.length(query) >= 3 do
+        MedicalTaxonomy.search_specialties_by_organ(query) |> Enum.take(5)
+      else
+        []
+      end
 
     socket =
       socket
@@ -587,7 +638,11 @@ defmodule MedicWeb.SearchLive do
   def handle_event("toggle_online_booking", _, socket) do
     socket =
       socket
-      |> assign(online_booking_only: !socket.assigns.online_booking_only, page: 1, searching: true)
+      |> assign(
+        online_booking_only: !socket.assigns.online_booking_only,
+        page: 1,
+        searching: true
+      )
       |> perform_search()
       |> push_url_params()
 
@@ -719,7 +774,8 @@ defmodule MedicWeb.SearchLive do
         opts
       end
 
-    opts = if assigns.selected_city, do: Keyword.put(opts, :city, assigns.selected_city), else: opts
+    opts =
+      if assigns.selected_city, do: Keyword.put(opts, :city, assigns.selected_city), else: opts
 
     doctors =
       Doctors.list_doctors(opts)
@@ -756,15 +812,22 @@ defmodule MedicWeb.SearchLive do
   defp maybe_filter_rating(doctors, min), do: Enum.filter(doctors, &(&1.rating >= min))
 
   defp maybe_filter_price(doctors, nil), do: doctors
-  defp maybe_filter_price(doctors, max), do: Enum.filter(doctors, &(&1.consultation_fee && &1.consultation_fee <= max))
+
+  defp maybe_filter_price(doctors, max),
+    do: Enum.filter(doctors, &(&1.consultation_fee && &1.consultation_fee <= max))
 
   defp maybe_filter_online(doctors, false), do: doctors
-  defp maybe_filter_online(doctors, true), do: Enum.filter(doctors, &(&1.has_cal_com))
+  defp maybe_filter_online(doctors, true), do: Enum.filter(doctors, & &1.has_cal_com)
 
   defp sort_doctors(doctors, "rating"), do: Enum.sort_by(doctors, &(&1.rating || 0), :desc)
   defp sort_doctors(doctors, "reviews"), do: Enum.sort_by(doctors, &(&1.review_count || 0), :desc)
-  defp sort_doctors(doctors, "price_low"), do: Enum.sort_by(doctors, &(&1.consultation_fee || 999))
-  defp sort_doctors(doctors, "price_high"), do: Enum.sort_by(doctors, &(&1.consultation_fee || 0), :desc)
+
+  defp sort_doctors(doctors, "price_low"),
+    do: Enum.sort_by(doctors, &(&1.consultation_fee || 999))
+
+  defp sort_doctors(doctors, "price_high"),
+    do: Enum.sort_by(doctors, &(&1.consultation_fee || 0), :desc)
+
   defp sort_doctors(doctors, _), do: doctors
 
   defp push_url_params(socket) do
@@ -772,18 +835,46 @@ defmodule MedicWeb.SearchLive do
     assigns = socket.assigns
 
     params = if assigns.query != "", do: Map.put(params, "q", assigns.query), else: params
-    params = if assigns.selected_specialty, do: Map.put(params, "specialty", assigns.selected_specialty), else: params
-    params = if assigns.selected_city, do: Map.put(params, "city", assigns.selected_city), else: params
-    params = if assigns.min_rating, do: Map.put(params, "rating", assigns.min_rating), else: params
-    params = if assigns.max_price, do: Map.put(params, "max_price", assigns.max_price), else: params
+
+    params =
+      if assigns.selected_specialty,
+        do: Map.put(params, "specialty", assigns.selected_specialty),
+        else: params
+
+    params =
+      if assigns.selected_city, do: Map.put(params, "city", assigns.selected_city), else: params
+
+    params =
+      if assigns.min_rating, do: Map.put(params, "rating", assigns.min_rating), else: params
+
+    params =
+      if assigns.max_price, do: Map.put(params, "max_price", assigns.max_price), else: params
+
     params = if assigns.online_booking_only, do: Map.put(params, "online", "true"), else: params
-    params = if assigns.sort_by != "rating", do: Map.put(params, "sort", assigns.sort_by), else: params
+
+    params =
+      if assigns.sort_by != "rating", do: Map.put(params, "sort", assigns.sort_by), else: params
 
     push_patch(socket, to: ~p"/search?#{params}", replace: true)
   end
 
   defp get_cities do
-    ["Athens", "Thessaloniki", "Patras", "Heraklion", "Larissa", "Volos", "Ioannina", "Chania", "Rhodes", "Alexandroupoli", "Kalamata", "Kavala", "Serres", "Corfu"]
+    [
+      "Athens",
+      "Thessaloniki",
+      "Patras",
+      "Heraklion",
+      "Larissa",
+      "Volos",
+      "Ioannina",
+      "Chania",
+      "Rhodes",
+      "Alexandroupoli",
+      "Kalamata",
+      "Kavala",
+      "Serres",
+      "Corfu"
+    ]
   end
 
   defp typesense_available? do
@@ -797,22 +888,26 @@ defmodule MedicWeb.SearchLive do
 
   defp parse_float(nil), do: nil
   defp parse_float(""), do: nil
+
   defp parse_float(val) when is_binary(val) do
     case Float.parse(val) do
       {f, _} -> f
       :error -> nil
     end
   end
+
   defp parse_float(val) when is_number(val), do: val
 
   defp parse_int(nil), do: nil
   defp parse_int(""), do: nil
+
   defp parse_int(val) when is_binary(val) do
     case Integer.parse(val) do
       {i, _} -> i
       :error -> nil
     end
   end
+
   defp parse_int(val) when is_integer(val), do: val
 
   defp has_active_filters?(assigns) do
@@ -828,7 +923,7 @@ defmodule MedicWeb.SearchLive do
       assigns.max_price,
       assigns.online_booking_only && true
     ]
-    |> Enum.count(&(&1))
+    |> Enum.count(& &1)
   end
 
   defp get_specialty_name(specialties, slug) do

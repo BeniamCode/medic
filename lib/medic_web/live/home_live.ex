@@ -1,7 +1,6 @@
 defmodule MedicWeb.HomeLive do
   use MedicWeb, :live_view
 
-  alias Medic.Doctors
   alias Medic.MedicalTaxonomy
   alias Medic.Hospitals
 
@@ -10,14 +9,13 @@ defmodule MedicWeb.HomeLive do
     <div class="min-h-screen">
       <%!-- Hero Section --%>
       <section class="hero min-h-[70vh] bg-base-200 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5">
+        </div>
         <div class="hero-content text-center relative z-10">
           <div class="max-w-3xl">
             <h1 class="text-5xl md:text-7xl font-bold leading-tight">
-              Find the right
-              <span class="text-primary">doctor</span>
-              <br />
-              for you
+              Find the right <span class="text-primary">doctor</span>
+              <br /> for you
             </h1>
             <p class="py-6 text-xl text-base-content/70 max-w-2xl mx-auto">
               Search among hundreds of specialized doctors
@@ -28,7 +26,10 @@ defmodule MedicWeb.HomeLive do
             <div class="max-w-2xl mx-auto mt-8">
               <.form for={%{}} action={~p"/search"} method="get" class="join w-full shadow-lg">
                 <div class="relative flex-1 join-item">
-                  <.icon name="hero-magnifying-glass" class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-base-content/50" />
+                  <.icon
+                    name="hero-magnifying-glass"
+                    class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-base-content/50"
+                  />
                   <input
                     type="text"
                     name="q"
@@ -55,10 +56,12 @@ defmodule MedicWeb.HomeLive do
               </div>
               <div>
                 <h2 class="text-2xl font-bold">Hospitals On Duty Today</h2>
-                <p class="text-sm text-base-content/60"><%= Calendar.strftime(Date.utc_today(), "%A, %d %B %Y") %></p>
+                <p class="text-sm text-base-content/60">
+                  <%= Calendar.strftime(Date.utc_today(), "%A, %d %B %Y") %>
+                </p>
               </div>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <%= for hospital <- @on_duty_hospitals do %>
                 <div class="card bg-base-100 shadow-xl border border-base-200 hover:border-primary transition-colors">
@@ -73,9 +76,11 @@ defmodule MedicWeb.HomeLive do
                       </div>
                       <div class="badge badge-secondary badge-outline text-xs">On Call</div>
                     </div>
-                    
+
                     <div class="mt-4">
-                      <div class="text-xs font-bold text-base-content/50 mb-2 uppercase tracking-wider">Departments</div>
+                      <div class="text-xs font-bold text-base-content/50 mb-2 uppercase tracking-wider">
+                        Departments
+                      </div>
                       <div class="flex flex-wrap gap-1.5">
                         <%= for schedule <- hospital.hospital_schedules do %>
                           <%= for specialty <- schedule.specialties do %>
@@ -200,8 +205,7 @@ defmodule MedicWeb.HomeLive do
             Join the Medic network and increase your visibility
           </p>
           <.link navigate={~p"/register/doctor"} class="btn btn-primary btn-lg">
-            <.icon name="hero-identification" class="size-5 mr-2" />
-            Doctor Registration
+            <.icon name="hero-identification" class="size-5 mr-2" /> Doctor Registration
           </.link>
         </div>
       </section>
@@ -213,11 +217,12 @@ defmodule MedicWeb.HomeLive do
     # Use popular specialties from taxonomy
     specialties = MedicalTaxonomy.popular_specialties()
     on_duty_hospitals = Hospitals.list_on_duty_hospitals(Date.utc_today())
-    
-    {:ok, assign(socket, 
-      specialties: specialties, 
-      on_duty_hospitals: on_duty_hospitals,
-      page_title: "Find a Doctor"
-    )}
+
+    {:ok,
+     assign(socket,
+       specialties: specialties,
+       on_duty_hospitals: on_duty_hospitals,
+       page_title: "Find a Doctor"
+     )}
   end
 end

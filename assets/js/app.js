@@ -89,6 +89,36 @@ const Hooks = {
   }
 };
 
+const getThemeColor = (variableName, fallbackVariable) => {
+  const styles = getComputedStyle(document.documentElement)
+  const fromTheme = styles.getPropertyValue(variableName)?.trim()
+  if (fromTheme) return fromTheme
+
+  if (fallbackVariable) {
+    const fromFallback = styles.getPropertyValue(fallbackVariable)?.trim()
+    if (fromFallback) return fromFallback
+  }
+
+  const probe = document.createElement("span")
+  probe.className = "text-primary"
+  probe.style.position = "absolute"
+  probe.style.opacity = "0"
+  probe.style.pointerEvents = "none"
+  document.body.appendChild(probe)
+  const computed = getComputedStyle(probe).color
+  probe.remove()
+  return computed || "currentColor"
+}
+
+const configureTopbar = () => {
+  const primary = getThemeColor("--color-primary", "--fallback-p")
+  const shadow = getThemeColor("--color-base-content", "--fallback-nc")
+  topbar.config({ barColors: { 0: primary }, shadowColor: shadow })
+}
+
+configureTopbar()
+window.addEventListener("phx:theme-changed", configureTopbar)
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
@@ -108,7 +138,6 @@ const liveSocket = new LiveSocket("/live", Socket, {
 })
 
 // Show progress bar on live navigation and form submits
-topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
@@ -155,4 +184,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

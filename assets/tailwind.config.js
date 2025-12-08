@@ -12,11 +12,7 @@ module.exports = {
         "../lib/medic_web/**/*.*ex"
     ],
     theme: {
-        extend: {
-            colors: {
-                brand: "#FD4F00",
-            }
-        },
+        extend: {},
     },
     plugins: [
         require("@tailwindcss/forms"),
@@ -74,6 +70,6 @@ module.exports = {
         })
     ],
     daisyui: {
-        themes: ["corporate"],
+        themes: ["cupcake"],
     },
 }

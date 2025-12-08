@@ -7,7 +7,6 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
   alias Medic.Doctors
   alias Medic.Doctors.Doctor
-  alias Medic.MedicalTaxonomy
 
   @steps [:welcome, :personal, :specialty, :location, :pricing, :complete]
 
@@ -19,10 +18,13 @@ defmodule MedicWeb.DoctorOnboardingLive do
       <div class="fixed top-0 left-0 right-0 z-50 bg-base-100/80 backdrop-blur-sm border-b border-base-200">
         <div class="max-w-2xl mx-auto px-4 py-3">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-sm text-base-content/60">Step <%= step_number(@step) %> of <%= length(@steps) - 1 %></span>
+            <span class="text-sm text-base-content/60">
+              Step <%= step_number(@step) %> of <%= length(@steps) - 1 %>
+            </span>
             <span class="text-sm font-bold text-primary"><%= step_progress(@step) %>%</span>
           </div>
-          <progress class="progress progress-primary w-full" value={step_progress(@step)} max="100"></progress>
+          <progress class="progress progress-primary w-full" value={step_progress(@step)} max="100">
+          </progress>
         </div>
       </div>
 
@@ -32,19 +34,14 @@ defmodule MedicWeb.DoctorOnboardingLive do
           <%= case @step do %>
             <% :welcome -> %>
               <.step_welcome />
-
             <% :personal -> %>
               <.step_personal form={@form} />
-
             <% :specialty -> %>
               <.step_specialty form={@form} specialty_options={@specialty_options} />
-
             <% :location -> %>
               <.step_location form={@form} />
-
             <% :pricing -> %>
               <.step_pricing form={@form} />
-
             <% :complete -> %>
               <.step_complete doctor={@doctor} />
           <% end %>
@@ -57,8 +54,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
           <div class="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
             <%= if @step != :welcome do %>
               <button phx-click="prev_step" class="btn btn-ghost">
-                <.icon name="hero-arrow-left" class="size-4 mr-2" />
-                Back
+                <.icon name="hero-arrow-left" class="size-4 mr-2" /> Back
               </button>
             <% else %>
               <div></div>
@@ -151,7 +147,10 @@ defmodule MedicWeb.DoctorOnboardingLive do
         <div class="text-center pt-4">
           <div class="inline-flex items-center gap-2 text-base-content/50 text-sm">
             <.icon name="hero-user-circle" class="size-5" />
-            <span>Patients will see: Dr. <%= @form[:first_name].value || "___" %> <%= @form[:last_name].value || "___" %></span>
+            <span>
+              Patients will see: Dr. <%= @form[:first_name].value || "___" %> <%= @form[:last_name].value ||
+                "___" %>
+            </span>
           </div>
         </div>
       </.form>
@@ -172,10 +171,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
       <.form for={@form} phx-change="validate" class="space-y-6">
         <div class="form-control">
-          <select
-            name="doctor[specialty_id]"
-            class="select select-lg select-bordered w-full text-lg"
-          >
+          <select name="doctor[specialty_id]" class="select select-lg select-bordered w-full text-lg">
             <option value="">Select your specialty...</option>
             <%= for {name, id} <- @specialty_options do %>
               <option value={id} selected={to_string(@form[:specialty_id].value) == to_string(id)}>
@@ -257,7 +253,9 @@ defmodule MedicWeb.DoctorOnboardingLive do
             <span class="label-text text-base font-bold">Consultation Fee (EUR)</span>
           </label>
           <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-base-content/50">€</span>
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-base-content/50">
+              €
+            </span>
             <input
               type="number"
               name="doctor[consultation_fee]"
@@ -269,7 +267,9 @@ defmodule MedicWeb.DoctorOnboardingLive do
             />
           </div>
           <label class="label">
-            <span class="label-text-alt text-base-content/60">Leave empty if you prefer not to display pricing</span>
+            <span class="label-text-alt text-base-content/60">
+              Leave empty if you prefer not to display pricing
+            </span>
           </label>
         </div>
       </.form>
@@ -316,8 +316,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
       <div class="flex flex-col gap-3 max-w-xs mx-auto pt-4">
         <.link navigate={~p"/doctor/schedule"} class="btn btn-primary btn-lg">
-          <.icon name="hero-calendar-days" class="size-5 mr-2" />
-          Set Your Availability
+          <.icon name="hero-calendar-days" class="size-5 mr-2" /> Set Your Availability
         </.link>
         <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost">
           Go to Dashboard
@@ -337,8 +336,8 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
     # Get or create doctor profile
     doctor = Doctors.get_doctor_by_user_id(user.id)
-    
-    {doctor, changeset} = 
+
+    {doctor, changeset} =
       if doctor do
         {doctor, Doctors.change_doctor(doctor)}
       else
@@ -364,11 +363,12 @@ defmodule MedicWeb.DoctorOnboardingLive do
     next_step = Enum.at(@steps, current_idx + 1, :complete)
 
     # Save progress when moving forward (except from welcome)
-    socket = if socket.assigns.step != :welcome do
-      save_progress(socket)
-    else
-      socket
-    end
+    socket =
+      if socket.assigns.step != :welcome do
+        save_progress(socket)
+      else
+        socket
+      end
 
     {:noreply, assign(socket, step: next_step)}
   end
@@ -419,7 +419,8 @@ defmodule MedicWeb.DoctorOnboardingLive do
   end
 
   defp step_progress(step) do
-    total = length(@steps) - 1  # Exclude :complete from progress
+    # Exclude :complete from progress
+    total = length(@steps) - 1
     current = step_number(step)
     round(current / total * 100)
   end

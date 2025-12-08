@@ -30,14 +30,8 @@ defmodule Mix.Tasks.Search.Setup do
         exit(:shutdown)
     end
 
-    case Medic.Search.sync_all_doctors() do
-      {:ok, count} ->
-        IO.puts("✓ Indexed #{count} doctors")
-        IO.puts("\n✅ Search setup complete!")
-
-      {:error, reason} ->
-        IO.puts("✗ Indexing failed: #{inspect(reason)}")
-        exit(:shutdown)
-    end
+    {:ok, count} = Medic.Search.sync_all_doctors()
+    IO.puts("✓ Indexed #{count} doctors")
+    IO.puts("\n✅ Search setup complete!")
   end
 end

@@ -7,7 +7,6 @@ defmodule Medic.Appointments do
   alias Medic.Repo
   alias Medic.Appointments.Appointment
   alias Medic.Notifications
-  alias Medic.Doctors
 
   @doc """
   Returns the list of appointments.
@@ -32,29 +31,35 @@ defmodule Medic.Appointments do
   end
 
   defp maybe_filter_patient(query, nil), do: query
+
   defp maybe_filter_patient(query, patient_id) do
     from a in query, where: a.patient_id == ^patient_id
   end
 
   defp maybe_filter_doctor(query, nil), do: query
+
   defp maybe_filter_doctor(query, doctor_id) do
     from a in query, where: a.doctor_id == ^doctor_id
   end
 
   defp maybe_filter_status(query, nil), do: query
+
   defp maybe_filter_status(query, status) when is_list(status) do
     from a in query, where: a.status in ^status
   end
+
   defp maybe_filter_status(query, status) do
     from a in query, where: a.status == ^status
   end
 
   defp maybe_filter_upcoming(query, true) do
     now = DateTime.utc_now()
+
     from a in query,
       where: a.starts_at > ^now,
       where: a.status in ["pending", "confirmed"]
   end
+
   defp maybe_filter_upcoming(query, _), do: query
 
   defp maybe_preload(query, nil), do: query
@@ -81,29 +86,33 @@ defmodule Medic.Appointments do
   The PostgreSQL exclusion constraint will reject double-bookings.
   """
   def create_appointment(attrs \\ %{}) do
-    result = %Appointment{}
-    |> Appointment.changeset(attrs)
-    |> Repo.insert()
-    |> handle_constraint_error()
+    result =
+      %Appointment{}
+      |> Appointment.changeset(attrs)
+      |> Repo.insert()
+      |> handle_constraint_error()
 
     case result do
       {:ok, appointment} ->
         notify_doctor_booking(appointment)
         {:ok, appointment}
-      error -> error
+
+      error ->
+        error
     end
   end
 
   defp notify_doctor_booking(appointment) do
     # Preload patient and doctor to get names and user_id
     appointment = Repo.preload(appointment, [:patient, :doctor])
-    
+
     if appointment.doctor do
       Notifications.create_notification(%{
         user_id: appointment.doctor.user_id,
         type: "booking",
         title: "New Appointment Request",
-        message: "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
+        message:
+          "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
         resource_id: appointment.id,
         resource_type: "appointment"
       })
@@ -159,28 +168,32 @@ defmodule Medic.Appointments do
   Cancels an appointment.
   """
   def cancel_appointment(%Appointment{} = appointment, reason \\ nil) do
-    result = appointment
-    |> Appointment.cancel_changeset(reason)
-    |> Repo.update()
+    result =
+      appointment
+      |> Appointment.cancel_changeset(reason)
+      |> Repo.update()
 
     case result do
       {:ok, updated_appointment} ->
         notify_doctor_cancellation(updated_appointment)
         {:ok, updated_appointment}
-      error -> error
+
+      error ->
+        error
     end
   end
 
   defp notify_doctor_cancellation(appointment) do
     # Preload patient and doctor
     appointment = Repo.preload(appointment, [:patient, :doctor])
-    
+
     if appointment.doctor do
       Notifications.create_notification(%{
         user_id: appointment.doctor.user_id,
         type: "cancellation",
         title: "Appointment Cancelled",
-        message: "Appointment with #{appointment.patient.first_name} #{appointment.patient.last_name} has been cancelled.",
+        message:
+          "Appointment with #{appointment.patient.first_name} #{appointment.patient.last_name} has been cancelled.",
         resource_id: appointment.id,
         resource_type: "appointment"
       })
@@ -244,6 +257,7 @@ defmodule Medic.Appointments do
 
   # Handle exclusion constraint violations gracefully
   defp handle_constraint_error({:ok, appointment}), do: {:ok, appointment}
+
   defp handle_constraint_error({:error, %Ecto.Changeset{} = changeset}) do
     if has_constraint_error?(changeset, :no_double_bookings) do
       {:error, :slot_already_booked}
@@ -256,6 +270,7 @@ defmodule Medic.Appointments do
     Enum.any?(changeset.errors, fn
       {_field, {_msg, opts}} ->
         Keyword.get(opts, :constraint) == constraint_name
+
       _ ->
         false
     end)

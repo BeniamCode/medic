@@ -2,8 +2,6 @@ defmodule Medic.Patients do
   @moduledoc """
   The Patients context for managing patient profiles.
   """
-
-  import Ecto.Query
   alias Medic.Repo
   alias Medic.Patients.Patient
 

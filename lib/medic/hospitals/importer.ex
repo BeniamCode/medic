@@ -1,8 +1,5 @@
 defmodule Medic.Hospitals.Importer do
   alias Medic.Hospitals
-  alias Medic.Hospitals.Hospital
-  alias Medic.Hospitals.HospitalSchedule
-  alias Medic.Repo
 
   NimbleCSV.define(SemicolonCSV, separator: ";", escape: "\"")
 
@@ -18,7 +15,7 @@ defmodule Medic.Hospitals.Importer do
     # Row 1: Month "ΔΕΚΕΜΒΡΙΟΣ 2025"
     # Row 2: Days
     # Row 3: Headers (Dates)
-    [month_row, _days_row, dates_row | data_rows] = rows
+    [_month_row, _days_row, dates_row | data_rows] = rows
 
     dates = extract_dates(dates_row)
 
@@ -36,15 +33,17 @@ defmodule Medic.Hospitals.Importer do
 
   defp parse_date(date_str) do
     case String.split(date_str, "/") do
-      [m, d, y] -> 
+      [m, d, y] ->
         year = 2000 + String.to_integer(y)
         Date.new!(year, String.to_integer(m), String.to_integer(d))
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
   defp process_data_row([hospital_name, clinic | schedule_values], dates, current_hospital) do
-    hospital = 
+    hospital =
       if hospital_name != "" do
         find_or_create_hospital(hospital_name)
       else
@@ -66,11 +65,14 @@ defmodule Medic.Hospitals.Importer do
   defp find_or_create_hospital(name) do
     # Clean up name
     name = String.trim(name)
+
     case Hospitals.get_hospital_by_name(name) do
-      nil -> 
+      nil ->
         {:ok, hospital} = Hospitals.create_hospital(%{name: name, city: "Thessaloniki"})
         hospital
-      hospital -> hospital
+
+      hospital ->
+        hospital
     end
   end
 
@@ -83,6 +85,7 @@ defmodule Medic.Hospitals.Importer do
           date: date,
           specialties: [specialty]
         })
+
       schedule ->
         if specialty not in schedule.specialties do
           Hospitals.update_hospital_schedule(schedule, %{
