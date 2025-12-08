@@ -70,6 +70,6 @@ module.exports = {
         })
     ],
     daisyui: {
-        themes: ["cupcake"],
+        themes: ["corporate"],
     },
 }
