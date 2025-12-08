@@ -9,147 +9,149 @@ defmodule MedicWeb.DoctorDashboardLive do
 
   def render(assigns) do
     ~H"""
-    <div class="flex-1 space-y-4 p-8 pt-6">
-      <div class="flex items-center justify-between space-y-2">
+    <div class="p-4 md:p-8 space-y-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 class="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p class="text-muted-foreground">
+          <h2 class="text-3xl font-bold">Dashboard</h2>
+          <p class="text-base-content/70 mt-1">
             Good morning, Dr. <%= @doctor && @doctor.last_name || "Doctor" %>. Here's what's happening today.
           </p>
         </div>
-        <div class="flex items-center space-x-2">
-          <.link navigate={~p"/dashboard/doctor/profile"} class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-            <.icon name="hero-user-circle" class="mr-2 h-4 w-4" />
+        <div>
+          <.link navigate={~p"/dashboard/doctor/profile"} class="btn btn-primary">
+            <.icon name="hero-user-circle" class="size-5" />
             Profile
           </.link>
         </div>
       </div>
 
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Today's Appointments</h3>
-            <.icon name="hero-calendar" class="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold"><%= length(@today_appointments) %></div>
-            <p class="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+        <div class="stats shadow bg-base-100">
+          <div class="stat">
+            <div class="stat-figure text-primary">
+              <.icon name="hero-calendar" class="size-8" />
+            </div>
+            <div class="stat-title">Today's Appointments</div>
+            <div class="stat-value text-primary"><%= length(@today_appointments) %></div>
+            <div class="stat-desc">↗︎ 20.1% from last month</div>
           </div>
         </div>
-        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Pending Requests</h3>
-            <.icon name="hero-clock" class="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold"><%= @pending_count %></div>
-            <p class="text-xs text-muted-foreground">
-              Action required
-            </p>
-          </div>
-        </div>
-        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Confirmed (Week)</h3>
-            <.icon name="hero-check-circle" class="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold"><%= @upcoming_count %></div>
-            <p class="text-xs text-muted-foreground">
-              +19% from last week
-            </p>
+        
+        <div class="stats shadow bg-base-100">
+          <div class="stat">
+            <div class="stat-figure text-secondary">
+              <.icon name="hero-clock" class="size-8" />
+            </div>
+            <div class="stat-title">Pending Requests</div>
+            <div class="stat-value text-secondary"><%= @pending_count %></div>
+            <div class="stat-desc">Action required</div>
           </div>
         </div>
-        <div class="rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div class="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 class="tracking-tight text-sm font-medium">Rating</h3>
-            <.icon name="hero-star" class="h-4 w-4 text-muted-foreground" />
+
+        <div class="stats shadow bg-base-100">
+          <div class="stat">
+            <div class="stat-figure text-accent">
+              <.icon name="hero-check-circle" class="size-8" />
+            </div>
+            <div class="stat-title">Confirmed (Week)</div>
+            <div class="stat-value text-accent"><%= @upcoming_count %></div>
+            <div class="stat-desc">↗︎ 19% from last week</div>
           </div>
-          <div class="p-6 pt-0">
-            <div class="text-2xl font-bold"><%= @doctor && Float.round(@doctor.rating || 0.0, 1) || "N/A" %></div>
-            <p class="text-xs text-muted-foreground">
-              Based on <%= @doctor && @doctor.review_count || 0 %> reviews
-            </p>
+        </div>
+
+        <div class="stats shadow bg-base-100">
+          <div class="stat">
+            <div class="stat-figure text-warning">
+              <.icon name="hero-star" class="size-8" />
+            </div>
+            <div class="stat-title">Rating</div>
+            <div class="stat-value text-warning"><%= @doctor && Float.round(@doctor.rating || 0.0, 1) || "N/A" %></div>
+            <div class="stat-desc">Based on <%= @doctor && @doctor.review_count || 0 %> reviews</div>
           </div>
         </div>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div class="col-span-4 rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="font-semibold leading-none tracking-tight">Today's Schedule</h3>
-            <p class="text-sm text-muted-foreground">
+      <div class="grid gap-8 lg:grid-cols-3">
+        <div class="lg:col-span-2 card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h3 class="card-title">Today's Schedule</h3>
+            <p class="text-base-content/70">
               You have <%= length(@today_appointments) %> appointments today.
             </p>
-          </div>
-          <div class="p-6 pt-0">
+            
+            <div class="divider my-0"></div>
+
             <%= if @today_appointments == [] do %>
-              <div class="flex flex-col items-center justify-center py-8 text-center">
-                <.icon name="hero-calendar" class="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p class="text-muted-foreground">No appointments scheduled for today.</p>
+              <div class="flex flex-col items-center justify-center py-12 text-center opacity-50">
+                <.icon name="hero-calendar" class="size-16 mb-4" />
+                <p>No appointments scheduled for today.</p>
               </div>
             <% else %>
-              <div class="space-y-8">
-                <%= for appointment <- @today_appointments do %>
-                  <div class="flex items-center">
-                    <div class="space-y-1">
-                      <p class="text-sm font-medium leading-none">
-                        <%= appointment.patient && "#{appointment.patient.first_name} #{appointment.patient.last_name}" || "Patient" %>
-                      </p>
-                      <p class="text-sm text-muted-foreground">
-                        <%= format_time(appointment.starts_at) %> - <%= appointment.duration_minutes %> min
-                        <span class="ml-2 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                          <%= if appointment.appointment_type == "telemedicine", do: "Telemedicine", else: "In-person" %>
-                        </span>
-                      </p>
-                    </div>
-                    <div class={"ml-auto font-medium " <> status_color_class(appointment.status)}>
-                      <%= status_text(appointment.status) %>
-                    </div>
-                  </div>
-                <% end %>
+              <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                  <tbody>
+                    <%= for appointment <- @today_appointments do %>
+                      <tr>
+                        <td>
+                          <div class="font-bold">
+                            <%= appointment.patient && "#{appointment.patient.first_name} #{appointment.patient.last_name}" || "Patient" %>
+                          </div>
+                          <div class="text-sm opacity-50">
+                            <%= if appointment.appointment_type == "telemedicine", do: "Telemedicine", else: "In-person" %>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="font-medium">
+                            <%= format_time(appointment.starts_at) %>
+                          </div>
+                          <div class="text-xs opacity-50">
+                            <%= appointment.duration_minutes %> min
+                          </div>
+                        </td>
+                        <td class="text-right">
+                          <div class={"badge " <> status_badge_class(appointment.status)}>
+                            <%= status_text(appointment.status) %>
+                          </div>
+                        </td>
+                      </tr>
+                    <% end %>
+                  </tbody>
+                </table>
               </div>
             <% end %>
           </div>
         </div>
 
-        <div class="col-span-3 rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div class="flex flex-col space-y-1.5 p-6">
-            <h3 class="font-semibold leading-none tracking-tight">Quick Actions</h3>
-            <p class="text-sm text-muted-foreground">
-              Manage your practice
-            </p>
-          </div>
-          <div class="p-6 pt-0 space-y-2">
-            <.link navigate={~p"/doctor/schedule"} class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full justify-start">
-              <.icon name="hero-calendar" class="mr-2 h-4 w-4" />
-              Manage Availability
-            </.link>
-            <.link navigate={~p"/dashboard/doctor/profile"} class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full justify-start">
-              <.icon name="hero-user-circle" class="mr-2 h-4 w-4" />
-              Edit Profile
-            </.link>
-            <button class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full justify-start opacity-50 cursor-not-allowed">
-              <.icon name="hero-chart-bar" class="mr-2 h-4 w-4" />
-              Analytics (Coming Soon)
-            </button>
-          </div>
-          
-          <%= if @doctor && is_nil(@doctor.verified_at) do %>
-            <div class="p-6 pt-0 mt-4">
-              <div class="rounded-lg border border-warning/50 bg-warning/10 p-4 text-warning-foreground">
-                <div class="flex items-center gap-2">
-                  <.icon name="hero-exclamation-triangle" class="h-4 w-4" />
-                  <h5 class="font-medium leading-none tracking-tight">Verification Pending</h5>
-                </div>
-                <div class="mt-2 text-sm opacity-90">
-                  Complete your profile to appear in search results.
+        <div class="card bg-base-100 shadow-xl h-fit">
+          <div class="card-body">
+            <h3 class="card-title">Quick Actions</h3>
+            <p class="text-base-content/70 mb-4">Manage your practice</p>
+            
+            <div class="flex flex-col gap-2">
+              <.link navigate={~p"/doctor/schedule"} class="btn btn-outline justify-start">
+                <.icon name="hero-calendar" class="size-5" />
+                Manage Availability
+              </.link>
+              <.link navigate={~p"/dashboard/doctor/profile"} class="btn btn-outline justify-start">
+                <.icon name="hero-user-circle" class="size-5" />
+                Edit Profile
+              </.link>
+              <button class="btn btn-outline btn-disabled justify-start">
+                <.icon name="hero-chart-bar" class="size-5" />
+                Analytics (Coming Soon)
+              </button>
+            </div>
+            
+            <%= if @doctor && is_nil(@doctor.verified_at) do %>
+              <div class="alert alert-warning mt-4">
+                <.icon name="hero-exclamation-triangle" class="size-5" />
+                <div>
+                  <h3 class="font-bold">Verification Pending</h3>
+                  <div class="text-xs">Complete your profile to appear in search results.</div>
                 </div>
               </div>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         </div>
       </div>
     </div>
@@ -180,11 +182,11 @@ defmodule MedicWeb.DoctorDashboardLive do
      )}
   end
 
-  defp status_color_class("pending"), do: "text-yellow-600"
-  defp status_color_class("confirmed"), do: "text-green-600"
-  defp status_color_class("completed"), do: "text-blue-600"
-  defp status_color_class("cancelled"), do: "text-red-600"
-  defp status_color_class(_), do: "text-muted-foreground"
+  defp status_badge_class("pending"), do: "badge-warning"
+  defp status_badge_class("confirmed"), do: "badge-success"
+  defp status_badge_class("completed"), do: "badge-info"
+  defp status_badge_class("cancelled"), do: "badge-error"
+  defp status_badge_class(_), do: "badge-ghost"
 
   defp status_text("pending"), do: "Pending"
   defp status_text("confirmed"), do: "Confirmed"

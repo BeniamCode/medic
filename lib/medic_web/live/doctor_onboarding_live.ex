@@ -14,20 +14,15 @@ defmodule MedicWeb.DoctorOnboardingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 flex flex-col">
+    <div class="min-h-screen bg-base-200 flex flex-col">
       <%!-- Progress Bar --%>
       <div class="fixed top-0 left-0 right-0 z-50 bg-base-100/80 backdrop-blur-sm border-b border-base-200">
         <div class="max-w-2xl mx-auto px-4 py-3">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-base-content/60">Step <%= step_number(@step) %> of <%= length(@steps) - 1 %></span>
-            <span class="text-sm font-medium text-primary"><%= step_progress(@step) %>%</span>
+            <span class="text-sm font-bold text-primary"><%= step_progress(@step) %>%</span>
           </div>
-          <div class="w-full bg-base-200 rounded-full h-1.5">
-            <div
-              class="bg-primary h-1.5 rounded-full transition-all duration-500 ease-out"
-              style={"width: #{step_progress(@step)}%"}
-            ></div>
-          </div>
+          <progress class="progress progress-primary w-full" value={step_progress(@step)} max="100"></progress>
         </div>
       </div>
 
@@ -61,17 +56,17 @@ defmodule MedicWeb.DoctorOnboardingLive do
         <div class="fixed bottom-0 left-0 right-0 bg-base-100/80 backdrop-blur-sm border-t border-base-200">
           <div class="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
             <%= if @step != :welcome do %>
-              <button phx-click="prev_step" class="btn btn-ghost gap-2">
-                <.icon name="hero-arrow-left" class="w-4 h-4" />
+              <button phx-click="prev_step" class="btn btn-ghost">
+                <.icon name="hero-arrow-left" class="size-4 mr-2" />
                 Back
               </button>
             <% else %>
               <div></div>
             <% end %>
 
-            <button phx-click="next_step" class="btn btn-primary btn-lg gap-2">
+            <button phx-click="next_step" class="btn btn-primary btn-lg">
               <%= if @step == :pricing, do: "Complete Setup", else: "Continue" %>
-              <.icon name="hero-arrow-right" class="w-4 h-4" />
+              <.icon name="hero-arrow-right" class="size-4 ml-2" />
             </button>
           </div>
         </div>
@@ -85,8 +80,10 @@ defmodule MedicWeb.DoctorOnboardingLive do
   defp step_welcome(assigns) do
     ~H"""
     <div class="text-center space-y-8 animate-fade-in">
-      <div class="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-        <.icon name="hero-identification" class="w-12 h-12 text-primary" />
+      <div class="avatar placeholder">
+        <div class="bg-primary/10 text-primary rounded-full w-24">
+          <.icon name="hero-identification" class="size-12" />
+        </div>
       </div>
 
       <div class="space-y-4">
@@ -99,12 +96,12 @@ defmodule MedicWeb.DoctorOnboardingLive do
       </div>
 
       <div class="flex flex-wrap justify-center gap-4 text-sm text-base-content/60">
-        <div class="flex items-center gap-2">
-          <.icon name="hero-clock" class="w-4 h-4" />
+        <div class="badge badge-ghost gap-2 p-3">
+          <.icon name="hero-clock" class="size-4" />
           <span>Takes about 2 minutes</span>
         </div>
-        <div class="flex items-center gap-2">
-          <.icon name="hero-pencil-square" class="w-4 h-4" />
+        <div class="badge badge-ghost gap-2 p-3">
+          <.icon name="hero-pencil-square" class="size-4" />
           <span>Edit anytime later</span>
         </div>
       </div>
@@ -126,7 +123,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="form-control">
             <label class="label">
-              <span class="label-text text-base font-medium">First Name</span>
+              <span class="label-text text-base font-bold">First Name</span>
             </label>
             <input
               type="text"
@@ -139,7 +136,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
           </div>
           <div class="form-control">
             <label class="label">
-              <span class="label-text text-base font-medium">Last Name</span>
+              <span class="label-text text-base font-bold">Last Name</span>
             </label>
             <input
               type="text"
@@ -153,7 +150,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
         <div class="text-center pt-4">
           <div class="inline-flex items-center gap-2 text-base-content/50 text-sm">
-            <.icon name="hero-user-circle" class="w-5 h-5" />
+            <.icon name="hero-user-circle" class="size-5" />
             <span>Patients will see: Dr. <%= @form[:first_name].value || "___" %> <%= @form[:last_name].value || "___" %></span>
           </div>
         </div>
@@ -190,7 +187,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
         <div class="form-control">
           <label class="label">
-            <span class="label-text text-base font-medium">Brief Bio (optional)</span>
+            <span class="label-text text-base font-bold">Brief Bio (optional)</span>
           </label>
           <textarea
             name="doctor[bio]"
@@ -216,7 +213,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
       <.form for={@form} phx-change="validate" class="space-y-6">
         <div class="form-control">
           <label class="label">
-            <span class="label-text text-base font-medium">City</span>
+            <span class="label-text text-base font-bold">City</span>
           </label>
           <input
             type="text"
@@ -229,7 +226,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
         <div class="form-control">
           <label class="label">
-            <span class="label-text text-base font-medium">Practice Address (optional)</span>
+            <span class="label-text text-base font-bold">Practice Address (optional)</span>
           </label>
           <input
             type="text"
@@ -257,7 +254,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
       <.form for={@form} phx-change="validate" class="space-y-6">
         <div class="form-control">
           <label class="label">
-            <span class="label-text text-base font-medium">Consultation Fee (EUR)</span>
+            <span class="label-text text-base font-bold">Consultation Fee (EUR)</span>
           </label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-base-content/50">€</span>
@@ -285,8 +282,10 @@ defmodule MedicWeb.DoctorOnboardingLive do
   defp step_complete(assigns) do
     ~H"""
     <div class="text-center space-y-8 animate-fade-in">
-      <div class="w-24 h-24 mx-auto rounded-full bg-success/10 flex items-center justify-center">
-        <.icon name="hero-check-circle" class="w-16 h-16 text-success" />
+      <div class="avatar placeholder">
+        <div class="bg-success/10 text-success rounded-full w-24">
+          <.icon name="hero-check-circle" class="size-16" />
+        </div>
       </div>
 
       <div class="space-y-4">
@@ -298,16 +297,16 @@ defmodule MedicWeb.DoctorOnboardingLive do
         </p>
       </div>
 
-      <div class="card bg-base-200 max-w-sm mx-auto">
+      <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
         <div class="card-body items-center text-center">
           <div class="avatar placeholder">
             <div class="w-16 rounded-full bg-primary/10 text-primary">
-              <span class="text-2xl"><.icon name="hero-user" class="w-8 h-8" /></span>
+              <span class="text-2xl"><.icon name="hero-user" class="size-8" /></span>
             </div>
           </div>
-          <h3 class="text-lg font-semibold">Dr. <%= @doctor.first_name %> <%= @doctor.last_name %></h3>
+          <h3 class="text-lg font-bold">Dr. <%= @doctor.first_name %> <%= @doctor.last_name %></h3>
           <%= if @doctor.specialty do %>
-            <p class="text-primary"><%= @doctor.specialty.name_en %></p>
+            <p class="text-primary font-medium"><%= @doctor.specialty.name_en %></p>
           <% end %>
           <%= if @doctor.city do %>
             <p class="text-sm text-base-content/60"><%= @doctor.city %></p>
@@ -317,7 +316,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
       <div class="flex flex-col gap-3 max-w-xs mx-auto pt-4">
         <.link navigate={~p"/doctor/schedule"} class="btn btn-primary btn-lg">
-          <.icon name="hero-calendar-days" class="w-5 h-5" />
+          <.icon name="hero-calendar-days" class="size-5 mr-2" />
           Set Your Availability
         </.link>
         <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost">

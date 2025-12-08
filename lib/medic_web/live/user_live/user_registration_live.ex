@@ -6,95 +6,99 @@ defmodule MedicWeb.UserRegistrationLive do
 
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div class="text-center">
-          <div class="flex justify-center">
-            <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <.icon name="hero-user-plus" class="w-8 h-8 text-primary" />
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-base-200">
+      <div class="card w-full max-w-md bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="text-center mb-8">
+            <div class="avatar placeholder mb-4">
+              <div class="bg-primary/10 text-primary rounded-full w-16">
+                <.icon name="hero-user-plus" class="size-8" />
+              </div>
             </div>
+            <h2 class="text-3xl font-bold">
+              <%= if @role == "doctor", do: "Doctor Registration", else: "Patient Registration" %>
+            </h2>
+            <p class="mt-2 text-base-content/70">
+              Create your Medic account
+            </p>
           </div>
-          <h2 class="mt-6 text-3xl font-bold">
-            <%= if @role == "doctor", do: "Doctor Registration", else: "Patient Registration" %>
-          </h2>
-          <p class="mt-2 text-base-content/70">
-            Create your Medic account
-          </p>
-        </div>
 
-        <.form
-          for={@form}
-          id="registration_form"
-          phx-submit="save"
-          phx-change="validate"
-          phx-trigger-action={@trigger_submit}
-          action={~p"/login?_action=registered"}
-          method="post"
-          class="mt-8 space-y-6"
-        >
-          <div class="space-y-4">
-            <.input
-              field={@form[:email]}
-              type="email"
-              label="Email"
-              placeholder="you@example.com"
-              required
-              autocomplete="email"
-              phx-debounce="blur"
-            />
-            <.input
-              field={@form[:password]}
-              type="password"
-              label="Password"
-              placeholder="At least 8 characters"
-              required
-              autocomplete="new-password"
-              phx-debounce="blur"
-            />
+          <.form
+            for={@form}
+            id="registration_form"
+            phx-submit="save"
+            phx-change="validate"
+            phx-trigger-action={@trigger_submit}
+            action={~p"/login?_action=registered"}
+            method="post"
+            class="space-y-6"
+          >
+            <div class="space-y-4">
+              <.input
+                field={@form[:email]}
+                type="email"
+                label="Email"
+                placeholder="you@example.com"
+                required
+                autocomplete="email"
+                phx-debounce="blur"
+              />
+              <.input
+                field={@form[:password]}
+                type="password"
+                label="Password"
+                placeholder="At least 8 characters"
+                required
+                autocomplete="new-password"
+                phx-debounce="blur"
+              />
 
-            <div class="text-xs text-base-content/60 space-y-1">
-              <p>Password must contain:</p>
-              <ul class="list-disc list-inside">
-                <li>At least 8 characters</li>
-                <li>One uppercase letter</li>
-                <li>One lowercase letter</li>
-                <li>One number</li>
-              </ul>
+              <div class="text-xs text-base-content/60 space-y-1 p-3 bg-base-200 rounded-box">
+                <p class="font-semibold">Password must contain:</p>
+                <ul class="list-disc list-inside pl-2">
+                  <li>At least 8 characters</li>
+                  <li>One uppercase letter</li>
+                  <li>One lowercase letter</li>
+                  <li>One number</li>
+                </ul>
+              </div>
             </div>
+
+            <input type="hidden" name="user[role]" value={@role} />
+
+            <div>
+              <.button type="submit" class="btn btn-primary w-full" phx-disable-with="Creating...">
+                <.icon name="hero-check" class="size-5 mr-2" />
+                Create Account
+              </.button>
+            </div>
+          </.form>
+
+          <div class="divider"></div>
+
+          <div class="text-center">
+            <p class="text-base-content/70">
+              Already have an account?
+              <.link navigate={~p"/login"} class="link link-primary font-bold">
+                Sign In
+              </.link>
+            </p>
           </div>
 
-          <input type="hidden" name="user[role]" value={@role} />
-
-          <div>
-            <.button type="submit" class="w-full btn-primary" phx-disable-with="Creating...">
-              <.icon name="hero-check" class="w-5 h-5 mr-2" />
-              Create Account
-            </.button>
-          </div>
-        </.form>
-
-        <div class="text-center">
-          <p class="text-base-content/70">
-            Already have an account?
-            <.link navigate={~p"/login"} class="link link-primary">
-              Sign In
-            </.link>
-          </p>
+          <%= if @role == "patient" do %>
+            <div class="text-center mt-4">
+              <.link navigate={~p"/register/doctor"} class="link link-hover text-sm">
+                Are you a doctor? Register here →
+              </.link>
+            </div>
+          <% else %>
+            <div class="text-center mt-4">
+              <.link navigate={~p"/register"} class="link link-hover text-sm">
+                ← Register as a patient
+              </.link>
+            </div>
+          <% end %>
         </div>
-
-        <%= if @role == "patient" do %>
-          <div class="text-center">
-            <.link navigate={~p"/register/doctor"} class="link text-sm">
-              Are you a doctor? Register here →
-            </.link>
-          </div>
-        <% else %>
-          <div class="text-center">
-            <.link navigate={~p"/register"} class="link text-sm">
-              ← Register as a patient
-            </.link>
-          </div>
-        <% end %>
       </div>
     </div>
     """

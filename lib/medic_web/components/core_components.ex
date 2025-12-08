@@ -60,19 +60,18 @@ defmodule MedicWeb.CoreComponents do
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
+        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap shadow-lg",
         @kind == :info && "alert-info",
         @kind == :error && "alert-error"
       ]}>
         <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
         <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
-          <p :if={@title} class="font-semibold"><%= @title %></p>
+          <p :if={@title} class="font-bold"><%= @title %></p>
           <p><%= msg %></p>
         </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        <button type="button" class="btn btn-ghost btn-xs btn-circle" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark" class="size-4" />
         </button>
       </div>
     </div>
@@ -81,39 +80,26 @@ defmodule MedicWeb.CoreComponents do
 
   @doc """
   Renders a button with navigation support.
-
-  ## Examples
-
-      <.button>Send!</.button>
-      <.button phx-click="go" variant="primary">Send!</.button>
-      <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value disabled type form)
-  attr :class, :any
-  attr :variant, :string, values: ~w(primary)
+  attr :class, :any, default: nil
+  attr :variant, :string, values: ~w(primary secondary accent ghost link outline error warning info success)
+  attr :size, :string, values: ~w(lg md sm xs)
   slot :inner_block, required: true
 
-
-  def button(%{rest: rest} = assigns) do
-    variants = %{
-      "primary" => "bg-primary text-primary-foreground hover:bg-primary/90",
-      "secondary" => "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      "destructive" => "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-      "outline" => "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      "ghost" => "hover:bg-accent hover:text-accent-foreground",
-      "link" => "text-primary underline-offset-4 hover:underline",
-      nil => "bg-primary text-primary-foreground hover:bg-primary/90"
-    }
-
+  def button(assigns) do
     assigns =
-      assign_new(assigns, :class, fn ->
+      assigns
+      |> assign_new(:class, fn ->
         [
-          "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2",
-          Map.fetch!(variants, assigns[:variant])
+          "btn",
+          assigns[:variant] && "btn-#{assigns[:variant]}",
+          assigns[:size] && "btn-#{assigns[:size]}",
+          assigns[:class]
         ]
       end)
 
-    if rest[:href] || rest[:navigate] || rest[:patch] do
+    if assigns.rest[:href] || assigns.rest[:navigate] || assigns.rest[:patch] do
       ~H"""
       <.link class={@class} {@rest}>
         <%= render_slot(@inner_block) %>
@@ -130,43 +116,6 @@ defmodule MedicWeb.CoreComponents do
 
   @doc """
   Renders an input with label and error messages.
-
-  A `Phoenix.HTML.FormField` may be passed as argument,
-  which is used to retrieve the input name, id, and values.
-  Otherwise all attributes may be passed explicitly.
-
-  ## Types
-
-  This function accepts all HTML input types, considering that:
-
-    * You may also set `type="select"` to render a `<select>` tag
-
-    * `type="checkbox"` is used exclusively to render boolean values
-
-    * For live file uploads, see `Phoenix.Component.live_file_input/1`
-
-  See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input
-  for more information. Unsupported types, such as radio, are best
-  written directly in your templates.
-
-  ## Examples
-
-  ```heex
-  <.input field={@form[:email]} type="email" />
-  <.input name="my-input" errors={["oh no!"]} />
-  ```
-
-  ## Select type
-
-  When using `type="select"`, you must pass the `options` and optionally
-  a `value` to mark which option should be preselected.
-
-  ```heex
-  <.input field={@form[:user_type]} type="select" options={["Admin": "admin", "User": "user"]} />
-  ```
-
-  For more information on what kind of data can be passed to `options` see
-  [`options_for_select`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html#options_for_select/2).
   """
   attr :id, :any, default: nil
   attr :name, :any
@@ -194,7 +143,6 @@ defmodule MedicWeb.CoreComponents do
                 multiple pattern placeholder readonly required rows size step)
 
   def input(%{field: %Phoenix.HTML.FormField{} = field} = assigns) do
-    # For LiveView 0.20 compatibility, always show errors if present
     errors = field.errors
 
     assigns
@@ -204,7 +152,6 @@ defmodule MedicWeb.CoreComponents do
     |> assign_new(:value, fn -> field.value end)
     |> input()
   end
-
 
   def input(%{type: "hidden"} = assigns) do
     ~H"""
@@ -219,8 +166,8 @@ defmodule MedicWeb.CoreComponents do
       end)
 
     ~H"""
-    <div class="mb-4">
-      <label class="flex items-center space-x-2">
+    <div class="form-control">
+      <label class="label cursor-pointer justify-start gap-4">
         <input
           type="hidden"
           name={@name}
@@ -234,12 +181,10 @@ defmodule MedicWeb.CoreComponents do
           name={@name}
           value="true"
           checked={@checked}
-          class="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+          class="checkbox"
           {@rest}
         />
-        <span class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          <%= @label %>
-        </span>
+        <span class="label-text"><%= @label %></span>
       </label>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
@@ -248,14 +193,14 @@ defmodule MedicWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div class="grid w-full max-w-sm items-center gap-1.5 mb-4">
-      <label :if={@label} for={@id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        <%= @label %>
+    <div class="form-control w-full max-w-xs mb-4">
+      <label :if={@label} for={@id} class="label">
+        <span class="label-text"><%= @label %></span>
       </label>
       <select
         id={@id}
         name={@name}
-        class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        class="select select-bordered w-full max-w-xs"
         multiple={@multiple}
         {@rest}
       >
@@ -269,17 +214,14 @@ defmodule MedicWeb.CoreComponents do
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div class="grid w-full gap-1.5 mb-4">
-      <label :if={@label} for={@id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        <%= @label %>
+    <div class="form-control w-full mb-4">
+      <label :if={@label} for={@id} class="label">
+        <span class="label-text"><%= @label %></span>
       </label>
       <textarea
         id={@id}
         name={@name}
-        class={[
-          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          @errors != [] && "border-destructive focus-visible:ring-destructive"
-        ]}
+        class={["textarea textarea-bordered h-24", @errors != [] && "textarea-error"]}
         {@rest}
       ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
       <.error :for={msg <- @errors}><%= msg %></.error>
@@ -287,22 +229,18 @@ defmodule MedicWeb.CoreComponents do
     """
   end
 
-  # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div class="grid w-full max-w-sm items-center gap-1.5 mb-4">
-      <label :if={@label} for={@id} class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        <%= @label %>
+    <div class="form-control w-full max-w-xs mb-4">
+      <label :if={@label} for={@id} class="label">
+        <span class="label-text"><%= @label %></span>
       </label>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-        class={[
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          @errors != [] && "border-destructive focus-visible:ring-destructive"
-        ]}
+        class={["input input-bordered w-full max-w-xs", @errors != [] && "input-error"]}
         {@rest}
       />
       <.error :for={msg <- @errors}><%= msg %></.error>
@@ -310,12 +248,11 @@ defmodule MedicWeb.CoreComponents do
     """
   end
 
-  # Helper used by inputs to generate form errors
   defp error(assigns) do
     ~H"""
-    <p class="text-sm font-medium text-destructive">
-      <%= render_slot(@inner_block) %>
-    </p>
+    <label class="label">
+      <span class="label-text-alt text-error"><%= render_slot(@inner_block) %></span>
+    </label>
     """
   end
 
@@ -328,12 +265,12 @@ defmodule MedicWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
+    <header class="flex items-center justify-between gap-6 pb-4 border-b border-base-200 mb-8">
       <div>
-        <h1 class="text-lg font-semibold leading-8">
+        <h1 class="text-3xl font-bold">
           <%= render_slot(@inner_block) %>
         </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
+        <p :if={@subtitle != []} class="mt-2 text-base-content/70">
           <%= render_slot(@subtitle) %>
         </p>
       </div>
@@ -344,28 +281,18 @@ defmodule MedicWeb.CoreComponents do
 
   @doc """
   Renders a table with generic styling.
-
-  ## Examples
-
-      <.table id="users" rows={@users}>
-        <:col :let={user} label="id">{user.id}</:col>
-        <:col :let={user} label="username">{user.username}</:col>
-      </.table>
   """
   attr :id, :string, required: true
   attr :rows, :list, required: true
-  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
-  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
-
-  attr :row_item, :any,
-    default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
+  attr :row_id, :any, default: nil
+  attr :row_click, :any, default: nil
+  attr :row_item, :any, default: &Function.identity/1
 
   slot :col, required: true do
     attr :label, :string
   end
 
-  slot :action, doc: "the slot for showing user actions in the last table column"
+  slot :action
 
   def table(assigns) do
     assigns =
@@ -374,28 +301,25 @@ defmodule MedicWeb.CoreComponents do
       end
 
     ~H"""
-    <div class="relative w-full overflow-auto">
-      <table class="w-full caption-bottom text-sm">
-        <thead class="[&_tr]:border-b">
-          <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <th :for={col <- @col} class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-              {col[:label]}
-            </th>
-            <th :if={@action != []} class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th :for={col <- @col}>{col[:label]}</th>
+            <th :if={@action != []}>
               <span class="sr-only">{gettext("Actions")}</span>
             </th>
           </tr>
         </thead>
-        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"} class="[&_tr:last-child]:border-0">
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+        <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class={@row_click && "hover cursor-pointer"}>
             <td
               :for={col <- @col}
               phx-click={@row_click && @row_click.(row)}
-              class={["p-4 align-middle [&:has([role=checkbox])]:pr-0", @row_click && "cursor-pointer"]}
             >
               <%= render_slot(col, @row_item.(row)) %>
             </td>
-            <td :if={@action != []} class="p-4 align-middle">
+            <td :if={@action != []}>
               <div class="flex gap-2">
                 <%= for action <- @action do %>
                   <%= render_slot(action, @row_item.(row)) %>
@@ -411,13 +335,6 @@ defmodule MedicWeb.CoreComponents do
 
   @doc """
   Renders a data list.
-
-  ## Examples
-
-      <.list>
-        <:item title="Title">{@post.title}</:item>
-        <:item title="Views">{@post.views}</:item>
-      </.list>
   """
   slot :item, required: true do
     attr :title, :string, required: true
@@ -425,34 +342,19 @@ defmodule MedicWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div><%= render_slot(item) %></div>
+    <div class="mt-14">
+      <dl class="-my-4 divide-y divide-base-200">
+        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
+          <dt class="w-1/4 flex-none text-base-content/70"><%= item.title %></dt>
+          <dd class="text-base-content"><%= render_slot(item) %></dd>
         </div>
-      </li>
-    </ul>
+      </dl>
+    </div>
     """
   end
 
   @doc """
-  Renders a [Heroicon](https://heroicons.com).
-
-  Heroicons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid and mini may
-  be applied by using the `-solid` and `-mini` suffix.
-
-  You can customize the size and colors of the icons by setting
-  width, height, and background color classes.
-
-  Icons are extracted from the `deps/heroicons` directory and bundled within
-  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
-
-  ## Examples
-
-      <.icon name="hero-x-mark" />
-      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+  Renders a Heroicon.
   """
   attr :name, :string, required: true
   attr :class, :any, default: "size-4"
@@ -465,22 +367,6 @@ defmodule MedicWeb.CoreComponents do
 
   @doc """
   Renders a modal.
-
-  ## Examples
-
-      <.modal id="confirm-modal">
-        Are you sure?
-        <:confirm>OK</:confirm>
-        <:cancel>Cancel</:cancel>
-      </.modal>
-
-  JS commands may be passed to the `:on_cancel` to configure
-  the closing/cancel event, for example:
-
-      <.modal id="confirm" on_cancel={JS.navigate(~p"/posts")}>
-        Are you sure?
-      </.modal>
-
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
@@ -489,63 +375,41 @@ defmodule MedicWeb.CoreComponents do
 
   def modal(assigns) do
     ~H"""
-    <div
+    <dialog
       id={@id}
+      class="modal"
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      class="relative z-50 hidden"
     >
-      <div id={"#{@id}-bg"} class="fixed inset-0 bg-background/80 backdrop-blur-sm transition-all duration-100 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in" aria-hidden="true" />
-      <div
-        class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 sm:p-6"
-        role="dialog"
-        aria-modal="true"
-        tabindex="0"
-      >
-        <div
-          id={"#{@id}-content"}
-          class="w-full max-w-lg gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg"
-        >
-          <div class="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
-             <%!-- Header content usually goes here --%>
-          </div>
-          
-          <%= render_slot(@inner_block) %>
-
+      <div class="modal-box">
+        <form method="dialog">
           <button
             phx-click={JS.exec("data-cancel", to: "##{@id}")}
-            type="button"
-            class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-            aria-label={gettext("close")}
+            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
           >
-            <.icon name="hero-x-mark" class="h-4 w-4" />
-            <span class="sr-only">Close</span>
+            ✕
           </button>
+        </form>
+        <div class="mt-4">
+          <%= render_slot(@inner_block) %>
         </div>
       </div>
-    </div>
+      <form method="dialog" class="modal-backdrop">
+        <button phx-click={JS.exec("data-cancel", to: "##{@id}")}>close</button>
+      </form>
+    </dialog>
     """
   end
 
   def show_modal(js \\ %JS{}, id) when is_binary(id) do
     js
-    |> JS.show(to: "##{id}")
-    |> JS.show(
-      to: "##{id}-bg",
-      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
-    )
-    |> show("##{id}-content")
+    |> JS.add_class("modal-open", to: "##{id}")
   end
 
   def hide_modal(js \\ %JS{}, id) do
     js
-    |> JS.hide(
-      to: "##{id}-bg",
-      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
-    )
-    |> hide("##{id}-content")
-    |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
+    |> JS.remove_class("modal-open", to: "##{id}")
   end
 
   ## JS Commands

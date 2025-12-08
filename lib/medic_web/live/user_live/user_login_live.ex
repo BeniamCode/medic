@@ -3,84 +3,86 @@ defmodule MedicWeb.UserLoginLive do
 
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div class="text-center">
-          <div class="flex justify-center">
-            <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <.icon name="hero-heart" class="w-8 h-8 text-primary" />
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-base-200">
+      <div class="card w-full max-w-md bg-base-100 shadow-xl">
+        <div class="card-body">
+          <div class="text-center mb-8">
+            <div class="avatar placeholder mb-4">
+              <div class="bg-primary/10 text-primary rounded-full w-16">
+                <.icon name="hero-heart" class="size-8" />
+              </div>
             </div>
+            <h2 class="text-3xl font-bold">
+              Welcome to Medic
+            </h2>
+            <p class="mt-2 text-base-content/70">
+              Sign in to your account
+            </p>
           </div>
-          <h2 class="mt-6 text-3xl font-bold">
-            Welcome to Medic
-          </h2>
-          <p class="mt-2 text-base-content/70">
-            Sign in to your account
-          </p>
-        </div>
 
-        <.form
-          for={@form}
-          id="login_form"
-          action={~p"/login"}
-          phx-submit="login"
-          phx-trigger-action={@trigger_submit}
-          class="mt-8 space-y-6"
-        >
-          <%= if @error_message do %>
-            <div class="alert alert-error">
-              <.icon name="hero-exclamation-circle" class="w-5 h-5" />
-              <span><%= @error_message %></span>
+          <.form
+            for={@form}
+            id="login_form"
+            action={~p"/login"}
+            phx-submit="login"
+            phx-trigger-action={@trigger_submit}
+            class="space-y-6"
+          >
+            <%= if @error_message do %>
+              <div class="alert alert-error">
+                <.icon name="hero-exclamation-circle" class="size-5" />
+                <span><%= @error_message %></span>
+              </div>
+            <% end %>
+
+            <div class="space-y-4">
+              <.input
+                field={@form[:email]}
+                type="email"
+                label="Email"
+                placeholder="you@example.com"
+                required
+                autocomplete="email"
+              />
+              <.input
+                field={@form[:password]}
+                type="password"
+                label="Password"
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              />
             </div>
-          <% end %>
 
-          <div class="space-y-4">
-            <.input
-              field={@form[:email]}
-              type="email"
-              label="Email"
-              placeholder="you@example.com"
-              required
-              autocomplete="email"
-            />
-            <.input
-              field={@form[:password]}
-              type="password"
-              label="Password"
-              placeholder="••••••••"
-              required
-              autocomplete="current-password"
-            />
-          </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-2">
+                <input type="checkbox" name="user[remember_me]" class="checkbox checkbox-sm checkbox-primary" />
+                <span class="label-text">Remember me</span>
+              </label>
+            </div>
 
-          <div class="flex items-center justify-between">
-            <label class="label cursor-pointer gap-2">
-              <input type="checkbox" name="user[remember_me]" class="checkbox checkbox-sm" />
-              <span class="label-text">Remember me</span>
-            </label>
-          </div>
+            <div>
+              <.button type="submit" class="btn btn-primary w-full" phx-disable-with="Signing in...">
+                <.icon name="hero-arrow-right-on-rectangle" class="size-5 mr-2" />
+                Sign In
+              </.button>
+            </div>
+          </.form>
 
-          <div>
-            <.button type="submit" class="w-full btn-primary" phx-disable-with="Signing in...">
-              <.icon name="hero-arrow-right-on-rectangle" class="w-5 h-5 mr-2" />
-              Sign In
-            </.button>
-          </div>
-        </.form>
+          <div class="divider">or</div>
 
-        <div class="divider">or</div>
-
-        <div class="text-center space-y-4">
-          <p class="text-base-content/70">Don't have an account?</p>
-          <div class="flex gap-4 justify-center">
-            <.link navigate={~p"/register"} class="btn btn-outline btn-primary">
-              <.icon name="hero-user-plus" class="w-5 h-5 mr-2" />
-              Patient Sign Up
-            </.link>
-            <.link navigate={~p"/register/doctor"} class="btn btn-outline">
-              <.icon name="hero-identification" class="w-5 h-5 mr-2" />
-              Doctor Sign Up
-            </.link>
+          <div class="text-center space-y-4">
+            <p class="text-base-content/70">Don't have an account?</p>
+            <div class="flex gap-4 justify-center">
+              <.link navigate={~p"/register"} class="btn btn-outline btn-primary">
+                <.icon name="hero-user-plus" class="size-5 mr-2" />
+                Patient Sign Up
+              </.link>
+              <.link navigate={~p"/register/doctor"} class="btn btn-outline">
+                <.icon name="hero-identification" class="size-5 mr-2" />
+                Doctor Sign Up
+              </.link>
+            </div>
           </div>
         </div>
       </div>

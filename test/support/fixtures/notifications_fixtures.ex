@@ -8,6 +8,13 @@ defmodule Medic.NotificationsFixtures do
   Generate a notification.
   """
   def notification_fixture(attrs \\ %{}) do
+    {:ok, user} =
+      Medic.Accounts.register_user(%{
+        email: "user_#{System.unique_integer()}@example.com",
+        password: "Password123!",
+        role: "patient"
+      })
+
     {:ok, notification} =
       attrs
       |> Enum.into(%{
@@ -16,7 +23,8 @@ defmodule Medic.NotificationsFixtures do
         resource_id: "some resource_id",
         resource_type: "some resource_type",
         title: "some title",
-        type: "some type"
+        type: "some type",
+        user_id: user.id
       })
       |> Medic.Notifications.create_notification()
 

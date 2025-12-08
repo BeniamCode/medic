@@ -9,34 +9,34 @@ defmodule MedicWeb.HomeLive do
     ~H"""
     <div class="min-h-screen">
       <%!-- Hero Section --%>
-      <section class="relative py-20 px-4 overflow-hidden">
+      <section class="hero min-h-[70vh] bg-base-200 relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5"></div>
-        <div class="max-w-6xl mx-auto relative">
-          <div class="text-center space-y-6">
-            <h1 class="text-4xl md:text-6xl font-bold leading-tight">
+        <div class="hero-content text-center relative z-10">
+          <div class="max-w-3xl">
+            <h1 class="text-5xl md:text-7xl font-bold leading-tight">
               Find the right
               <span class="text-primary">doctor</span>
               <br />
               for you
             </h1>
-            <p class="text-xl text-base-content/70 max-w-2xl mx-auto">
+            <p class="py-6 text-xl text-base-content/70 max-w-2xl mx-auto">
               Search among hundreds of specialized doctors
               and book your appointment instantly.
             </p>
 
             <%!-- Search Bar --%>
             <div class="max-w-2xl mx-auto mt-8">
-              <.form for={%{}} action={~p"/search"} method="get" class="flex gap-2">
-                <div class="flex-1 relative">
-                  <.icon name="hero-magnifying-glass" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/50" />
+              <.form for={%{}} action={~p"/search"} method="get" class="join w-full shadow-lg">
+                <div class="relative flex-1 join-item">
+                  <.icon name="hero-magnifying-glass" class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-base-content/50" />
                   <input
                     type="text"
                     name="q"
                     placeholder="Search by doctor, specialty, or body part..."
-                    class="input input-lg w-full pl-12 bg-base-100 border-base-300 focus:border-primary"
+                    class="input input-lg w-full pl-12 bg-base-100 border-base-300 focus:border-primary join-item"
                   />
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg">
+                <button type="submit" class="btn btn-primary btn-lg join-item">
                   Search
                 </button>
               </.form>
@@ -47,39 +47,39 @@ defmodule MedicWeb.HomeLive do
 
       <%!-- On Duty Hospitals Section --%>
       <%= if @on_duty_hospitals != [] do %>
-        <section class="py-12 px-4 bg-secondary/5">
+        <section class="py-16 px-4 bg-base-100">
           <div class="max-w-6xl mx-auto">
             <div class="flex items-center gap-3 mb-8">
               <div class="p-2 rounded-lg bg-secondary/10 text-secondary">
-                <.icon name="hero-building-office-2" class="w-6 h-6" />
+                <.icon name="hero-building-office-2" class="size-6" />
               </div>
               <div>
-                <h2 class="text-2xl font-bold text-base-content">Hospitals On Duty Today</h2>
+                <h2 class="text-2xl font-bold">Hospitals On Duty Today</h2>
                 <p class="text-sm text-base-content/60"><%= Calendar.strftime(Date.utc_today(), "%A, %d %B %Y") %></p>
               </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <%= for hospital <- @on_duty_hospitals do %>
-                <div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow border border-base-200">
+                <div class="card bg-base-100 shadow-xl border border-base-200 hover:border-primary transition-colors">
                   <div class="card-body p-5">
                     <div class="flex items-start justify-between gap-4">
                       <div>
-                        <h3 class="font-semibold text-lg leading-snug mb-1"><%= hospital.name %></h3>
+                        <h3 class="card-title text-lg leading-snug mb-1"><%= hospital.name %></h3>
                         <div class="flex items-center gap-1 text-xs text-base-content/60">
-                          <.icon name="hero-map-pin" class="w-3 h-3" />
+                          <.icon name="hero-map-pin" class="size-3" />
                           <%= hospital.city %>
                         </div>
                       </div>
-                      <div class="badge badge-sm badge-outline text-xs">On Call</div>
+                      <div class="badge badge-secondary badge-outline text-xs">On Call</div>
                     </div>
                     
                     <div class="mt-4">
-                      <div class="text-xs font-medium text-base-content/50 mb-2 uppercase tracking-wider">Departments</div>
+                      <div class="text-xs font-bold text-base-content/50 mb-2 uppercase tracking-wider">Departments</div>
                       <div class="flex flex-wrap gap-1.5">
                         <%= for schedule <- hospital.hospital_schedules do %>
                           <%= for specialty <- schedule.specialties do %>
-                            <span class="badge badge-primary badge-soft badge-sm text-xs font-normal">
+                            <span class="badge badge-primary badge-outline badge-sm text-xs">
                               <%= specialty %>
                             </span>
                           <% end %>
@@ -95,20 +95,22 @@ defmodule MedicWeb.HomeLive do
       <% end %>
 
       <%!-- Specialties Grid --%>
-      <section class="py-16 px-4 bg-base-200/30">
+      <section class="py-16 px-4 bg-base-200">
         <div class="max-w-6xl mx-auto">
-          <h2 class="text-2xl font-bold text-center mb-8">Popular Specialties</h2>
+          <h2 class="text-3xl font-bold text-center mb-12">Popular Specialties</h2>
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <%= for specialty <- @specialties do %>
               <.link
                 navigate={~p"/search?specialty=#{specialty.id}"}
-                class="card bg-base-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group"
+                class="card bg-base-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
               >
                 <div class="card-body items-center text-center p-4">
-                  <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <.icon name={specialty.icon || "hero-heart"} class="w-6 h-6 text-primary" />
+                  <div class="avatar placeholder mb-2">
+                    <div class="bg-primary/10 text-primary rounded-full w-12 group-hover:bg-primary group-hover:text-primary-content transition-colors">
+                      <.icon name={specialty.icon || "hero-heart"} class="size-6" />
+                    </div>
                   </div>
-                  <h3 class="font-medium text-sm mt-2"><%= specialty.name %></h3>
+                  <h3 class="font-bold text-sm"><%= specialty.name %></h3>
                 </div>
               </.link>
             <% end %>
@@ -117,12 +119,12 @@ defmodule MedicWeb.HomeLive do
       </section>
 
       <%!-- Stats Section --%>
-      <section class="py-16 px-4">
+      <section class="py-16 px-4 bg-base-100">
         <div class="max-w-4xl mx-auto">
-          <div class="stats stats-vertical md:stats-horizontal shadow w-full">
+          <div class="stats stats-vertical md:stats-horizontal shadow-xl w-full bg-base-100">
             <div class="stat place-items-center">
               <div class="stat-figure text-primary">
-                <.icon name="hero-users" class="w-8 h-8" />
+                <.icon name="hero-users" class="size-8" />
               </div>
               <div class="stat-title">Doctors</div>
               <div class="stat-value text-primary">600+</div>
@@ -130,7 +132,7 @@ defmodule MedicWeb.HomeLive do
             </div>
             <div class="stat place-items-center">
               <div class="stat-figure text-secondary">
-                <.icon name="hero-calendar-days" class="w-8 h-8" />
+                <.icon name="hero-calendar-days" class="size-8" />
               </div>
               <div class="stat-title">Appointments</div>
               <div class="stat-value text-secondary">10K+</div>
@@ -138,10 +140,10 @@ defmodule MedicWeb.HomeLive do
             </div>
             <div class="stat place-items-center">
               <div class="stat-figure text-accent">
-                <.icon name="hero-star" class="w-8 h-8" />
+                <.icon name="hero-star" class="size-8" />
               </div>
               <div class="stat-title">Rating</div>
-              <div class="stat-value">4.8</div>
+              <div class="stat-value text-accent">4.8</div>
               <div class="stat-desc">From our users</div>
             </div>
           </div>
@@ -149,50 +151,56 @@ defmodule MedicWeb.HomeLive do
       </section>
 
       <%!-- How It Works --%>
-      <section class="py-16 px-4 bg-base-200/30">
+      <section class="py-16 px-4 bg-base-200">
         <div class="max-w-4xl mx-auto">
-          <h2 class="text-2xl font-bold text-center mb-12">How It Works</h2>
+          <h2 class="text-3xl font-bold text-center mb-12">How It Works</h2>
           <div class="grid md:grid-cols-3 gap-8">
-            <div class="text-center space-y-4">
-              <div class="w-16 h-16 mx-auto rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold">
-                1
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body items-center text-center">
+                <div class="w-16 h-16 rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold mb-4">
+                  1
+                </div>
+                <h3 class="card-title">Search</h3>
+                <p class="text-base-content/70">
+                  Find the doctor you need by specialty, body part, or location
+                </p>
               </div>
-              <h3 class="font-semibold text-lg">Search</h3>
-              <p class="text-base-content/70">
-                Find the doctor you need by specialty, body part, or location
-              </p>
             </div>
-            <div class="text-center space-y-4">
-              <div class="w-16 h-16 mx-auto rounded-full bg-secondary text-secondary-content flex items-center justify-center text-2xl font-bold">
-                2
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body items-center text-center">
+                <div class="w-16 h-16 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-2xl font-bold mb-4">
+                  2
+                </div>
+                <h3 class="card-title">Choose Time</h3>
+                <p class="text-base-content/70">
+                  See real-time availability and pick a convenient time slot
+                </p>
               </div>
-              <h3 class="font-semibold text-lg">Choose Time</h3>
-              <p class="text-base-content/70">
-                See real-time availability and pick a convenient time slot
-              </p>
             </div>
-            <div class="text-center space-y-4">
-              <div class="w-16 h-16 mx-auto rounded-full bg-accent text-accent-content flex items-center justify-center text-2xl font-bold">
-                3
+            <div class="card bg-base-100 shadow-xl">
+              <div class="card-body items-center text-center">
+                <div class="w-16 h-16 rounded-full bg-accent text-accent-content flex items-center justify-center text-2xl font-bold mb-4">
+                  3
+                </div>
+                <h3 class="card-title">Confirm</h3>
+                <p class="text-base-content/70">
+                  Get confirmation and reminders for your appointment
+                </p>
               </div>
-              <h3 class="font-semibold text-lg">Confirm</h3>
-              <p class="text-base-content/70">
-                Get confirmation and reminders for your appointment
-              </p>
             </div>
           </div>
         </div>
       </section>
 
       <%!-- CTA Section --%>
-      <section class="py-20 px-4">
+      <section class="py-20 px-4 bg-base-100">
         <div class="max-w-4xl mx-auto text-center">
-          <h2 class="text-3xl font-bold mb-4">Are You a Doctor?</h2>
+          <h2 class="text-4xl font-bold mb-4">Are You a Doctor?</h2>
           <p class="text-xl text-base-content/70 mb-8">
             Join the Medic network and increase your visibility
           </p>
           <.link navigate={~p"/register/doctor"} class="btn btn-primary btn-lg">
-            <.icon name="hero-identification" class="w-5 h-5 mr-2" />
+            <.icon name="hero-identification" class="size-5 mr-2" />
             Doctor Registration
           </.link>
         </div>

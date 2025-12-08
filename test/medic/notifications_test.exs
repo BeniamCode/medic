@@ -21,7 +21,14 @@ defmodule Medic.NotificationsTest do
     end
 
     test "create_notification/1 with valid data creates a notification" do
-      valid_attrs = %{message: "some message", type: "some type", title: "some title", read_at: ~U[2025-12-06 17:26:00Z], resource_id: "some resource_id", resource_type: "some resource_type"}
+      {:ok, user} =
+        Medic.Accounts.register_user(%{
+          email: "user_#{System.unique_integer()}@example.com",
+          password: "Password123!",
+          role: "patient"
+        })
+
+      valid_attrs = %{message: "some message", type: "some type", title: "some title", read_at: ~U[2025-12-06 17:26:00Z], resource_id: "some resource_id", resource_type: "some resource_type", user_id: user.id}
 
       assert {:ok, %Notification{} = notification} = Notifications.create_notification(valid_attrs)
       assert notification.message == "some message"

@@ -32,7 +32,7 @@ config :medic, MedicWeb.Endpoint,
   secret_key_base: "sqyjAhhWA2k/0nUSSkqdJdqiTGfCYomVQIigpUBzbLXpd4xbujXJMkzPkigW2Hly",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:medic, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:medic, ~w(--watch)]}
+    npm: ["run", "watch", cd: Path.expand("../assets", __DIR__)]
   ]
 
 # ## SSL Support
