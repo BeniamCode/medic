@@ -15,7 +15,7 @@
         <%= if @current_user do %>
           <div class="dropdown dropdown-end">
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
-              <div class="bg-neutral text-neutral-content rounded-full w-10">
+              <div class="bg-base-300 text-base-content rounded-full w-10">
                 <span><%= String.at(@current_user.email, 0) |> String.upcase() %></span>
               </div>
             </div>
