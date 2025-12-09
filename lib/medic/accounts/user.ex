@@ -3,50 +3,77 @@ defmodule Medic.Accounts.User do
   User schema for authentication.
   Supports both patient and doctor roles.
   """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Accounts,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  postgres do
+    table "users"
+    repo Medic.Repo
+  end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:email, :role, :hashed_password, :confirmed_at, :totp_secret]
+    end
+
+    update :update do
+      accept [:email, :role, :hashed_password, :confirmed_at, :totp_secret]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :email, :string do
+      allow_nil? false
+      public? true
+    end
+
+    attribute :hashed_password, :string do
+      sensitive? true
+      public? true # Needed for auth checks
+    end
+
+    attribute :role, :string do
+      default "patient"
+      public? true
+    end
+
+    attribute :confirmed_at, :utc_datetime do
+      public? true
+    end
+
+    attribute :totp_secret, :binary do
+      sensitive? true
+      public? true
+    end
+
+    timestamps()
+  end
+
+  relationships do
+    has_one :doctor, Medic.Doctors.Doctor
+    has_one :patient, Medic.Patients.Patient
+  end
+
+  # --- Legacy Ecto Changeset Logic ---
 
   @roles ~w(patient doctor admin)
 
-  schema "users" do
-    field :email, :string
-    field :password, :string, virtual: true, redact: true
-    field :hashed_password, :string, redact: true
-    field :role, :string, default: "patient"
-    field :confirmed_at, :utc_datetime
-    field :totp_secret, :binary, redact: true
-
-    has_one :doctor, Medic.Doctors.Doctor
-    has_one :patient, Medic.Patients.Patient
-
-    timestamps(type: :utc_datetime)
-  end
-
   @doc """
   A user changeset for registration.
-
-  ## Options
-    * `:hash_password` - Hashes the password so it can be stored securely
-      in the database and ensures the password field is cleared to prevent
-      leaks in the logs. If password hashing is not needed and clearing the
-      password field is not desired (like when using this changeset for
-      validations on a LiveView form), this option can be set to `false`.
-      Defaults to `true`.
-
-    * `:validate_email` - Validates the uniqueness of the email, in case
-      you don't want to validate the uniqueness of the email (like when
-      using this changeset for validations on a LiveView form before
-      having access to the database), this option can be set to `false`.
-      Defaults to `true`.
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password, :role])
+    |> cast(attrs, [:email, :role])
     |> validate_email(opts)
-    |> validate_password(opts)
+    |> validate_password(attrs, opts)
     |> validate_role()
   end
 
@@ -58,18 +85,44 @@ defmodule Medic.Accounts.User do
     |> maybe_validate_unique_email(opts)
   end
 
-  defp validate_password(changeset, opts) do
+  defp validate_password(changeset, attrs, opts) do
+    password = attrs["password"] || attrs[:password]
+
+    if password do
+      changeset
+      |> validate_password_complexity(password)
+      |> maybe_hash_password(password, opts)
+    else
+      add_error(changeset, :password, "can't be blank")
+    end
+  end
+
+  defp validate_password_complexity(changeset, password) do
     changeset
-    |> validate_required([:password])
-    |> validate_length(:password, min: 8, max: 72)
-    |> validate_format(:password, ~r/[a-z]/,
-      message: "must contain at least one lowercase letter"
-    )
-    |> validate_format(:password, ~r/[A-Z]/,
-      message: "must contain at least one uppercase letter"
-    )
-    |> validate_format(:password, ~r/[0-9]/, message: "must contain at least one number")
-    |> maybe_hash_password(opts)
+    |> validate_length_manually(:password, password, min: 8, max: 72)
+    |> validate_format_manually(:password, password, ~r/[a-z]/, "must contain at least one lowercase letter")
+    |> validate_format_manually(:password, password, ~r/[A-Z]/, "must contain at least one uppercase letter")
+    |> validate_format_manually(:password, password, ~r/[0-9]/, "must contain at least one number")
+  end
+
+  defp validate_length_manually(changeset, field, value, opts) do
+    min = Keyword.get(opts, :min, 0)
+    max = Keyword.get(opts, :max, :infinity)
+    len = String.length(value)
+
+    cond do
+      len < min -> add_error(changeset, field, "should be at least #{min} character(s)")
+      len > max -> add_error(changeset, field, "should be at most #{max} character(s)")
+      true -> changeset
+    end
+  end
+
+  defp validate_format_manually(changeset, field, value, regex, message) do
+    if value =~ regex do
+      changeset
+    else
+      add_error(changeset, field, message)
+    end
   end
 
   defp validate_role(changeset) do
@@ -77,15 +130,12 @@ defmodule Medic.Accounts.User do
     |> validate_inclusion(:role, @roles)
   end
 
-  defp maybe_hash_password(changeset, opts) do
+  defp maybe_hash_password(changeset, password, opts) do
     hash_password? = Keyword.get(opts, :hash_password, true)
-    password = get_change(changeset, :password)
 
-    if hash_password? && password && changeset.valid? do
+    if hash_password? && changeset.valid? do
       changeset
-      |> validate_length(:password, max: 72, count: :bytes)
       |> put_change(:hashed_password, Bcrypt.hash_pwd_salt(password))
-      |> delete_change(:password)
     else
       changeset
     end
@@ -115,8 +165,8 @@ defmodule Medic.Accounts.User do
   """
   def password_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:password])
-    |> validate_password(opts)
+    |> cast(attrs, [])
+    |> validate_password(attrs, opts)
   end
 
   @doc """
@@ -129,11 +179,8 @@ defmodule Medic.Accounts.User do
 
   @doc """
   Verifies the password.
-
-  If there is no user or the user doesn't have a password, we call
-  `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
-  def valid_password?(%__MODULE__{hashed_password: hashed_password}, password)
+  def valid_password?(%{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
     Bcrypt.verify_pass(password, hashed_password)
   end

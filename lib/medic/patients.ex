@@ -2,6 +2,12 @@ defmodule Medic.Patients do
   @moduledoc """
   The Patients context for managing patient profiles.
   """
+  use Ash.Domain
+
+  resources do
+    resource Medic.Patients.Patient
+  end
+
   alias Medic.Repo
   alias Medic.Patients.Patient
 
@@ -32,7 +38,7 @@ defmodule Medic.Patients do
   def get_patient_with_details!(id) do
     Patient
     |> Repo.get!(id)
-    |> Repo.preload([:user, :appointments])
+    |> Ash.load!([:user, :appointments])
   end
 
   @doc """

@@ -3,11 +3,18 @@ defmodule Medic.Notifications do
   The Notifications context.
   """
 
+  use Ash.Domain
+
+  resources do
+    resource Medic.Notifications.Notification
+  end
+
   import Ecto.Query, warn: false
-  alias Medic.Repo
+
 
   alias Medic.Notifications.Notification
   require Logger
+  require Ash.Query
 
   @doc """
   Returns the list of notifications.
@@ -19,7 +26,7 @@ defmodule Medic.Notifications do
 
   """
   def list_notifications do
-    Repo.all(Notification)
+    Ash.read!(Notification)
   end
 
   @doc """
@@ -36,16 +43,16 @@ defmodule Medic.Notifications do
       ** (Ecto.NoResultsError)
 
   """
-  def get_notification!(id), do: Repo.get!(Notification, id)
+  def get_notification!(id), do: Ash.get!(Notification, id)
 
   @doc """
   Creates a notification and broadcasts it.
   """
   def create_notification(attrs \\ %{}) do
     result =
-      %Notification{}
-      |> Notification.changeset(attrs)
-      |> Repo.insert()
+      Notification
+      |> Ash.Changeset.for_create(:create, attrs)
+      |> Ash.create()
 
     case result do
       {:ok, notification} ->
@@ -58,29 +65,35 @@ defmodule Medic.Notifications do
   end
 
   def list_user_notifications(user_id, limit \\ 20) do
-    from(n in Notification,
-      where: n.user_id == ^user_id,
-      order_by: [desc: n.inserted_at],
-      limit: ^limit
-    )
-    |> Repo.all()
+    Notification
+    |> Ash.Query.filter(user_id == ^user_id)
+    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.Query.limit(limit)
+    |> Ash.read!()
   end
 
   def list_unread_count(user_id) do
-    Repo.one(
-      from n in Notification, where: n.user_id == ^user_id and is_nil(n.read_at), select: count()
-    )
+    Notification
+    |> Ash.Query.filter(user_id == ^user_id and is_nil(read_at))
+    |> Ash.count!()
   end
 
   def mark_as_read(notification_id) do
     get_notification!(notification_id)
-    |> Notification.changeset(%{read_at: DateTime.utc_now()})
-    |> Repo.update()
+    |> Ash.Changeset.for_update(:update, %{read_at: DateTime.utc_now()})
+    |> Ash.update()
   end
 
   def mark_all_as_read(user_id) do
-    from(n in Notification, where: n.user_id == ^user_id and is_nil(n.read_at))
-    |> Repo.update_all(set: [read_at: DateTime.utc_now()])
+    # Ash doesn't have a direct update_all equivalent that runs validations/changesets for each,
+    # but for bulk updates we can use Ash.bulk_update or manual iteration.
+    # For now, let's use Ash.bulk_update if available (Ash 3.0) or iterate.
+    # Since this is a simple update, we can use Ash.bulk_update.
+    # However, to be safe and simple:
+    
+    Notification
+    |> Ash.Query.filter(user_id == ^user_id and is_nil(read_at))
+    |> Ash.bulk_update(:update, %{read_at: DateTime.utc_now()}, strategy: :atomic)
   end
 
   def subscribe(user_id) do
@@ -102,8 +115,8 @@ defmodule Medic.Notifications do
   """
   def update_notification(%Notification{} = notification, attrs) do
     notification
-    |> Notification.changeset(attrs)
-    |> Repo.update()
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
   end
 
   @doc """
@@ -119,7 +132,7 @@ defmodule Medic.Notifications do
 
   """
   def delete_notification(%Notification{} = notification) do
-    Repo.delete(notification)
+    Ash.destroy(notification)
   end
 
   @doc """

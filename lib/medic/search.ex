@@ -11,7 +11,7 @@ defmodule Medic.Search do
   Uses Req HTTP client for Typesense API calls.
   """
 
-  alias Medic.Repo
+
   alias Medic.Doctors
   alias Medic.Doctors.Doctor
 
@@ -108,7 +108,7 @@ defmodule Medic.Search do
   Indexes a single doctor document (upsert).
   """
   def index_doctor(%Doctor{} = doctor) do
-    doctor = Repo.preload(doctor, :specialty)
+    doctor = Ash.load!(doctor, :specialty)
     doc = doctor_to_document(doctor)
 
     url = "#{typesense_url()}/collections/#{@collection_name}/documents?action=upsert"

@@ -2,35 +2,55 @@ defmodule Medic.Appointments.Appointment do
   @moduledoc """
   Appointment schema with PostgreSQL exclusion constraint for double-booking prevention.
   """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Appointments,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  postgres do
+    table "appointments"
+    repo Medic.Repo
+  end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:starts_at, :ends_at, :duration_minutes, :appointment_type, :status, :notes, :doctor_id, :patient_id]
+    end
+
+    update :update do
+      accept [:starts_at, :ends_at, :duration_minutes, :appointment_type, :status, :notes]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :starts_at, :utc_datetime
+    attribute :ends_at, :utc_datetime
+    attribute :duration_minutes, :integer, default: 30
+    attribute :status, :string, default: "pending"
+    attribute :meeting_url, :string
+    attribute :appointment_type, :string, default: "in_person"
+    attribute :notes, :string
+    attribute :cancellation_reason, :string
+    attribute :cancelled_at, :utc_datetime
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :patient, Medic.Patients.Patient
+    belongs_to :doctor, Medic.Doctors.Doctor
+  end
+
+  # --- Legacy Logic ---
 
   @statuses ~w(pending confirmed completed cancelled no_show)
   @appointment_types ~w(in_person telemedicine)
-
-  schema "appointments" do
-    belongs_to :patient, Medic.Patients.Patient
-    belongs_to :doctor, Medic.Doctors.Doctor
-
-    # Time range (enables PostgreSQL exclusion constraint)
-    field :starts_at, :utc_datetime
-    field :ends_at, :utc_datetime
-    field :duration_minutes, :integer, default: 30
-    field :status, :string, default: "pending"
-
-    # Telemedicine support
-    field :meeting_url, :string
-    field :appointment_type, :string, default: "in_person"
-
-    field :notes, :string
-    field :cancellation_reason, :string
-    field :cancelled_at, :utc_datetime
-
-    timestamps(type: :utc_datetime)
-  end
 
   @doc false
   def changeset(appointment, attrs) do
@@ -92,7 +112,6 @@ defmodule Medic.Appointments.Appointment do
 
   @doc """
   Changeset for seeding (bypasses future date validation).
-  Use only in seeds for creating historical test data.
   """
   def seed_changeset(appointment, attrs) do
     appointment
@@ -143,7 +162,7 @@ defmodule Medic.Appointments.Appointment do
   @doc """
   Returns the duration in minutes.
   """
-  def duration(%__MODULE__{starts_at: starts_at, ends_at: ends_at})
+  def duration(%{starts_at: starts_at, ends_at: ends_at})
       when not is_nil(starts_at) and not is_nil(ends_at) do
     DateTime.diff(ends_at, starts_at, :minute)
   end
@@ -153,7 +172,7 @@ defmodule Medic.Appointments.Appointment do
   @doc """
   Checks if the appointment is upcoming.
   """
-  def upcoming?(%__MODULE__{starts_at: starts_at, status: status})
+  def upcoming?(%{starts_at: starts_at, status: status})
       when status in ["pending", "confirmed"] do
     DateTime.compare(starts_at, DateTime.utc_now()) == :gt
   end
@@ -163,6 +182,6 @@ defmodule Medic.Appointments.Appointment do
   @doc """
   Checks if the appointment is a telemedicine appointment.
   """
-  def telemedicine?(%__MODULE__{appointment_type: "telemedicine"}), do: true
+  def telemedicine?(%{appointment_type: "telemedicine"}), do: true
   def telemedicine?(_), do: false
 end

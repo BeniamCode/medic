@@ -1,23 +1,75 @@
 defmodule Medic.Doctors.Specialty do
-  @moduledoc """
-  Medical specialty schema with bilingual support (English/Greek).
-  """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Doctors,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
-
-  schema "specialties" do
-    field :name_en, :string
-    field :name_el, :string
-    field :slug, :string
-    field :icon, :string
-
-    has_many :doctors, Medic.Doctors.Doctor
-
-    timestamps(type: :utc_datetime)
+  postgres do
+    table "specialties"
+    repo Medic.Repo
   end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:name_en, :name_el, :slug, :icon]
+    end
+
+    update :update do
+      accept [:name_en, :name_el, :slug, :icon]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :name_en, :string do
+      allow_nil? false
+    end
+
+    attribute :name_el, :string do
+      allow_nil? false
+    end
+
+    attribute :slug, :string do
+      allow_nil? false
+    end
+
+    attribute :icon, :string
+
+    timestamps()
+  end
+
+  relationships do
+    has_many :doctors, Medic.Doctors.Doctor
+  end
+
+  calculations do
+    calculate :localized_name, :string, expr(
+      if ^arg(:locale) == "el" or ^arg(:locale) == :el do
+        name_el
+      else
+        name_en
+      end
+    ) do
+      argument :locale, :term, default: :en
+    end
+  end
+
+  # Code interface for convenience
+  code_interface do
+    define :create, action: :create
+    define :read_all, action: :read
+    define :update, action: :update
+    define :destroy, action: :destroy
+    define :get_by_slug, action: :read, get_by: [:slug]
+    define :get_by_id, action: :read, get_by: [:id]
+  end
+
+  # --- Legacy Logic ---
 
   @doc false
   def changeset(specialty, attrs) do
@@ -45,16 +97,5 @@ defmodule Medic.Doctors.Specialty do
       _ ->
         changeset
     end
-  end
-
-  @doc """
-  Returns the localized name based on the given locale.
-  """
-  def localized_name(%__MODULE__{} = specialty, locale) when locale in ["el", :el] do
-    specialty.name_el
-  end
-
-  def localized_name(%__MODULE__{} = specialty, _locale) do
-    specialty.name_en
   end
 end

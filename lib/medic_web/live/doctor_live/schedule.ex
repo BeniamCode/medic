@@ -4,7 +4,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
   """
   use MedicWeb, :live_view
 
-  alias Medic.Repo
+
   alias Medic.Scheduling
   alias Medic.Scheduling.AvailabilityRule
   alias Medic.Appointments
@@ -268,7 +268,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
 
   @impl true
   def mount(_params, _session, socket) do
-    user = Repo.preload(socket.assigns.current_user, :doctor)
+    user = Ash.load!(socket.assigns.current_user, :doctor)
     rules = Scheduling.list_availability_rules(user.doctor.id, include_inactive: true)
     upcoming = load_upcoming_appointments(user.doctor.id)
 

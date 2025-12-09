@@ -3,6 +3,13 @@ defmodule Medic.Accounts do
   The Accounts context for user authentication and management.
   """
 
+  use Ash.Domain
+
+  resources do
+    resource Medic.Accounts.User
+    resource Medic.Accounts.UserToken
+  end
+
   alias Medic.Repo
   alias Medic.Accounts.{User, UserToken}
 

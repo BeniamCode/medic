@@ -3,6 +3,13 @@ defmodule Medic.Doctors do
   The Doctors context for managing doctor profiles and specialties.
   """
 
+  use Ash.Domain
+
+  resources do
+    resource Medic.Doctors.Doctor
+    resource Medic.Doctors.Specialty
+  end
+
   import Ecto.Query
   alias Medic.Repo
   alias Medic.Doctors.{Doctor, Specialty}
@@ -74,8 +81,8 @@ defmodule Medic.Doctors do
     |> maybe_filter_city(opts[:city])
     |> maybe_filter_available_today(opts[:available_today])
     |> maybe_filter_verified(opts[:verified])
-    |> maybe_preload(opts[:preload])
     |> Repo.all()
+    |> Ash.load!(opts[:preload] || [])
   end
 
   defp maybe_filter_specialty(query, nil), do: query
@@ -108,8 +115,7 @@ defmodule Medic.Doctors do
 
   defp maybe_filter_verified(query, _), do: query
 
-  defp maybe_preload(query, nil), do: query
-  defp maybe_preload(query, preloads), do: from(q in query, preload: ^preloads)
+
 
   @doc """
   Gets a single doctor.
@@ -131,7 +137,7 @@ defmodule Medic.Doctors do
   def get_doctor_with_details!(id) do
     Doctor
     |> Repo.get!(id)
-    |> Repo.preload([:specialty, :user])
+    |> Ash.load!([:specialty, :user])
   end
 
   @doc """

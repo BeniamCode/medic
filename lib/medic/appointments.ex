@@ -3,6 +3,12 @@ defmodule Medic.Appointments do
   The Appointments context for managing bookings.
   """
 
+  use Ash.Domain
+
+  resources do
+    resource Medic.Appointments.Appointment
+  end
+
   import Ecto.Query
   alias Medic.Repo
   alias Medic.Appointments.Appointment
@@ -27,8 +33,8 @@ defmodule Medic.Appointments do
     |> maybe_filter_doctor(opts[:doctor_id])
     |> maybe_filter_status(opts[:status])
     |> maybe_filter_upcoming(opts[:upcoming])
-    |> maybe_preload(opts[:preload])
     |> Repo.all()
+    |> Ash.load!(opts[:preload] || [])
   end
 
   defp maybe_filter_patient(query, nil), do: query
@@ -63,8 +69,7 @@ defmodule Medic.Appointments do
 
   defp maybe_filter_upcoming(query, _), do: query
 
-  defp maybe_preload(query, nil), do: query
-  defp maybe_preload(query, preloads), do: from(q in query, preload: ^preloads)
+
 
   @doc """
   Gets a single appointment.
@@ -79,7 +84,7 @@ defmodule Medic.Appointments do
   def get_appointment_with_details!(id) do
     Appointment
     |> Repo.get!(id)
-    |> Repo.preload([:patient, doctor: [:specialty]])
+    |> Ash.load!([:patient, doctor: [:specialty]])
   end
 
   @doc """
@@ -106,7 +111,7 @@ defmodule Medic.Appointments do
 
   defp notify_doctor_booking(appointment) do
     # Preload patient and doctor to get names and user_id
-    appointment = Repo.preload(appointment, [:patient, :doctor])
+    appointment = Ash.load!(appointment, [:patient, :doctor])
 
     if appointment.doctor do
       Notifications.create_notification(%{
@@ -180,7 +185,7 @@ defmodule Medic.Appointments do
 
     case result do
       {:ok, updated_appointment} ->
-        updated_appointment = Repo.preload(updated_appointment, [:patient, :doctor])
+        updated_appointment = Ash.load!(updated_appointment, [:patient, :doctor])
         maybe_notify_cancellation(updated_appointment, Keyword.get(opts, :cancelled_by, :patient))
         broadcast_doctor_event(updated_appointment.doctor_id, :refresh_dashboard)
         {:ok, updated_appointment}
@@ -295,10 +300,10 @@ defmodule Medic.Appointments do
       where: a.doctor_id == ^doctor_id,
       where: a.starts_at >= ^today_start,
       where: a.starts_at < ^today_end,
-      order_by: a.starts_at,
-      preload: [:patient]
+      order_by: a.starts_at
     )
     |> Repo.all()
+    |> Ash.load!([:patient])
   end
 
   # Handle exclusion constraint violations gracefully

@@ -69,6 +69,10 @@ defmodule Medic.MixProject do
       {:faker, "~> 0.18", only: [:dev, :test]},
       {:ex_typesense, "~> 0.7"},
       # Scheduling engine deps
+      {:ash, "~> 3.0"},
+      {:ash_postgres, "~> 2.0"},
+      {:ash_phoenix, "~> 2.0"},
+      {:igniter, "~> 0.1"}, # Helpful for Ash generators
       {:timex, "~> 3.7"},
       {:oban, "~> 2.17"},
       {:nimble_csv, "~> 1.2"}

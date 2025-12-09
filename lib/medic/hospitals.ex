@@ -3,6 +3,13 @@ defmodule Medic.Hospitals do
   The Hospitals context.
   """
 
+  use Ash.Domain
+
+  resources do
+    resource Medic.Hospitals.Hospital
+    resource Medic.Hospitals.HospitalSchedule
+  end
+
   import Ecto.Query, warn: false
   alias Medic.Repo
 

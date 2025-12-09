@@ -2,43 +2,87 @@ defmodule Medic.Doctors.Doctor do
   @moduledoc """
   Doctor profile schema with Cal.com integration and geo-location support.
   """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Doctors,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  postgres do
+    table "doctors"
+    repo Medic.Repo
+  end
 
-  schema "doctors" do
-    # Associations
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:first_name, :last_name, :bio, :bio_el, :profile_image_url, :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id, :user_id]
+    end
+
+    update :update do
+      accept [:first_name, :last_name, :bio, :bio_el, :profile_image_url, :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id]
+    end
+
+    update :update_rating do
+      accept [:rating, :review_count]
+    end
+
+    update :update_availability do
+      accept [:next_available_slot]
+    end
+
+    update :verify do
+      accept []
+      change fn changeset, _ ->
+        Ash.Changeset.force_change_attribute(changeset, :verified_at, DateTime.utc_now() |> DateTime.truncate(:second))
+      end
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :first_name, :string, allow_nil?: false
+    attribute :last_name, :string, allow_nil?: false
+    attribute :bio, :string
+    attribute :bio_el, :string
+    attribute :profile_image_url, :string
+    attribute :location_lat, :float
+    attribute :location_lng, :float
+    attribute :address, :string
+    attribute :city, :string
+    attribute :rating, :float, default: 0.0
+    attribute :review_count, :integer, default: 0
+    attribute :consultation_fee, :decimal
+    attribute :next_available_slot, :utc_datetime
+    attribute :verified_at, :utc_datetime
+
+    timestamps()
+  end
+
+  relationships do
     belongs_to :user, Medic.Accounts.User
     belongs_to :specialty, Medic.Doctors.Specialty
     has_many :appointments, Medic.Appointments.Appointment
-
-    # Profile information
-    field :first_name, :string
-    field :last_name, :string
-    field :bio, :string
-    field :bio_el, :string
-    field :profile_image_url, :string
-
-    # Location for geo-search
-    field :location_lat, :float
-    field :location_lng, :float
-    field :address, :string
-    field :city, :string
-
-    # Ratings and pricing
-    field :rating, :float, default: 0.0
-    field :review_count, :integer, default: 0
-    field :consultation_fee, :decimal
-
-    # Cached availability for fast search
-    field :next_available_slot, :utc_datetime
-
-    field :verified_at, :utc_datetime
-
-    timestamps(type: :utc_datetime)
   end
+
+  calculations do
+    calculate :full_name, :string, expr(first_name <> " " <> last_name)
+    
+    calculate :localized_bio, :string, expr(
+      if ^arg(:locale) == "el" or ^arg(:locale) == :el do
+        bio_el
+      else
+        bio
+      end
+    ) do
+      argument :locale, :term, default: :en
+    end
+  end
+
+  # --- Legacy Logic ---
 
   @doc false
   def changeset(doctor, attrs) do
@@ -93,17 +137,17 @@ defmodule Medic.Doctors.Doctor do
   @doc """
   Returns the full name of the doctor.
   """
-  def full_name(%__MODULE__{first_name: first, last_name: last}) do
+  def full_name(%{first_name: first, last_name: last}) do
     "#{first} #{last}"
   end
 
   @doc """
   Returns the localized bio based on locale.
   """
-  def localized_bio(%__MODULE__{bio_el: bio_el}, locale)
+  def localized_bio(%{bio_el: bio_el}, locale)
       when locale in ["el", :el] and not is_nil(bio_el) do
     bio_el
   end
 
-  def localized_bio(%__MODULE__{bio: bio}, _locale), do: bio
+  def localized_bio(%{bio: bio}, _locale), do: bio
 end

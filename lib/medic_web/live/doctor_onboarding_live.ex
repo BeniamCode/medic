@@ -403,7 +403,7 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
     case result do
       {:ok, doctor} ->
-        doctor = Medic.Repo.preload(doctor, :specialty)
+        doctor = Ash.load!(doctor, :specialty)
         assign(socket, doctor: doctor, form: to_form(Doctors.change_doctor(doctor)))
 
       {:error, changeset} ->

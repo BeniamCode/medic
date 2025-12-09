@@ -2,25 +2,49 @@ defmodule Medic.Patients.Patient do
   @moduledoc """
   Patient profile schema.
   """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Patients,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  postgres do
+    table "patients"
+    repo Medic.Repo
+  end
 
-  schema "patients" do
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:first_name, :last_name, :date_of_birth, :phone, :emergency_contact, :profile_image_url, :user_id]
+    end
+
+    update :update do
+      accept [:first_name, :last_name, :date_of_birth, :phone, :emergency_contact, :profile_image_url]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :first_name, :string
+    attribute :last_name, :string
+    attribute :date_of_birth, :date
+    attribute :phone, :string
+    attribute :emergency_contact, :string
+    attribute :profile_image_url, :string
+
+    timestamps()
+  end
+
+  relationships do
     belongs_to :user, Medic.Accounts.User
     has_many :appointments, Medic.Appointments.Appointment
-
-    field :first_name, :string
-    field :last_name, :string
-    field :date_of_birth, :date
-    field :phone, :string
-    field :emergency_contact, :string
-    field :profile_image_url, :string
-
-    timestamps(type: :utc_datetime)
   end
+
+  # --- Legacy Logic ---
 
   @doc false
   def changeset(patient, attrs) do
@@ -56,16 +80,16 @@ defmodule Medic.Patients.Patient do
   @doc """
   Returns the full name of the patient.
   """
-  def full_name(%__MODULE__{first_name: first, last_name: last}) do
+  def full_name(%{first_name: first, last_name: last}) do
     "#{first} #{last}"
   end
 
   @doc """
   Calculates the patient's age.
   """
-  def age(%__MODULE__{date_of_birth: nil}), do: nil
+  def age(%{date_of_birth: nil}), do: nil
 
-  def age(%__MODULE__{date_of_birth: dob}) do
+  def age(%{date_of_birth: dob}) do
     today = Date.utc_today()
     years = today.year - dob.year
 

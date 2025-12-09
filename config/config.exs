@@ -9,7 +9,13 @@ import Config
 
 config :medic,
   ecto_repos: [Medic.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  ash_domains: [Medic.Doctors, Medic.Accounts, Medic.Hospitals, Medic.Patients,    Medic.Appointments,
+    Medic.Scheduling,
+    Medic.Notifications
+  ]
+
+config :ash, :use_all_identities_in_manage_relationship?, false
 
 # Configure the endpoint
 config :medic, MedicWeb.Endpoint,

@@ -1,30 +1,50 @@
 defmodule Medic.Scheduling.AvailabilityRule do
   @moduledoc """
   Defines a doctor's weekly availability schedule.
-
-  Each rule represents when a doctor is available on a specific weekday.
-  Uses ISO week numbering: 1=Monday, 7=Sunday.
   """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Scheduling,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
-
-  schema "availability_rules" do
-    belongs_to :doctor, Medic.Doctors.Doctor
-
-    # 1=Monday, 2=Tuesday, ..., 7=Sunday (ISO week)
-    field :day_of_week, :integer
-    field :start_time, :time
-    field :end_time, :time
-    field :break_start, :time
-    field :break_end, :time
-    field :slot_duration_minutes, :integer, default: 30
-    field :is_active, :boolean, default: true
-
-    timestamps(type: :utc_datetime)
+  postgres do
+    table "availability_rules"
+    repo Medic.Repo
   end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:day_of_week, :start_time, :end_time, :break_start, :break_end, :slot_duration_minutes, :is_active, :doctor_id]
+    end
+
+    update :update do
+      accept [:day_of_week, :start_time, :end_time, :break_start, :break_end, :slot_duration_minutes, :is_active]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :day_of_week, :integer
+    attribute :start_time, :time
+    attribute :end_time, :time
+    attribute :break_start, :time
+    attribute :break_end, :time
+    attribute :slot_duration_minutes, :integer, default: 30
+    attribute :is_active, :boolean, default: true
+
+    timestamps()
+  end
+
+  relationships do
+    belongs_to :doctor, Medic.Doctors.Doctor
+  end
+
+  # --- Legacy Logic ---
 
   @days_of_week 1..7
 

@@ -2,11 +2,41 @@ defmodule Medic.Accounts.UserToken do
   @moduledoc """
   User token schema for session management and email confirmation.
   """
-  use Ecto.Schema
+  use Ash.Resource,
+    domain: Medic.Accounts,
+    data_layer: AshPostgres.DataLayer
+
   import Ecto.Query
 
-  @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
+  postgres do
+    table "users_tokens"
+    repo Medic.Repo
+  end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:token, :context, :sent_to, :user_id]
+    end
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :token, :binary
+    attribute :context, :string
+    attribute :sent_to, :string
+
+    create_timestamp :inserted_at
+  end
+
+  relationships do
+    belongs_to :user, Medic.Accounts.User
+  end
+
+  # --- Legacy Logic ---
 
   @hash_algorithm :sha256
   @rand_size 32
@@ -18,28 +48,16 @@ defmodule Medic.Accounts.UserToken do
   # Password reset valid for 1 day
   @reset_password_validity_in_days 1
 
-  schema "users_tokens" do
-    field :token, :binary
-    field :context, :string
-    field :sent_to, :string
-
-    belongs_to :user, Medic.Accounts.User
-
-    timestamps(type: :utc_datetime, updated_at: false)
-  end
-
   @doc """
   Generates a session token.
   """
   def build_session_token(user) do
     token = :crypto.strong_rand_bytes(@rand_size)
-    {token, %__MODULE__{token: token, context: "session", user_id: user.id}}
+    {token, %{token: token, context: "session", user_id: user.id}}
   end
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.
-
-  The query returns the user found by the token, if any.
   """
   def verify_session_token_query(token) do
     query =
@@ -53,11 +71,6 @@ defmodule Medic.Accounts.UserToken do
 
   @doc """
   Builds a token and its hash to be delivered to the user's email.
-
-  The non-hashed token is sent to the user email while the
-  hashed part is stored in the database. The original token cannot be reconstructed,
-  which means anyone with read-only access to the database cannot directly use
-  the token in the application to gain access.
   """
   def build_email_token(user, context) do
     build_hashed_token(user, context, user.email)
@@ -68,7 +81,7 @@ defmodule Medic.Accounts.UserToken do
     hashed_token = :crypto.hash(@hash_algorithm, token)
 
     {Base.url_encode64(token, padding: false),
-     %__MODULE__{
+     %{
        token: hashed_token,
        context: context,
        sent_to: sent_to,
@@ -78,11 +91,6 @@ defmodule Medic.Accounts.UserToken do
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.
-
-  The query returns the user found by the token, if any.
-
-  The given token is valid if it matches its hashed counterpart in the
-  database and the user email has not changed.
   """
   def verify_email_token_query(token, context) do
     case Base.url_decode64(token, padding: false) do
