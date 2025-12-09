@@ -119,35 +119,6 @@ const configureTopbar = () => {
 configureTopbar()
 window.addEventListener("phx:theme-changed", configureTopbar)
 
-let activeViewTransition = null
-const supportsViewTransition = () => typeof document !== "undefined" && !!document.startViewTransition
-
-const patchWithViewTransition = (root, patch) => {
-  const shouldTransition = supportsViewTransition() && root?.hasAttribute?.("data-phx-view-transition")
-
-  if (!shouldTransition || activeViewTransition) {
-    patch()
-    return
-  }
-
-  try {
-    const transition = document.startViewTransition(() => {
-      patch()
-    })
-
-    activeViewTransition = transition
-    transition.finished.finally(() => {
-      if (activeViewTransition === transition) {
-        activeViewTransition = null
-      }
-    })
-  } catch (error) {
-    console.warn("View transition failed", error)
-    activeViewTransition = null
-    patch()
-  }
-}
-
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
@@ -156,8 +127,8 @@ const liveSocket = new LiveSocket("/live", Socket, {
     onBeforeElUpdated(from, to) {
       if (from._x_dataStack) { window.Alpine.clone(from, to) }
     },
-    render(_message, root, patch) {
-      patchWithViewTransition(root, patch)
+    render(_message, _root, patch) {
+      patch()
     }
   }
 })

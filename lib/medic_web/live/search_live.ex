@@ -12,7 +12,7 @@ defmodule MedicWeb.SearchLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8" data-phx-view-transition>
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <%!-- Header with Search --%>
       <div class="mb-8 space-y-4">
         <h1 class="text-3xl font-bold text-base-content">Find a Doctor</h1>
@@ -401,15 +401,10 @@ defmodule MedicWeb.SearchLive do
               <.link
                 navigate={~p"/doctors/#{doctor.id}"}
                 class="card card-bordered w-full bg-base-100 card-compact shadow-sm hover:shadow-md transition-all duration-300"
-                style={"view-transition-name: doctor-card-#{doctor.id}"}
-                data-phx-view-transition
               >
                 <div class="card-body">
                   <div class="flex items-start gap-4 mb-2">
-                    <div
-                      class="avatar placeholder"
-                      style={"view-transition-name: doctor-avatar-#{doctor.id}"}
-                    >
+                    <div class="avatar placeholder">
                       <div class="w-12 h-12 rounded-full bg-base-300 text-base-content">
                         <span class="text-lg font-bold">
                           <%= String.at(doctor.first_name, 0) %><%= String.at(doctor.last_name, 0) %>
@@ -417,16 +412,10 @@ defmodule MedicWeb.SearchLive do
                       </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <h2
-                        class="card-title text-base"
-                        style={"view-transition-name: doctor-name-#{doctor.id}"}
-                      >
+                      <h2 class="card-title text-base">
                         Dr. <%= doctor.first_name %> <%= doctor.last_name %>
                       </h2>
-                      <p
-                        class="text-sm text-base-content/70 truncate"
-                        style={"view-transition-name: doctor-specialty-#{doctor.id}"}
-                      >
+                      <p class="text-sm text-base-content/70 truncate">
                         <%= doctor.specialty_name || "General Practice" %>
                       </p>
                     </div>
@@ -446,10 +435,7 @@ defmodule MedicWeb.SearchLive do
                   </div>
 
                   <div class="space-y-1 text-sm text-base-content/80">
-                    <div
-                      class="flex items-center gap-2"
-                      style={"view-transition-name: doctor-rating-#{doctor.id}"}
-                    >
+                    <div class="flex items-center gap-2">
                       <.icon name="hero-star" class="size-[1.2em] text-warning" />
                       <span class="font-bold"><%= Float.round(doctor.rating || 0.0, 1) %></span>
                       <span class="text-base-content/60">
@@ -458,20 +444,14 @@ defmodule MedicWeb.SearchLive do
                     </div>
 
                     <%= if doctor.city do %>
-                      <div
-                        class="flex items-center gap-2"
-                        style={"view-transition-name: doctor-location-#{doctor.id}"}
-                      >
+                      <div class="flex items-center gap-2">
                         <.icon name="hero-map-pin" class="size-[1.2em]" />
                         <%= doctor.city %>
                       </div>
                     <% end %>
 
                     <%= if doctor.consultation_fee do %>
-                      <div
-                        class="flex items-center gap-2"
-                        style={"view-transition-name: doctor-price-#{doctor.id}"}
-                      >
+                      <div class="flex items-center gap-2">
                         <.icon name="hero-currency-euro" class="size-[1.2em]" />
                         <span>
                           <span class="font-semibold">€<%= trunc(doctor.consultation_fee) %></span>

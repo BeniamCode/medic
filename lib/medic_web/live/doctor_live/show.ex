@@ -11,27 +11,17 @@ defmodule MedicWeb.DoctorLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen bg-gradient-to-b from-base-200 to-base-100" data-phx-view-transition>
+    <div class="min-h-screen bg-gradient-to-b from-base-200 to-base-100">
       <%!-- Hero Section with Doctor Info --%>
       <div class="bg-base-100 border-b border-base-200 shadow-sm">
         <div class="max-w-4xl mx-auto py-8 px-4">
-          <.link
-            navigate={~p"/search"}
-            class="btn btn-ghost btn-sm gap-1 mb-6"
-            data-phx-view-transition
-          >
+          <.link navigate={~p"/search"} class="btn btn-ghost btn-sm gap-1 mb-6">
             <.icon name="hero-arrow-left" class="w-4 h-4" /> Back to search
           </.link>
 
-          <div
-            class="flex flex-col md:flex-row items-start gap-6"
-            style={"view-transition-name: doctor-card-#{@doctor.id}"}
-          >
+          <div class="flex flex-col md:flex-row items-start gap-6">
             <%!-- Doctor Avatar --%>
-            <div
-              class="avatar placeholder"
-              style={"view-transition-name: doctor-avatar-#{@doctor.id}"}
-            >
+            <div class="avatar placeholder">
               <div class="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary ring-2 ring-primary/20">
                 <span class="text-4xl"><.icon name="hero-user" class="w-14 h-14" /></span>
               </div>
@@ -41,25 +31,16 @@ defmodule MedicWeb.DoctorLive.Show do
             <div class="flex-1">
               <div class="flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                  <h1
-                    class="text-3xl font-bold tracking-tight"
-                    style={"view-transition-name: doctor-name-#{@doctor.id}"}
-                  >
+                  <h1 class="text-3xl font-bold tracking-tight">
                     Dr. <%= @doctor.first_name %> <%= @doctor.last_name %>
                   </h1>
-                  <p
-                    class="text-lg text-primary font-medium mt-1"
-                    style={"view-transition-name: doctor-specialty-#{@doctor.id}"}
-                  >
+                  <p class="text-lg text-primary font-medium mt-1">
                     <%= (@doctor.specialty && @doctor.specialty.name_en) || "General Practice" %>
                   </p>
                 </div>
 
                 <%= if @doctor.consultation_fee do %>
-                  <div
-                    class="text-right bg-primary/5 rounded-xl px-4 py-3"
-                    style={"view-transition-name: doctor-price-#{@doctor.id}"}
-                  >
+                  <div class="text-right bg-primary/5 rounded-xl px-4 py-3">
                     <p class="text-xs text-base-content/60 uppercase tracking-wide">Consultation</p>
                     <p class="text-2xl font-bold text-primary">€<%= @doctor.consultation_fee %></p>
                   </div>
@@ -68,10 +49,7 @@ defmodule MedicWeb.DoctorLive.Show do
 
               <%!-- Stats Row --%>
               <div class="flex flex-wrap items-center gap-4 mt-4">
-                <div
-                  class="flex items-center gap-1.5 bg-warning/10 rounded-full px-3 py-1.5"
-                  style={"view-transition-name: doctor-rating-#{@doctor.id}"}
-                >
+                <div class="flex items-center gap-1.5 bg-warning/10 rounded-full px-3 py-1.5">
                   <.icon name="hero-star-solid" class="w-5 h-5 text-warning" />
                   <span class="font-semibold"><%= Float.round(@doctor.rating || 0.0, 1) %></span>
                   <span class="text-base-content/60">(<%= @doctor.review_count || 0 %> reviews)</span>
@@ -84,10 +62,7 @@ defmodule MedicWeb.DoctorLive.Show do
                 <% end %>
 
                 <%= if @doctor.city do %>
-                  <div
-                    class="flex items-center gap-1.5 text-base-content/70"
-                    style={"view-transition-name: doctor-location-#{@doctor.id}"}
-                  >
+                  <div class="flex items-center gap-1.5 text-base-content/70">
                     <.icon name="hero-map-pin" class="w-4 h-4" />
                     <span><%= @doctor.city %></span>
                   </div>
