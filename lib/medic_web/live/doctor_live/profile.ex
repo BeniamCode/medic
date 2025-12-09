@@ -48,6 +48,19 @@ defmodule MedicWeb.DoctorLive.Profile do
                 placeholder="π.χ. Παπαδόπουλος"
                 required
               />
+              <.input field={@form[:title]} label="Τίτλος" placeholder="π.χ. Dr., Καθηγητής" />
+              <.input field={@form[:academic_title]} label="Ακαδημαϊκός Τίτλος" placeholder="π.χ. PhD, MD" />
+              <.input
+                field={@form[:registration_number]}
+                label="Αριθμός Μητρώου"
+                placeholder="π.χ. 12345/IS"
+              />
+              <.input
+                field={@form[:years_of_experience]}
+                type="number"
+                label="Έτη Εμπειρίας"
+                placeholder="π.χ. 10"
+              />
             </div>
 
             <.input
@@ -73,6 +86,45 @@ defmodule MedicWeb.DoctorLive.Profile do
           </div>
         </div>
 
+        <%!-- Professional Info Card --%>
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <div class="flex items-center gap-2 mb-4">
+              <.icon name="hero-academic-cap" class="size-5 text-primary" />
+              <h3 class="card-title">Επαγγελματικά Στοιχεία</h3>
+            </div>
+
+            <div class="space-y-4">
+              <.input
+                field={@form[:hospital_affiliation]}
+                label="Συνεργαζόμενα Νοσοκομεία"
+                placeholder="π.χ. Υγεία, Ιατρικό Κέντρο"
+              />
+
+              <.input
+                field={@form[:board_certifications]}
+                value={Enum.join(@form[:board_certifications].value || [], ", ")}
+                label="Πιστοποιήσεις (χωρισμένες με κόμμα)"
+                placeholder="π.χ. Board Certified in Cardiology, ACLS"
+              />
+
+              <.input
+                field={@form[:languages]}
+                value={Enum.join(@form[:languages].value || [], ", ")}
+                label="Γλώσσες (χωρισμένες με κόμμα)"
+                placeholder="π.χ. Ελληνικά, Αγγλικά, Γαλλικά"
+              />
+
+              <.input
+                field={@form[:insurance_networks]}
+                value={Enum.join(@form[:insurance_networks].value || [], ", ")}
+                label="Ασφαλιστικά Ταμεία (χωρισμένα με κόμμα)"
+                placeholder="π.χ. ΕΟΠΥΥ, Allianz, Interamerican"
+              />
+            </div>
+          </div>
+        </div>
+
         <%!-- Location Card --%>
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
@@ -93,6 +145,22 @@ defmodule MedicWeb.DoctorLive.Profile do
               <.icon name="hero-information-circle" class="size-4" />
               Οι συντεταγμένες θα υπολογιστούν αυτόματα από τη διεύθυνση
             </p>
+          </div>
+        </div>
+
+        <%!-- Services Card --%>
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+             <div class="flex items-center gap-2 mb-4">
+              <.icon name="hero-briefcase" class="size-5 text-primary" />
+              <h3 class="card-title">Υπηρεσίες</h3>
+            </div>
+             <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-4">
+                <input type="checkbox" name="doctor[telemedicine_available]" class="checkbox checkbox-primary" checked={@form[:telemedicine_available].value} />
+                <span class="label-text">Παρέχω υπηρεσίες τηλεϊατρικής (Video Visit)</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -157,6 +225,8 @@ defmodule MedicWeb.DoctorLive.Profile do
   end
 
   def handle_event("validate", %{"doctor" => params}, socket) do
+    params = parse_array_params(params, ["board_certifications", "languages", "insurance_networks", "services", "sub_specialties", "clinical_procedures", "conditions_treated", "awards", "publications"])
+
     changeset =
       socket.assigns.doctor
       |> Doctors.change_doctor(params)
@@ -166,6 +236,8 @@ defmodule MedicWeb.DoctorLive.Profile do
   end
 
   def handle_event("save", %{"doctor" => params}, socket) do
+    params = parse_array_params(params, ["board_certifications", "languages", "insurance_networks", "services", "sub_specialties", "clinical_procedures", "conditions_treated", "awards", "publications"])
+
     case Doctors.update_doctor(socket.assigns.doctor, params) do
       {:ok, doctor} ->
         # Check if profile is complete and verify if needed
@@ -200,5 +272,21 @@ defmodule MedicWeb.DoctorLive.Profile do
       !is_nil(doctor.last_name) && doctor.last_name != "" &&
       !is_nil(doctor.specialty_id) &&
       !is_nil(doctor.city) && doctor.city != ""
+  end
+
+  defp parse_array_params(params, keys) do
+    Enum.reduce(keys, params, fn key, acc ->
+      if value = acc[key] do
+        list =
+          value
+          |> String.split(",")
+          |> Enum.map(&String.trim/1)
+          |> Enum.reject(&(&1 == ""))
+
+        Map.put(acc, key, list)
+      else
+        acc
+      end
+    end)
   end
 end

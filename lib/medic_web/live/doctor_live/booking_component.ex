@@ -76,7 +76,7 @@ defmodule MedicWeb.DoctorLive.BookingComponent do
                 <span class="text-xs font-medium">
                   <%= Calendar.strftime(date, "%a") %>
                 </span>
-                <span class={"text-lg font-bold #{if is_today, do: "ring-2 ring-primary ring-offset-2 rounded-full px-1"}"}>
+                <span class={"text-lg font-bold #{if is_today, do: "text-success"}"}>
                   <%= Calendar.strftime(date, "%d") %>
                 </span>
                 <%= if has_slots && !is_past do %>

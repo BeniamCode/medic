@@ -119,15 +119,28 @@ defmodule MedicWeb.DoctorOnboardingLive do
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="form-control">
             <label class="label">
+              <span class="label-text text-base font-bold">Title</span>
+            </label>
+            <input
+              type="text"
+              name="doctor[title]"
+              value={@form[:title].value}
+              placeholder="e.g., Dr."
+              class="input input-lg input-bordered w-full text-lg"
+              autofocus
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
               <span class="label-text text-base font-bold">First Name</span>
             </label>
+
             <input
               type="text"
               name="doctor[first_name]"
               value={@form[:first_name].value}
               placeholder="e.g., Maria"
               class="input input-lg input-bordered w-full text-lg"
-              autofocus
             />
           </div>
           <div class="form-control">
@@ -142,13 +155,38 @@ defmodule MedicWeb.DoctorOnboardingLive do
               class="input input-lg input-bordered w-full text-lg"
             />
           </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text text-base font-bold">Registration Number</span>
+            </label>
+            <input
+              type="text"
+              name="doctor[registration_number]"
+              value={@form[:registration_number].value}
+              placeholder="e.g., 12345/IS"
+              class="input input-lg input-bordered w-full text-lg"
+            />
+          </div>
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text text-base font-bold">Years of Experience</span>
+            </label>
+            <input
+              type="number"
+              name="doctor[years_of_experience]"
+              value={@form[:years_of_experience].value}
+              placeholder="e.g., 10"
+              min="0"
+              class="input input-lg input-bordered w-full text-lg"
+            />
+          </div>
         </div>
 
         <div class="text-center pt-4">
           <div class="inline-flex items-center gap-2 text-base-content/50 text-sm">
             <.icon name="hero-user-circle" class="size-5" />
             <span>
-              Patients will see: Dr. <%= @form[:first_name].value || "___" %> <%= @form[:last_name].value ||
+              Patients will see: <%= @form[:title].value || "Dr." %> <%= @form[:first_name].value || "___" %> <%= @form[:last_name].value ||
                 "___" %>
             </span>
           </div>
@@ -231,6 +269,13 @@ defmodule MedicWeb.DoctorOnboardingLive do
             placeholder="e.g., Kifisias Ave 123"
             class="input input-lg input-bordered w-full text-lg"
           />
+        </div>
+
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <input type="checkbox" name="doctor[telemedicine_available]" class="checkbox checkbox-primary" checked={@form[:telemedicine_available].value} />
+            <span class="label-text text-base font-bold">I offer telemedicine (video visits)</span>
+          </label>
         </div>
       </.form>
     </div>

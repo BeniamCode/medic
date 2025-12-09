@@ -37,9 +37,6 @@ defmodule MedicWeb.DoctorLive.Show do
                 <div>
                   <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-base-content">
                     <%= @doctor.title || "Dr." %> <%= @doctor.first_name %> <%= @doctor.last_name %>
-                    <%= if @doctor.pronouns do %>
-                      <span class="text-sm font-normal text-base-content/50 align-middle ml-2 bg-base-200 px-2 py-0.5 rounded-full"><%= @doctor.pronouns %></span>
-                    <% end %>
                   </h1>
                   
                   <div class="mt-2 text-lg text-primary font-medium flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -97,6 +94,48 @@ defmodule MedicWeb.DoctorLive.Show do
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <%!-- Booking Section (Central & Big) --%>
+      <div class="bg-base-100 border-b border-base-200 shadow-sm py-8">
+        <div class="max-w-4xl mx-auto px-4">
+             <div class="card bg-base-100 shadow-xl border border-primary/20 ring-1 ring-primary/10">
+                <div class="card-body p-6 md:p-8">
+                   <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 border-b border-base-200 pb-4">
+                      <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <.icon name="hero-calendar-days" class="w-6 h-6" />
+                        </div>
+                        <div>
+                           <h2 class="text-2xl font-bold">Book an Appointment</h2>
+                           <p class="text-base-content/70">Select a time that works for you</p>
+                        </div>
+                      </div>
+                      
+                      <div class="flex flex-col items-end gap-1">
+                         <%= if @doctor.consultation_fee do %>
+                            <div class="flex items-baseline gap-1">
+                               <span class="text-sm font-medium text-base-content/60">Consultation Fee:</span>
+                               <span class="text-xl font-bold text-primary">€<%= @doctor.consultation_fee %></span>
+                            </div>
+                         <% end %>
+                         <%= if @doctor.telemedicine_available do %>
+                            <div class="badge badge-info gap-1 text-xs">
+                              <.icon name="hero-video-camera" class="w-3 h-3" /> Video Available
+                            </div>
+                         <% end %>
+                      </div>
+                   </div>
+
+                   <.live_component
+                      module={BookingComponent}
+                      id="booking"
+                      doctor={@doctor}
+                      current_user={@current_user}
+                   />
+                </div>
+             </div>
         </div>
       </div>
 
@@ -239,57 +278,9 @@ defmodule MedicWeb.DoctorLive.Show do
             <% end %>
           </div>
 
-          <%!-- Right Column: Booking & Logistics (1/3) --%>
+          <%!-- Right Column: Logistics (1/3) --%>
           <div class="lg:col-span-1 space-y-6">
              
-             <%!-- 📅 III. Booking Card --%>
-             <div class="card bg-base-100 shadow-xl border border-base-200 sticky top-28" id="booking-card">
-                <div class="card-body p-5">
-                   <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
-                     <.icon name="hero-calendar-days" class="w-5 h-5 text-primary" />
-                     Book Appointment
-                   </h2>
-                   
-                   <%= if @doctor.telemedicine_available do %>
-                      <div class="alert alert-info py-2 px-3 text-xs mb-4 shadow-sm">
-                         <.icon name="hero-video-camera" class="w-4 h-4 ml-0.5" />
-                         <span>Video consultations available</span>
-                      </div>
-                   <% end %>
-
-                   <.live_component
-                      module={BookingComponent}
-                      id="booking"
-                      doctor={@doctor}
-                      current_user={@current_user}
-                   />
-                   
-                   <%!-- Fee Details --%>
-                    <%= if @doctor.consultation_fee do %>
-                      <div class="mt-4 pt-4 border-t border-base-200">
-                         <div class="flex justify-between items-center text-sm">
-                            <span class="text-base-content/70">Initial Consultation</span>
-                            <span class="font-bold text-base-content">€<%= @doctor.consultation_fee %></span>
-                         </div>
-                         <p class="text-xs text-base-content/50 mt-1 text-center">Price may vary depending on insurance & complexity.</p>
-                      </div>
-                   <% end %>
-                   
-                   <%!-- Insurance --%>
-                   <%= if @doctor.insurance_networks != [] do %>
-                      <div class="mt-4 pt-4 border-t border-base-200">
-                         <button class="btn btn-ghost btn-xs w-full text-base-content/60 font-normal justify-between group">
-                            Accepted Insurance
-                            <.icon name="hero-chevron-down" class="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
-                         </button>
-                         <div class="hidden">
-                           <%!-- Expandable logic could be added here or just show 3 and +more --%>
-                         </div>
-                      </div>
-                   <% end %>
-                </div>
-             </div>
-
              <%!-- Location Card --%>
              <div class="card bg-base-100 shadow-md border border-base-200">
                 <div class="card-body p-5">
@@ -318,6 +309,23 @@ defmodule MedicWeb.DoctorLive.Show do
                     <% end %>
                 </div>
              </div>
+
+             <%!-- Insurance --%>
+             <%= if @doctor.insurance_networks != [] do %>
+                <div class="card bg-base-100 shadow-md border border-base-200">
+                  <div class="card-body p-5">
+                     <h3 class="font-bold flex items-center gap-2 mb-3">
+                        <.icon name="hero-credit-card" class="w-5 h-5 text-secondary" />
+                        Insurance
+                     </h3>
+                     <div class="flex flex-wrap gap-2">
+                       <%= for insurance <- @doctor.insurance_networks do %>
+                         <div class="badge badge-outline"><%= insurance %></div>
+                       <% end %>
+                     </div>
+                  </div>
+                </div>
+             <% end %>
           </div>
 
         </div>

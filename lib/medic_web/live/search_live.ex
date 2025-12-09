@@ -414,9 +414,6 @@ defmodule MedicWeb.SearchLive do
                     <div class="flex-1 min-w-0">
                       <h2 class="card-title text-base flex items-baseline gap-2">
                         <span><%= doctor.title %> <%= doctor.first_name %> <%= doctor.last_name %></span>
-                        <%= if doctor.pronouns do %>
-                          <span class="text-xs font-normal text-base-content/50 bg-base-200 px-1.5 py-0.5 rounded-full"><%= doctor.pronouns %></span>
-                        <% end %>
                       </h2>
                       <p class="text-sm text-base-content/70 truncate font-medium text-primary">
                         <%= doctor.specialty_name || "General Practice" %>
