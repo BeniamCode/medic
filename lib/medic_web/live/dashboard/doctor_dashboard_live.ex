@@ -14,13 +14,12 @@ defmodule MedicWeb.DoctorDashboardLive do
         <div>
           <h2 class="text-3xl font-bold">Dashboard</h2>
           <p class="text-base-content/70 mt-1">
-            Good morning, Dr. <%= @doctor && @doctor.last_name || "Doctor" %>. Here's what's happening today.
+            Good morning, Dr. <%= (@doctor && @doctor.last_name) || "Doctor" %>. Here's what's happening today.
           </p>
         </div>
         <div>
           <.link navigate={~p"/dashboard/doctor/profile"} class="btn btn-primary">
-            <.icon name="hero-user-circle" class="size-5" />
-            Profile
+            <.icon name="hero-user-circle" class="size-5" /> Profile
           </.link>
         </div>
       </div>
@@ -36,7 +35,7 @@ defmodule MedicWeb.DoctorDashboardLive do
             <div class="stat-desc">↗︎ 20.1% from last month</div>
           </div>
         </div>
-        
+
         <div class="stats shadow bg-base-100">
           <div class="stat">
             <div class="stat-figure text-secondary">
@@ -65,8 +64,12 @@ defmodule MedicWeb.DoctorDashboardLive do
               <.icon name="hero-star" class="size-8" />
             </div>
             <div class="stat-title">Rating</div>
-            <div class="stat-value text-warning"><%= @doctor && Float.round(@doctor.rating || 0.0, 1) || "N/A" %></div>
-            <div class="stat-desc">Based on <%= @doctor && @doctor.review_count || 0 %> reviews</div>
+            <div class="stat-value text-warning">
+              <%= (@doctor && Float.round(@doctor.rating || 0.0, 1)) || "N/A" %>
+            </div>
+            <div class="stat-desc">
+              Based on <%= (@doctor && @doctor.review_count) || 0 %> reviews
+            </div>
           </div>
         </div>
       </div>
@@ -78,7 +81,7 @@ defmodule MedicWeb.DoctorDashboardLive do
             <p class="text-base-content/70">
               You have <%= length(@today_appointments) %> appointments today.
             </p>
-            
+
             <div class="divider my-0"></div>
 
             <%= if @today_appointments == [] do %>
@@ -94,10 +97,14 @@ defmodule MedicWeb.DoctorDashboardLive do
                       <tr>
                         <td>
                           <div class="font-bold">
-                            <%= appointment.patient && "#{appointment.patient.first_name} #{appointment.patient.last_name}" || "Patient" %>
+                            <%= (appointment.patient &&
+                                   "#{appointment.patient.first_name} #{appointment.patient.last_name}") ||
+                              "Patient" %>
                           </div>
                           <div class="text-sm opacity-50">
-                            <%= if appointment.appointment_type == "telemedicine", do: "Telemedicine", else: "In-person" %>
+                            <%= if appointment.appointment_type == "telemedicine",
+                              do: "Telemedicine",
+                              else: "In-person" %>
                           </div>
                         </td>
                         <td>
@@ -126,22 +133,19 @@ defmodule MedicWeb.DoctorDashboardLive do
           <div class="card-body">
             <h3 class="card-title">Quick Actions</h3>
             <p class="text-base-content/70 mb-4">Manage your practice</p>
-            
+
             <div class="flex flex-col gap-2">
               <.link navigate={~p"/doctor/schedule"} class="btn btn-outline justify-start">
-                <.icon name="hero-calendar" class="size-5" />
-                Manage Availability
+                <.icon name="hero-calendar" class="size-5" /> Manage Availability
               </.link>
               <.link navigate={~p"/dashboard/doctor/profile"} class="btn btn-outline justify-start">
-                <.icon name="hero-user-circle" class="size-5" />
-                Edit Profile
+                <.icon name="hero-user-circle" class="size-5" /> Edit Profile
               </.link>
               <button class="btn btn-outline btn-disabled justify-start">
-                <.icon name="hero-chart-bar" class="size-5" />
-                Analytics (Coming Soon)
+                <.icon name="hero-chart-bar" class="size-5" /> Analytics (Coming Soon)
               </button>
             </div>
-            
+
             <%= if @doctor && is_nil(@doctor.verified_at) do %>
               <div class="alert alert-warning mt-4">
                 <.icon name="hero-exclamation-triangle" class="size-5" />
@@ -162,24 +166,22 @@ defmodule MedicWeb.DoctorDashboardLive do
     user = socket.assigns.current_user
     doctor = Doctors.get_doctor_by_user_id(user.id)
 
-    {today_appointments, pending_count, upcoming_count} =
-      if doctor do
-        today = Appointments.list_doctor_appointments_today(doctor.id)
-        pending = Appointments.count_upcoming_doctor_appointments(doctor.id)
-        upcoming = Appointments.list_appointments(doctor_id: doctor.id, status: "confirmed") |> length()
-        {today, pending, upcoming}
+    socket = assign(socket, page_title: "Doctor Dashboard", doctor: doctor)
+    socket = refresh_dashboard(socket)
+
+    socket =
+      if doctor && connected?(socket) do
+        Appointments.subscribe_doctor_events(doctor.id)
+        socket
       else
-        {[], 0, 0}
+        socket
       end
 
-    {:ok,
-     assign(socket,
-       page_title: "Doctor Dashboard",
-       doctor: doctor,
-       today_appointments: today_appointments,
-       pending_count: pending_count,
-       upcoming_count: upcoming_count
-     )}
+    {:ok, socket}
+  end
+
+  def handle_info({:refresh_dashboard, _payload}, socket) do
+    {:noreply, refresh_dashboard(socket)}
   end
 
   defp status_badge_class("pending"), do: "badge-warning"
@@ -198,5 +200,29 @@ defmodule MedicWeb.DoctorDashboardLive do
     datetime
     |> DateTime.shift_zone!("Europe/Athens")
     |> Calendar.strftime("%H:%M")
+  end
+
+  defp refresh_dashboard(%{assigns: %{doctor: nil}} = socket) do
+    assign(socket, today_appointments: [], pending_count: 0, upcoming_count: 0)
+  end
+
+  defp refresh_dashboard(%{assigns: %{doctor: doctor}} = socket) do
+    {today, pending, upcoming} = doctor_dashboard_snapshot(doctor.id)
+
+    assign(socket,
+      today_appointments: today,
+      pending_count: pending,
+      upcoming_count: upcoming
+    )
+  end
+
+  defp doctor_dashboard_snapshot(doctor_id) do
+    today = Appointments.list_doctor_appointments_today(doctor_id)
+    pending = Appointments.count_upcoming_doctor_appointments(doctor_id)
+
+    upcoming =
+      Appointments.list_appointments(doctor_id: doctor_id, status: "confirmed") |> length()
+
+    {today, pending, upcoming}
   end
 end

@@ -10,15 +10,16 @@ defmodule MedicWeb.NotificationLive do
         Logger.info("Subscribing to notifications for user #{user_id}")
         Notifications.subscribe(user_id)
       end
-      
+
       unread_count = Notifications.list_unread_count(user_id)
-      
-      {:ok, assign(socket, 
-        current_user: %{id: user_id}, 
-        unread_count: unread_count, 
-        notifications: [],
-        show_dropdown: false
-      )}
+
+      {:ok,
+       assign(socket,
+         current_user: %{id: user_id},
+         unread_count: unread_count,
+         notifications: [],
+         show_dropdown: false
+       )}
     else
       {:ok, assign(socket, current_user: nil, unread_count: 0, show_dropdown: false)}
     end
@@ -32,7 +33,9 @@ defmodule MedicWeb.NotificationLive do
           <div class="indicator">
             <.icon name="hero-bell" class="w-5 h-5" />
             <%= if @unread_count > 0 do %>
-              <span class="badge badge-xs badge-primary indicator-item"></span>
+              <span class="badge badge-primary badge-xs indicator-item">
+                <%= if @unread_count > 9, do: "9+", else: @unread_count %>
+              </span>
             <% end %>
           </div>
         </button>
@@ -42,10 +45,12 @@ defmodule MedicWeb.NotificationLive do
             <div class="p-3 border-b border-base-200 flex justify-between items-center bg-base-200/50">
               <h3 class="font-bold text-sm">Notifications</h3>
               <%= if @unread_count > 0 do %>
-                <button class="text-xs text-primary hover:underline" phx-click="mark_all_read">Mark all read</button>
+                <button class="text-xs text-primary hover:underline" phx-click="mark_all_read">
+                  Mark all read
+                </button>
               <% end %>
             </div>
-            
+
             <div class="max-h-96 overflow-y-auto">
               <%= if @notifications == [] do %>
                 <div class="p-4 text-center text-base-content/60 text-sm">
@@ -56,10 +61,13 @@ defmodule MedicWeb.NotificationLive do
                   <%= for notification <- @notifications do %>
                     <li class={"p-3 hover:bg-base-200/50 transition-colors #{unless notification.read_at, do: "bg-primary/5"}"}>
                       <div class="flex gap-3">
-                        <div class={"mt-1 w-2 h-2 rounded-full shrink-0 #{if notification.read_at, do: "bg-base-300", else: "bg-primary"}"}></div>
+                        <div class={"mt-1 w-2 h-2 rounded-full shrink-0 #{if notification.read_at, do: "bg-base-300", else: "bg-primary"}"}>
+                        </div>
                         <div>
                           <p class="font-medium text-sm"><%= notification.title %></p>
-                          <p class="text-xs text-base-content/70 mt-0.5"><%= notification.message %></p>
+                          <p class="text-xs text-base-content/70 mt-0.5">
+                            <%= notification.message %>
+                          </p>
                           <p class="text-[10px] text-base-content/50 mt-1">
                             <%= Calendar.strftime(notification.inserted_at, "%b %d, %H:%M") %>
                           </p>
@@ -71,7 +79,7 @@ defmodule MedicWeb.NotificationLive do
               <% end %>
             </div>
           </div>
-          
+
           <%!-- Backdrop to close --%>
           <div class="fixed inset-0 z-[90]" phx-click="toggle_notifications"></div>
         <% end %>
@@ -92,26 +100,37 @@ defmodule MedicWeb.NotificationLive do
 
   def handle_event("mark_all_read", _, socket) do
     Notifications.mark_all_as_read(socket.assigns.current_user.id)
-    {:noreply, assign(socket, unread_count: 0, notifications: Notifications.list_user_notifications(socket.assigns.current_user.id))}
+
+    {:noreply,
+     assign(socket,
+       unread_count: 0,
+       notifications: Notifications.list_user_notifications(socket.assigns.current_user.id)
+     )}
   end
 
   def handle_info({:new_notification, notification}, socket) do
     Logger.info("Received new notification in LiveView: #{inspect(notification)}")
     # Show toast
-    
+
     # Update count
     new_count = socket.assigns.unread_count + 1
-    
-    # If dropdown is open, prepend notification
-    notifications = if socket.assigns.show_dropdown do
-      [notification | socket.assigns.notifications]
-    else
-      socket.assigns.notifications
-    end
 
-    socket = socket
-             |> assign(unread_count: new_count, notifications: notifications)
-             |> push_event("show_toast", %{title: notification.title, message: notification.message, type: "info"})
+    # If dropdown is open, prepend notification
+    notifications =
+      if socket.assigns.show_dropdown do
+        [notification | socket.assigns.notifications]
+      else
+        socket.assigns.notifications
+      end
+
+    socket =
+      socket
+      |> assign(unread_count: new_count, notifications: notifications)
+      |> push_event("show_toast", %{
+        title: notification.title,
+        message: notification.message,
+        type: "info"
+      })
 
     {:noreply, socket}
   end

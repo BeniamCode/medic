@@ -1,6 +1,14 @@
 <div class="drawer lg:drawer-open bg-gradient-to-br from-base-100 via-base-200 to-secondary/20">
   <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
   <div class="drawer-content flex flex-col min-h-screen">
+    <%= if @current_user do %>
+      <div class="fixed right-4 top-4 z-50">
+        <%= live_render(@socket, MedicWeb.NotificationLive,
+          id: :notification_bell,
+          session: %{"user_id" => @current_user.id}
+        ) %>
+      </div>
+    <% end %>
     <%!-- Navbar --%>
     <div class="navbar bg-base-100/80 border-b border-base-200 backdrop-blur lg:hidden">
       <div class="flex-none">

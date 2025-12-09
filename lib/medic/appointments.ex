@@ -7,6 +7,7 @@ defmodule Medic.Appointments do
   alias Medic.Repo
   alias Medic.Appointments.Appointment
   alias Medic.Notifications
+  alias Phoenix.PubSub
 
   @doc """
   Returns the list of appointments.
@@ -95,6 +96,7 @@ defmodule Medic.Appointments do
     case result do
       {:ok, appointment} ->
         notify_doctor_booking(appointment)
+        broadcast_doctor_event(appointment.doctor_id, :refresh_dashboard)
         {:ok, appointment}
 
       error ->
@@ -180,6 +182,7 @@ defmodule Medic.Appointments do
       {:ok, updated_appointment} ->
         updated_appointment = Repo.preload(updated_appointment, [:patient, :doctor])
         maybe_notify_cancellation(updated_appointment, Keyword.get(opts, :cancelled_by, :patient))
+        broadcast_doctor_event(updated_appointment.doctor_id, :refresh_dashboard)
         {:ok, updated_appointment}
 
       error ->
@@ -230,6 +233,18 @@ defmodule Medic.Appointments do
       })
     end
   end
+
+  def subscribe_doctor_events(doctor_id) when not is_nil(doctor_id) do
+    PubSub.subscribe(Medic.PubSub, doctor_topic(doctor_id))
+  end
+
+  defp broadcast_doctor_event(nil, _event), do: :ok
+
+  defp broadcast_doctor_event(doctor_id, event, payload \\ %{}) do
+    PubSub.broadcast(Medic.PubSub, doctor_topic(doctor_id), {event, payload})
+  end
+
+  defp doctor_topic(doctor_id), do: "doctor_events:#{doctor_id}"
 
   @doc """
   Marks an appointment as no-show.
