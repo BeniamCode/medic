@@ -1,19 +1,19 @@
 <section class="bg-gradient-to-b from-base-100 via-base-200 to-secondary/10 text-base-content">
   <div class="max-w-5xl mx-auto px-6 py-20 text-center space-y-8">
-    <div class="badge badge-lg badge-secondary badge-outline mb-6">Cupcake Care</div>
+    <div class="badge badge-lg badge-secondary badge-outline mb-6"><%= gettext("Medical Excellence") %></div>
     <h1 class="text-5xl md:text-6xl font-black leading-tight">
-      Find caring doctors with a <span class="text-primary">cupcake-sweet</span> experience
+      <%= gettext("Find caring doctors with a") %> <span class="text-primary"><%= gettext("premium") %></span> <%= gettext("experience") %>
     </h1>
     <p class="text-lg md:text-xl text-base-content/70 max-w-3xl mx-auto">
-      Explore Medic's curated network of specialists, compare profiles, and book in seconds with a playful DaisyUI interface inspired by the Cupcake theme.
+      <%= gettext("Explore Medic's curated network of specialists, compare profiles, and book in seconds with our modern, easy-to-use interface.") %>
     </p>
 
     <div class="flex flex-col md:flex-row gap-4 justify-center">
       <a href="/search" class="btn btn-primary btn-lg gap-2 shadow-lg">
-        <.icon name="hero-magnifying-glass" class="size-5" /> Browse doctors
+        <.icon name="hero-magnifying-glass" class="size-5" /> <%= gettext("Browse doctors") %>
       </a>
       <a href="/register/doctor" class="btn btn-secondary btn-lg gap-2 btn-outline">
-        <.icon name="hero-identification" class="size-5" /> Join as doctor
+        <.icon name="hero-identification" class="size-5" /> <%= gettext("Join as doctor") %>
       </a>
     </div>
   </div>
@@ -29,9 +29,9 @@
               <.icon name="hero-calendar" class="size-8" />
             </div>
           </div>
-          <h3 class="card-title">Instant scheduling</h3>
+          <h3 class="card-title"><%= gettext("Instant scheduling") %></h3>
           <p class="text-base-content/70">
-            Pick an appointment slot straight from each doctor's Cupcake-inspired profile.
+            <%= gettext("Pick an appointment slot straight from each doctor's profile.") %>
           </p>
         </div>
       </div>
@@ -42,9 +42,9 @@
               <.icon name="hero-shield-check" class="size-8" />
             </div>
           </div>
-          <h3 class="card-title">Verified specialists</h3>
+          <h3 class="card-title"><%= gettext("Verified specialists") %></h3>
           <p class="text-base-content/70">
-            Every doctor goes through verification so you can focus on care, not paperwork.
+            <%= gettext("Every doctor goes through verification so you can focus on care, not paperwork.") %>
           </p>
         </div>
       </div>
@@ -55,9 +55,9 @@
               <.icon name="hero-chat-bubble-bottom-center-text" class="size-8" />
             </div>
           </div>
-          <h3 class="card-title">Friendly follow-ups</h3>
+          <h3 class="card-title"><%= gettext("Friendly follow-ups") %></h3>
           <p class="text-base-content/70">
-            Notifications, reminders, and notes stay in sync with your Medic dashboard.
+            <%= gettext("Notifications, reminders, and notes stay in sync with your Medic dashboard.") %>
           </p>
         </div>
       </div>

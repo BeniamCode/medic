@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el" data-theme="bumblebee">
+<html lang="el" data-theme="medic">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,7 +12,7 @@
     </script>
     <script>
       (() => {
-        const defaultTheme = "bumblebee";
+        const defaultTheme = "medic";
         const setTheme = (theme) => {
           const applied = theme === "system" ? defaultTheme : (theme || defaultTheme);
 
@@ -40,7 +40,17 @@
           if (e.key === "phx:theme") setTheme(e.newValue || defaultTheme);
         });
         
-        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+        window.addEventListener("phx:set-theme", (e) => {
+          // If a specific theme is provided, use it. Otherwise toggle.
+          if (e.detail && e.detail.theme && e.detail.theme !== "toggle") {
+            setTheme(e.detail.theme);
+          } else {
+            // Toggle logic
+            const current = document.documentElement.getAttribute("data-theme");
+            const next = current === "medic" ? "bumblebee" : "medic";
+            setTheme(next);
+          }
+        });
       })();
     </script>
   </head>

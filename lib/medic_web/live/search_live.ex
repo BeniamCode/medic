@@ -157,20 +157,35 @@ defmodule MedicWeb.SearchLive do
         <aside class={"w-full lg:w-72 shrink-0 space-y-6 #{if @show_filters, do: "block", else: "hidden lg:block"}"}>
           <%!-- On Duty Accordion --%>
           <%= if @on_duty_hospitals != [] do %>
-            <div class="collapse collapse-arrow bg-base-200 border border-base-300">
-              <input type="checkbox" />
-              <div class="collapse-title text-sm font-semibold flex items-center gap-2">
-                <.icon name="hero-building-office-2" class="w-4 h-4" /> On Duty Today
+            <div class={"collapse collapse-arrow bg-base-100 border border-secondary/20 shadow-sm #{if @show_on_duty, do: "collapse-open"}"}>
+              <div
+                class="collapse-title text-sm font-bold text-secondary flex items-center gap-2 cursor-pointer hover:bg-base-200/50 transition-colors"
+                phx-click="toggle_on_duty"
+              >
+                <.icon name="hero-building-office-2" class="w-5 h-5" /> <%= gettext("On Duty Hospitals Today") %>
               </div>
               <div class="collapse-content text-xs">
-                <ul class="space-y-3 pt-2">
+                <ul class="space-y-4 pt-2">
                   <%= for hospital <- @on_duty_hospitals do %>
-                    <li class="border-b border-base-content/10 last:border-0 pb-2 last:pb-0">
-                      <div class="font-bold"><%= hospital.name %></div>
-                      <div class="text-base-content/60 mt-1 flex flex-wrap gap-1">
+                    <li class="border-b border-base-content/10 last:border-0 pb-3 last:pb-0">
+                      <div class="font-bold text-sm text-base-content"><%= hospital.name %></div>
+                      <%= if hospital.address do %>
+                         <div class="flex items-start gap-1.5 mt-1 text-base-content/70">
+                          <.icon name="hero-map-pin" class="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                          <span><%= hospital.address %>, <%= hospital.city %></span>
+                        </div>
+                      <% end %>
+                      <%= if hospital.phone do %>
+                        <div class="flex items-center gap-1.5 mt-1 text-base-content/70">
+                          <.icon name="hero-phone" class="w-3.5 h-3.5 shrink-0" />
+                          <a href={"tel:#{hospital.phone}"} class="hover:text-primary transition-colors"><%= hospital.phone %></a>
+                        </div>
+                      <% end %>
+
+                      <div class="text-base-content/60 mt-2 flex flex-wrap gap-1">
                         <%= for schedule <- hospital.hospital_schedules do %>
                           <%= for specialty <- schedule.specialties do %>
-                            <div class="badge badge-xs badge-ghost"><%= specialty %></div>
+                            <div class="badge badge-xs badge-secondary badge-outline"><%= specialty %></div>
                           <% end %>
                         <% end %>
                       </div>
@@ -545,7 +560,7 @@ defmodule MedicWeb.SearchLive do
       )
 
     socket = if connected?(socket), do: perform_search(socket), else: socket
-    {:ok, socket}
+    {:ok, assign(socket, show_on_duty: false)}
   end
 
   @impl true
@@ -658,6 +673,10 @@ defmodule MedicWeb.SearchLive do
       |> push_url_params()
 
     {:noreply, socket}
+  end
+
+  def handle_event("toggle_on_duty", _, socket) do
+    {:noreply, assign(socket, show_on_duty: !socket.assigns.show_on_duty)}
   end
 
   def handle_event("toggle_filters", _, socket) do

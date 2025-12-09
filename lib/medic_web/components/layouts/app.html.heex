@@ -2,7 +2,18 @@
   <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
   <div class="drawer-content flex flex-col min-h-screen">
     <%= if @current_user do %>
-      <div class="fixed right-4 top-4 z-50">
+      <div class="fixed right-4 top-4 z-50 flex items-center gap-2">
+        <button
+          type="button"
+          class="btn btn-circle btn-ghost bg-base-100/50 backdrop-blur shadow-sm hover:rotate-12 transition-transform duration-300"
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "toggle"})}
+        >
+          <!-- Sun for Light Mode -->
+          <.icon name="hero-sun" class="hidden dark:block size-6 text-warning" />
+           <!-- Moon for Dark Mode -->
+          <.icon name="hero-moon" class="block dark:hidden size-6 text-primary" />
+        </button>
+
         <%= live_render(@socket, MedicWeb.NotificationLive,
           id: :notification_bell,
           session: %{"user_id" => @current_user.id}
@@ -11,7 +22,12 @@
     <% end %>
     <%!-- Navbar --%>
     <div class="navbar bg-base-100/80 border-b border-base-200 backdrop-blur lg:hidden">
-      <div class="flex-none">
+      <div class="flex-none gap-2">
+        <label class="swap swap-rotate btn btn-ghost btn-circle">
+          <input type="checkbox" class="theme-controller" value="medic" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "bumblebee"})} />
+          <.icon name="hero-sun" class="swap-on fill-current size-6" />
+          <.icon name="hero-moon" class="swap-off fill-current size-6" />
+        </label>
         <label for="my-drawer-2" class="btn btn-square btn-ghost drawer-button lg:hidden">
           <.icon name="hero-bars-3" class="size-6" />
         </label>
