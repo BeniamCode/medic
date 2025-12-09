@@ -21,12 +21,20 @@ defmodule Medic.Scheduling do
   @doc """
   Returns all availability rules for a doctor.
   """
-  def list_availability_rules(doctor_id) do
+  def list_availability_rules(doctor_id, opts \\ []) do
     AvailabilityRule
     |> where([r], r.doctor_id == ^doctor_id)
-    |> where([r], r.is_active == true)
+    |> maybe_filter_active(opts)
     |> order_by([r], r.day_of_week)
     |> Repo.all()
+  end
+
+  defp maybe_filter_active(query, opts) do
+    if Keyword.get(opts, :include_inactive, false) do
+      query
+    else
+      where(query, [r], r.is_active == true)
+    end
   end
 
   @doc """
@@ -83,7 +91,8 @@ defmodule Medic.Scheduling do
   """
   def get_slots(%Doctor{id: doctor_id}, date, opts \\ []) do
     timezone = Keyword.get(opts, :timezone, @timezone)
-    day_of_week = Timex.weekday(date)  # 1=Monday, 7=Sunday (ISO)
+    # 1=Monday, 7=Sunday (ISO)
+    day_of_week = Timex.weekday(date)
 
     # Get the availability rule for this day
     rule = get_rule_for_day(doctor_id, day_of_week)
@@ -115,6 +124,7 @@ defmodule Medic.Scheduling do
     0..(days - 1)
     |> Enum.map(fn offset ->
       date = Timex.shift(start_date, days: offset)
+
       %{
         date: date,
         slots: get_slots(doctor, date, opts)
@@ -213,8 +223,12 @@ defmodule Medic.Scheduling do
 
   defp in_break?(starts_at, _ends_at, rule, date, timezone) do
     case {rule.break_start, rule.break_end} do
-      {nil, _} -> false
-      {_, nil} -> false
+      {nil, _} ->
+        false
+
+      {_, nil} ->
+        false
+
       {break_start, break_end} ->
         break_start_dt = combine_date_time(date, break_start, timezone)
         break_end_dt = combine_date_time(date, break_end, timezone)
@@ -271,7 +285,8 @@ defmodule Medic.Scheduling do
         user_id: appointment.doctor.user_id,
         type: "booking",
         title: "New Appointment Request",
-        message: "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
+        message:
+          "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
         resource_id: appointment.id,
         resource_type: "appointment"
       })

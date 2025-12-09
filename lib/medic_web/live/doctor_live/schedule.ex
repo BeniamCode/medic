@@ -23,8 +23,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
         </div>
         <div>
           <.link navigate={~p"/dashboard/doctor"} class="btn btn-ghost">
-            <.icon name="hero-arrow-left" class="size-4 mr-2" />
-            Back to Dashboard
+            <.icon name="hero-arrow-left" class="size-4 mr-2" /> Back to Dashboard
           </.link>
         </div>
       </div>
@@ -54,13 +53,19 @@ defmodule MedicWeb.DoctorLive.Schedule do
                           <div class="flex items-center gap-2">
                             <.icon name="hero-clock" class="size-4 text-primary" />
                             <span class="font-semibold">
-                              <%= Calendar.strftime(rule.start_time, "%H:%M") %> - <%= Calendar.strftime(rule.end_time, "%H:%M") %>
+                              <%= Calendar.strftime(rule.start_time, "%H:%M") %> - <%= Calendar.strftime(
+                                rule.end_time,
+                                "%H:%M"
+                              ) %>
                             </span>
                           </div>
                           <%= if rule.break_start && rule.break_end do %>
                             <div class="text-xs text-base-content/70 flex items-center gap-2">
                               <.icon name="hero-pause" class="size-3" />
-                              Break: <%= Calendar.strftime(rule.break_start, "%H:%M") %> - <%= Calendar.strftime(rule.break_end, "%H:%M") %>
+                              Break: <%= Calendar.strftime(rule.break_start, "%H:%M") %> - <%= Calendar.strftime(
+                                rule.break_end,
+                                "%H:%M"
+                              ) %>
                             </div>
                           <% end %>
                         </div>
@@ -99,6 +104,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
       id="edit-rule-modal"
       show
       on_cancel={JS.push("cancel_edit")}
+      box_class="max-w-4xl w-11/12"
     >
       <div class="mb-6">
         <h3 class="text-lg font-bold">
@@ -109,12 +115,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
         </p>
       </div>
 
-      <.form
-        for={@form}
-        phx-submit="save_rule"
-        phx-change="validate_rule"
-        class="space-y-6"
-      >
+      <.form for={@form} phx-submit="save_rule" phx-change="validate_rule" class="space-y-6">
         <input type="hidden" name="rule[day_of_week]" value={@editing_day} />
         <input type="hidden" name="rule[doctor_id]" value={@preloaded_user.doctor.id} />
 
@@ -132,7 +133,11 @@ defmodule MedicWeb.DoctorLive.Schedule do
           </label>
         </div>
 
-        <div class={if !Ecto.Changeset.get_field(@form.source, :is_active, true), do: "opacity-50 pointer-events-none space-y-4", else: "space-y-4"} >
+        <div class={
+          if !Ecto.Changeset.get_field(@form.source, :is_active, true),
+            do: "opacity-50 pointer-events-none space-y-4",
+            else: "space-y-4"
+        }>
           <div class="grid grid-cols-2 gap-4">
             <.input field={@form[:start_time]} type="time" label="Start Time" />
             <.input field={@form[:end_time]} type="time" label="End Time" />
@@ -168,8 +173,8 @@ defmodule MedicWeb.DoctorLive.Schedule do
   @impl true
   def mount(_params, _session, socket) do
     user = Repo.preload(socket.assigns.current_user, :doctor)
-    rules = Scheduling.list_availability_rules(user.doctor.id)
-    
+    rules = Scheduling.list_availability_rules(user.doctor.id, include_inactive: true)
+
     # Map rules by day of week for easy access
     rules_map = Map.new(rules, fn r -> {r.day_of_week, r} end)
 
@@ -187,20 +192,22 @@ defmodule MedicWeb.DoctorLive.Schedule do
   @impl true
   def handle_event("edit_rule", %{"day" => day_str}, socket) do
     day = String.to_integer(day_str)
-    rule = Map.get(socket.assigns.rules, day) || %AvailabilityRule{
-      doctor_id: socket.assigns.preloaded_user.doctor.id,
-      day_of_week: day,
-      start_time: ~T[09:00:00],
-      end_time: ~T[17:00:00],
-      slot_duration_minutes: 30,
-      is_active: false
-    }
+
+    rule =
+      Map.get(socket.assigns.rules, day) ||
+        %AvailabilityRule{
+          doctor_id: socket.assigns.preloaded_user.doctor.id,
+          day_of_week: day,
+          start_time: ~T[09:00:00],
+          end_time: ~T[17:00:00],
+          slot_duration_minutes: 30,
+          is_active: false
+        }
 
     changeset = Scheduling.change_availability_rule(rule)
 
     {:noreply,
      assign(socket,
-       editing_day: day,
        editing_day: day,
        form: to_form(changeset, as: "rule")
      )}
@@ -211,8 +218,8 @@ defmodule MedicWeb.DoctorLive.Schedule do
   end
 
   def handle_event("validate_rule", %{"rule" => params}, socket) do
-    rule = Map.get(socket.assigns.rules, socket.assigns.editing_day) || %AvailabilityRule{}
-    
+    rule = (socket.assigns.form && socket.assigns.form.source.data) || %AvailabilityRule{}
+
     changeset =
       rule
       |> Scheduling.change_availability_rule(params)
@@ -244,7 +251,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
     case result do
       {:ok, rule} ->
         rules = Map.put(socket.assigns.rules, rule.day_of_week, rule)
-        
+
         {:noreply,
          socket
          |> assign(rules: rules, editing_day: nil, form: nil)

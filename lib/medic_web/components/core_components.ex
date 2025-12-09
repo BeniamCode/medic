@@ -381,6 +381,7 @@ defmodule MedicWeb.CoreComponents do
   attr :id, :string, required: true
   attr :show, :boolean, default: false
   attr :on_cancel, JS, default: %JS{}
+  attr :box_class, :any, default: nil, doc: "additional classes for the modal content"
   slot :inner_block, required: true
 
   def modal(assigns) do
@@ -392,7 +393,10 @@ defmodule MedicWeb.CoreComponents do
       phx-remove={hide_modal(@id)}
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
     >
-      <div class="modal-box">
+      <div class={[
+        "modal-box",
+        @box_class
+      ]}>
         <form method="dialog">
           <button
             phx-click={JS.exec("data-cancel", to: "##{@id}")}
