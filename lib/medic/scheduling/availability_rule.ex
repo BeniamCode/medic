@@ -32,8 +32,14 @@ defmodule Medic.Scheduling.AvailabilityRule do
   def changeset(rule, attrs) do
     rule
     |> cast(attrs, [
-      :doctor_id, :day_of_week, :start_time, :end_time,
-      :break_start, :break_end, :slot_duration_minutes, :is_active
+      :doctor_id,
+      :day_of_week,
+      :start_time,
+      :end_time,
+      :break_start,
+      :break_end,
+      :slot_duration_minutes,
+      :is_active
     ])
     |> validate_required([:doctor_id, :day_of_week, :start_time, :end_time])
     |> validate_inclusion(:day_of_week, @days_of_week, message: "must be 1-7 (Mon-Sun)")

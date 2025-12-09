@@ -68,8 +68,7 @@ defmodule MedicWeb.UserRegistrationLive do
 
             <div>
               <.button type="submit" class="btn btn-primary w-full" phx-disable-with="Creating...">
-                <.icon name="hero-check" class="size-5 mr-2" />
-                Create Account
+                <.icon name="hero-check" class="size-5 mr-2" /> Create Account
               </.button>
             </div>
           </.form>
@@ -121,7 +120,9 @@ defmodule MedicWeb.UserRegistrationLive do
       socket
       |> assign(trigger_submit: false, check_errors: false, role: role)
       |> assign(login_redirect: login_redirect)
-      |> assign(page_title: if(role == "doctor", do: "Doctor Registration", else: "Patient Registration"))
+      |> assign(
+        page_title: if(role == "doctor", do: "Doctor Registration", else: "Patient Registration")
+      )
       |> assign_form(changeset)
 
     {:noreply, socket}

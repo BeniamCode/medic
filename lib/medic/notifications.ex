@@ -51,7 +51,9 @@ defmodule Medic.Notifications do
       {:ok, notification} ->
         broadcast_notification(notification)
         {:ok, notification}
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -65,7 +67,9 @@ defmodule Medic.Notifications do
   end
 
   def list_unread_count(user_id) do
-    Repo.one(from n in Notification, where: n.user_id == ^user_id and is_nil(n.read_at), select: count())
+    Repo.one(
+      from n in Notification, where: n.user_id == ^user_id and is_nil(n.read_at), select: count()
+    )
   end
 
   def mark_as_read(notification_id) do
@@ -85,6 +89,7 @@ defmodule Medic.Notifications do
 
   defp broadcast_notification(notification) do
     Logger.info("Broadcasting notification to user_notifications:#{notification.user_id}")
+
     Phoenix.PubSub.broadcast(
       Medic.PubSub,
       "user_notifications:#{notification.user_id}",

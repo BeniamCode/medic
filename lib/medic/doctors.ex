@@ -79,11 +79,13 @@ defmodule Medic.Doctors do
   end
 
   defp maybe_filter_specialty(query, nil), do: query
+
   defp maybe_filter_specialty(query, specialty_id) do
     from d in query, where: d.specialty_id == ^specialty_id
   end
 
   defp maybe_filter_city(query, nil), do: query
+
   defp maybe_filter_city(query, city) do
     from d in query, where: d.city == ^city
   end
@@ -97,11 +99,13 @@ defmodule Medic.Doctors do
       where: d.next_available_slot >= ^today_start,
       where: d.next_available_slot < ^today_end
   end
+
   defp maybe_filter_available_today(query, _), do: query
 
   defp maybe_filter_verified(query, true) do
     from d in query, where: not is_nil(d.verified_at)
   end
+
   defp maybe_filter_verified(query, _), do: query
 
   defp maybe_preload(query, nil), do: query
@@ -134,16 +138,19 @@ defmodule Medic.Doctors do
   Creates a doctor profile for a user.
   """
   def create_doctor(user, attrs \\ %{}) do
-    result = %Doctor{}
-    |> Doctor.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> Repo.insert()
+    result =
+      %Doctor{}
+      |> Doctor.changeset(attrs)
+      |> Ecto.Changeset.put_assoc(:user, user)
+      |> Repo.insert()
 
     case result do
       {:ok, doctor} ->
         Search.index_doctor(doctor)
         {:ok, doctor}
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -151,15 +158,18 @@ defmodule Medic.Doctors do
   Updates a doctor.
   """
   def update_doctor(%Doctor{} = doctor, attrs) do
-    result = doctor
-    |> Doctor.changeset(attrs)
-    |> Repo.update()
+    result =
+      doctor
+      |> Doctor.changeset(attrs)
+      |> Repo.update()
 
     case result do
       {:ok, updated_doctor} ->
         Search.index_doctor(updated_doctor)
         {:ok, updated_doctor}
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -176,15 +186,18 @@ defmodule Medic.Doctors do
   Verifies a doctor.
   """
   def verify_doctor(%Doctor{} = doctor) do
-    result = doctor
-    |> Doctor.verify_changeset()
-    |> Repo.update()
+    result =
+      doctor
+      |> Doctor.verify_changeset()
+      |> Repo.update()
 
     case result do
       {:ok, verified_doctor} ->
         Search.index_doctor(verified_doctor)
         {:ok, verified_doctor}
-      error -> error
+
+      error ->
+        error
     end
   end
 

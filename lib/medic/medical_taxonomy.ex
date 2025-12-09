@@ -500,7 +500,12 @@ defmodule Medic.MedicalTaxonomy do
     %{id: "teeth", name: "Teeth", name_el: "Δόντια", category: "digestive"},
     %{id: "gums", name: "Gums", name_el: "Ούλα", category: "digestive"},
     %{id: "throat", name: "Throat", name_el: "Λαιμός", category: "respiratory"},
-    %{id: "salivary-glands", name: "Salivary Glands", name_el: "Σιελογόνοι Αδένες", category: "digestive"},
+    %{
+      id: "salivary-glands",
+      name: "Salivary Glands",
+      name_el: "Σιελογόνοι Αδένες",
+      category: "digestive"
+    },
 
     # Endocrine System
     %{id: "thyroid", name: "Thyroid", name_el: "Θυρεοειδής", category: "endocrine"},
@@ -508,16 +513,31 @@ defmodule Medic.MedicalTaxonomy do
     %{id: "pituitary-gland", name: "Pituitary Gland", name_el: "Υπόφυση", category: "endocrine"},
     %{id: "pineal-gland", name: "Pineal Gland", name_el: "Επίφυση", category: "endocrine"},
     %{id: "hypothalamus", name: "Hypothalamus", name_el: "Υποθάλαμος", category: "endocrine"},
-    %{id: "adrenal-glands", name: "Adrenal Glands", name_el: "Επινεφρίδια", category: "endocrine"},
+    %{
+      id: "adrenal-glands",
+      name: "Adrenal Glands",
+      name_el: "Επινεφρίδια",
+      category: "endocrine"
+    },
 
     # Digestive System
     %{id: "esophagus", name: "Esophagus", name_el: "Οισοφάγος", category: "digestive"},
     %{id: "stomach", name: "Stomach", name_el: "Στομάχι", category: "digestive"},
     %{id: "duodenum", name: "Duodenum", name_el: "Δωδεκαδάκτυλο", category: "digestive"},
-    %{id: "small-intestine", name: "Small Intestine", name_el: "Λεπτό Έντερο", category: "digestive"},
+    %{
+      id: "small-intestine",
+      name: "Small Intestine",
+      name_el: "Λεπτό Έντερο",
+      category: "digestive"
+    },
     %{id: "jejunum", name: "Jejunum", name_el: "Νηστίδα", category: "digestive"},
     %{id: "ileum", name: "Ileum", name_el: "Ειλεός", category: "digestive"},
-    %{id: "large-intestine", name: "Large Intestine", name_el: "Παχύ Έντερο", category: "digestive"},
+    %{
+      id: "large-intestine",
+      name: "Large Intestine",
+      name_el: "Παχύ Έντερο",
+      category: "digestive"
+    },
     %{id: "colon", name: "Colon", name_el: "Κόλον", category: "digestive"},
     %{id: "rectum", name: "Rectum", name_el: "Ορθό Έντερο", category: "digestive"},
     %{id: "anus", name: "Anus", name_el: "Πρωκτός", category: "digestive"},
@@ -548,7 +568,12 @@ defmodule Medic.MedicalTaxonomy do
 
     # Lymphatic & Immune System
     %{id: "lymph-nodes", name: "Lymph Nodes", name_el: "Λεμφαδένες", category: "immune"},
-    %{id: "lymphatic-vessels", name: "Lymphatic Vessels", name_el: "Λεμφαγγεία", category: "immune"},
+    %{
+      id: "lymphatic-vessels",
+      name: "Lymphatic Vessels",
+      name_el: "Λεμφαγγεία",
+      category: "immune"
+    },
     %{id: "spleen", name: "Spleen", name_el: "Σπλήνα", category: "immune"},
     %{id: "thymus", name: "Thymus", name_el: "Θύμος Αδένας", category: "immune"},
     %{id: "tonsils", name: "Tonsils", name_el: "Αμυγδαλές", category: "immune"},
@@ -575,7 +600,12 @@ defmodule Medic.MedicalTaxonomy do
     %{id: "endometrium", name: "Endometrium", name_el: "Ενδομήτριο", category: "reproductive"},
     %{id: "cervix", name: "Cervix", name_el: "Τράχηλος Μήτρας", category: "reproductive"},
     %{id: "ovaries", name: "Ovaries", name_el: "Ωοθήκες", category: "reproductive"},
-    %{id: "fallopian-tubes", name: "Fallopian Tubes", name_el: "Σάλπιγγες", category: "reproductive"},
+    %{
+      id: "fallopian-tubes",
+      name: "Fallopian Tubes",
+      name_el: "Σάλπιγγες",
+      category: "reproductive"
+    },
     %{id: "vagina", name: "Vagina", name_el: "Κόλπος", category: "reproductive"},
     %{id: "vulva", name: "Vulva", name_el: "Αιδοίο", category: "reproductive"},
     %{id: "placenta", name: "Placenta", name_el: "Πλακούντας", category: "reproductive"},
@@ -584,13 +614,33 @@ defmodule Medic.MedicalTaxonomy do
     %{id: "prostate", name: "Prostate", name_el: "Προστάτης", category: "reproductive"},
     %{id: "testicles", name: "Testicles", name_el: "Όρχεις", category: "reproductive"},
     %{id: "epididymis", name: "Epididymis", name_el: "Επιδιδυμίδα", category: "reproductive"},
-    %{id: "vas-deferens", name: "Vas Deferens", name_el: "Σπερματικός Πόρος", category: "reproductive"},
-    %{id: "seminal-vesicles", name: "Seminal Vesicles", name_el: "Σπερματοδόχες Κύστεις", category: "reproductive"},
+    %{
+      id: "vas-deferens",
+      name: "Vas Deferens",
+      name_el: "Σπερματικός Πόρος",
+      category: "reproductive"
+    },
+    %{
+      id: "seminal-vesicles",
+      name: "Seminal Vesicles",
+      name_el: "Σπερματοδόχες Κύστεις",
+      category: "reproductive"
+    },
     %{id: "penis", name: "Penis", name_el: "Πέος", category: "reproductive"},
 
     # General/System-wide
-    %{id: "immune-system", name: "Immune System", name_el: "Ανοσοποιητικό Σύστημα", category: "system"},
-    %{id: "connective-tissue", name: "Connective Tissue", name_el: "Συνδετικός Ιστός", category: "system"}
+    %{
+      id: "immune-system",
+      name: "Immune System",
+      name_el: "Ανοσοποιητικό Σύστημα",
+      category: "system"
+    },
+    %{
+      id: "connective-tissue",
+      name: "Connective Tissue",
+      name_el: "Συνδετικός Ιστός",
+      category: "system"
+    }
   ]
 
   @specialty_to_organs %{
@@ -600,65 +650,129 @@ defmodule Medic.MedicalTaxonomy do
     "interventional-cardiology" => ["heart", "arteries", "veins", "aorta"],
     "pediatric-cardiology" => ["heart", "arteries", "veins"],
     "vascular-surgery" => ["arteries", "veins", "capillaries", "aorta", "lymphatic-vessels"],
-
     "pulmonology" => ["lungs", "trachea", "bronchi", "larynx", "diaphragm"],
     "thoracic-surgery" => ["lungs", "esophagus", "trachea", "bronchi", "diaphragm"],
-
     "neurology" => ["brain", "cerebellum", "brainstem", "spinal-cord", "nerves"],
     "neurosurgery" => ["brain", "cerebellum", "brainstem", "spinal-cord", "nerves", "spine"],
     "neuropsychiatry" => ["brain", "nerves"],
-
-    "gastroenterology" => ["esophagus", "stomach", "duodenum", "small-intestine", "jejunum", "ileum", "large-intestine", "colon", "rectum", "liver", "gallbladder", "pancreas", "appendix"],
+    "gastroenterology" => [
+      "esophagus",
+      "stomach",
+      "duodenum",
+      "small-intestine",
+      "jejunum",
+      "ileum",
+      "large-intestine",
+      "colon",
+      "rectum",
+      "liver",
+      "gallbladder",
+      "pancreas",
+      "appendix"
+    ],
     "hepatology" => ["liver", "gallbladder"],
     "colorectal-surgery" => ["colon", "rectum", "anus", "large-intestine"],
     "bariatric-surgery" => ["stomach", "small-intestine", "duodenum"],
-
-    "endocrinology" => ["thyroid", "parathyroid", "pituitary-gland", "pineal-gland", "hypothalamus", "adrenal-glands", "pancreas"],
+    "endocrinology" => [
+      "thyroid",
+      "parathyroid",
+      "pituitary-gland",
+      "pineal-gland",
+      "hypothalamus",
+      "adrenal-glands",
+      "pancreas"
+    ],
     "diabetology" => ["pancreas", "adrenal-glands"],
-
     "nephrology" => ["kidneys", "ureters"],
-    "urology" => ["kidneys", "ureters", "bladder", "urethra", "prostate", "testicles", "epididymis", "vas-deferens", "seminal-vesicles", "penis"],
-    "andrology" => ["prostate", "testicles", "epididymis", "vas-deferens", "seminal-vesicles", "penis"],
-
+    "urology" => [
+      "kidneys",
+      "ureters",
+      "bladder",
+      "urethra",
+      "prostate",
+      "testicles",
+      "epididymis",
+      "vas-deferens",
+      "seminal-vesicles",
+      "penis"
+    ],
+    "andrology" => [
+      "prostate",
+      "testicles",
+      "epididymis",
+      "vas-deferens",
+      "seminal-vesicles",
+      "penis"
+    ],
     "dermatology" => ["skin", "hair", "nails"],
     "plastic-surgery" => ["skin", "breast", "muscles", "connective-tissue"],
-
     "rheumatology" => ["joints", "connective-tissue", "immune-system", "muscles", "bones"],
     "orthopedics" => ["bones", "joints", "ligaments", "tendons", "muscles", "cartilage", "spine"],
-    "orthopedic-surgery" => ["bones", "joints", "ligaments", "tendons", "muscles", "cartilage", "spine"],
+    "orthopedic-surgery" => [
+      "bones",
+      "joints",
+      "ligaments",
+      "tendons",
+      "muscles",
+      "cartilage",
+      "spine"
+    ],
     "hand-surgery" => ["bones", "joints", "tendons", "muscles", "nerves"],
     "sports-medicine" => ["muscles", "joints", "bones", "tendons", "ligaments"],
     "physical-rehab" => ["muscles", "joints", "bones", "nerves", "spine"],
-
     "ophthalmology" => ["eyes"],
     "optometry" => ["eyes"],
-
     "ent" => ["ears", "nose", "sinuses", "throat", "larynx", "tonsils"],
     "audiology" => ["ears"],
-
     "hematology" => ["blood", "bone-marrow", "lymph-nodes", "spleen"],
-    "allergy-immunology" => ["immune-system", "lymph-nodes", "spleen", "tonsils", "thymus", "skin", "lungs"],
+    "allergy-immunology" => [
+      "immune-system",
+      "lymph-nodes",
+      "spleen",
+      "tonsils",
+      "thymus",
+      "skin",
+      "lungs"
+    ],
     "infectious-diseases" => ["immune-system", "blood", "lymph-nodes"],
     "virology" => ["immune-system", "blood"],
-
     "oncology" => ["all"],
     "radiation-oncology" => ["all"],
-    "gynecologic-oncology" => ["uterus", "ovaries", "cervix", "fallopian-tubes", "vagina", "vulva"],
-
-    "gynecology" => ["uterus", "ovaries", "cervix", "fallopian-tubes", "vagina", "vulva", "breast"],
-    "obgyn" => ["uterus", "ovaries", "cervix", "fallopian-tubes", "vagina", "vulva", "breast", "placenta"],
+    "gynecologic-oncology" => [
+      "uterus",
+      "ovaries",
+      "cervix",
+      "fallopian-tubes",
+      "vagina",
+      "vulva"
+    ],
+    "gynecology" => [
+      "uterus",
+      "ovaries",
+      "cervix",
+      "fallopian-tubes",
+      "vagina",
+      "vulva",
+      "breast"
+    ],
+    "obgyn" => [
+      "uterus",
+      "ovaries",
+      "cervix",
+      "fallopian-tubes",
+      "vagina",
+      "vulva",
+      "breast",
+      "placenta"
+    ],
     "obstetrics" => ["uterus", "placenta", "cervix", "ovaries"],
-
     "pediatrics" => ["all-children"],
     "pediatric-surgery" => ["all-children"],
     "neonatology" => ["all-newborn"],
-
     "psychiatry" => ["brain", "nerves"],
     "psychology" => ["brain"],
-
     "dentistry" => ["teeth", "gums", "mouth", "tongue", "salivary-glands"],
     "periodontology" => ["gums", "teeth"],
-
     "general-practice" => ["all"],
     "family-medicine" => ["all"],
     "internal-medicine" => ["all-internal"],
@@ -666,29 +780,26 @@ defmodule Medic.MedicalTaxonomy do
     "emergency-medicine" => ["all"],
     "critical-care" => ["all"],
     "palliative-medicine" => ["all"],
-
     "radiology" => ["all"],
     "nuclear-medicine" => ["all"],
     "interventional-radiology" => ["all"],
     "pathology" => ["all"],
-
     "anesthesiology" => ["nerves", "brain"],
     "general-surgery" => ["all"],
     "trauma-surgery" => ["all"],
     "transplant-surgery" => ["kidneys", "liver", "heart", "lungs", "pancreas", "bone-marrow"],
-
     "sleep-medicine" => ["brain", "lungs", "trachea"],
     "occupational-medicine" => ["all"]
   }
 
   # Build reverse mapping at compile time
-  @organ_to_specialties (
-    @specialty_to_organs
-    |> Enum.flat_map(fn {specialty, organs} ->
-      Enum.map(organs, fn organ -> {organ, specialty} end)
-    end)
-    |> Enum.group_by(fn {organ, _} -> organ end, fn {_, specialty} -> specialty end)
-  )
+  @organ_to_specialties @specialty_to_organs
+                        |> Enum.flat_map(fn {specialty, organs} ->
+                          Enum.map(organs, fn organ -> {organ, specialty} end)
+                        end)
+                        |> Enum.group_by(fn {organ, _} -> organ end, fn {_, specialty} ->
+                          specialty
+                        end)
 
   # Public API
 
@@ -807,9 +918,18 @@ defmodule Medic.MedicalTaxonomy do
   """
   def popular_specialties do
     popular_ids = [
-      "general-practice", "cardiology", "dermatology", "orthopedics",
-      "pediatrics", "gynecology", "ophthalmology", "dentistry",
-      "ent", "psychiatry", "gastroenterology", "neurology"
+      "general-practice",
+      "cardiology",
+      "dermatology",
+      "orthopedics",
+      "pediatrics",
+      "gynecology",
+      "ophthalmology",
+      "dentistry",
+      "ent",
+      "psychiatry",
+      "gastroenterology",
+      "neurology"
     ]
 
     popular_ids

@@ -16,8 +16,7 @@ defmodule MedicWeb.DashboardLive do
           <p class="text-base-content/70"><%= @current_user.email %></p>
         </div>
         <.link navigate={~p"/search"} class="btn btn-primary">
-          <.icon name="hero-magnifying-glass" class="w-5 h-5 mr-2" />
-          Find Doctor
+          <.icon name="hero-magnifying-glass" class="w-5 h-5 mr-2" /> Find Doctor
         </.link>
       </div>
 
@@ -50,8 +49,7 @@ defmodule MedicWeb.DashboardLive do
       <div class="card bg-base-100 shadow-lg mb-8">
         <div class="card-body">
           <h2 class="card-title">
-            <.icon name="hero-calendar-days" class="w-6 h-6 text-primary" />
-            Upcoming Appointments
+            <.icon name="hero-calendar-days" class="w-6 h-6 text-primary" /> Upcoming Appointments
           </h2>
 
           <%= if @upcoming_appointments == [] do %>
@@ -77,8 +75,7 @@ defmodule MedicWeb.DashboardLive do
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
             <h2 class="card-title">
-              <.icon name="hero-clock" class="w-6 h-6 text-base-content/70" />
-              Appointment History
+              <.icon name="hero-clock" class="w-6 h-6 text-base-content/70" /> Appointment History
             </h2>
 
             <div class="space-y-4">
@@ -127,27 +124,33 @@ defmodule MedicWeb.DashboardLive do
 
     {upcoming, past, completed_count, cancelled_count} =
       if patient do
-        upcoming = Appointments.list_appointments(
-          patient_id: patient.id,
-          upcoming: true,
-          preload: [:doctor]
-        )
+        upcoming =
+          Appointments.list_appointments(
+            patient_id: patient.id,
+            upcoming: true,
+            preload: [:doctor]
+          )
 
-        past = Appointments.list_appointments(
-          patient_id: patient.id,
-          status: ["completed", "cancelled", "no_show"],
-          preload: [:doctor]
-        )
+        past =
+          Appointments.list_appointments(
+            patient_id: patient.id,
+            status: ["completed", "cancelled", "no_show"],
+            preload: [:doctor]
+          )
 
-        completed = Appointments.list_appointments(
-          patient_id: patient.id,
-          status: "completed"
-        ) |> length()
+        completed =
+          Appointments.list_appointments(
+            patient_id: patient.id,
+            status: "completed"
+          )
+          |> length()
 
-        cancelled = Appointments.list_appointments(
-          patient_id: patient.id,
-          status: "cancelled"
-        ) |> length()
+        cancelled =
+          Appointments.list_appointments(
+            patient_id: patient.id,
+            status: "cancelled"
+          )
+          |> length()
 
         {upcoming, past, completed, cancelled}
       else

@@ -247,7 +247,8 @@ defmodule Medic.Search do
       "address" => doctor.address || "",
       "rating" => doctor.rating || 0.0,
       "review_count" => doctor.review_count || 0,
-      "consultation_fee" => if(doctor.consultation_fee, do: Decimal.to_float(doctor.consultation_fee), else: 0.0),
+      "consultation_fee" =>
+        if(doctor.consultation_fee, do: Decimal.to_float(doctor.consultation_fee), else: 0.0),
       "verified" => doctor.verified_at != nil,
       "has_cal_com" => false
     }
@@ -272,31 +273,67 @@ defmodule Medic.Search do
   defp build_filters(opts) do
     filters = []
 
-    filters = if Keyword.get(opts, :verified_only, true), do: ["verified:=true" | filters], else: filters
-    filters = case Keyword.get(opts, :specialty), do: (nil -> filters; slug -> ["specialty_slug:=#{slug}" | filters])
-    filters = case Keyword.get(opts, :city), do: (nil -> filters; city -> ["city:=#{city}" | filters])
-    filters = case Keyword.get(opts, :min_rating), do: (nil -> filters; rating -> ["rating:>=#{rating}" | filters])
-    filters = case Keyword.get(opts, :max_price), do: (nil -> filters; price -> ["consultation_fee:<=#{price}" | filters])
-    filters = case Keyword.get(opts, :has_cal_com), do: (true -> ["has_cal_com:=true" | filters]; _ -> filters)
+    filters =
+      if Keyword.get(opts, :verified_only, true), do: ["verified:=true" | filters], else: filters
 
+    filters =
+      case Keyword.get(opts, :specialty),
+        do: (
+          nil -> filters
+          slug -> ["specialty_slug:=#{slug}" | filters]
+        )
+
+    filters =
+      case Keyword.get(opts, :city),
+        do: (
+          nil -> filters
+          city -> ["city:=#{city}" | filters]
+        )
+
+    filters =
+      case Keyword.get(opts, :min_rating),
+        do: (
+          nil -> filters
+          rating -> ["rating:>=#{rating}" | filters]
+        )
+
+    filters =
+      case Keyword.get(opts, :max_price),
+        do: (
+          nil -> filters
+          price -> ["consultation_fee:<=#{price}" | filters]
+        )
+
+    filters =
+      case Keyword.get(opts, :has_cal_com),
+        do: (
+          true -> ["has_cal_com:=true" | filters]
+          _ -> filters
+        )
 
     Enum.join(filters, " && ")
   end
 
   defp build_sort_by(opts) do
     case Keyword.get(opts, :sort_by) do
-      "price_low" -> "consultation_fee:asc"
-      "price_high" -> "consultation_fee:desc"
-      "reviews" -> "review_count:desc"
+      "price_low" ->
+        "consultation_fee:asc"
+
+      "price_high" ->
+        "consultation_fee:desc"
+
+      "reviews" ->
+        "review_count:desc"
+
       _ ->
         # Default or "rating" - check for geo sort
         case {Keyword.get(opts, :lat), Keyword.get(opts, :lng)} do
           {lat, lng} when is_number(lat) and is_number(lng) ->
             "location(#{lat}, #{lng}):asc,rating:desc"
+
           _ ->
             "rating:desc"
         end
     end
   end
 end
-

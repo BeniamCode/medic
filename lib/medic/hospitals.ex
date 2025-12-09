@@ -144,9 +144,9 @@ defmodule Medic.Hospitals do
   def list_on_duty_hospitals(date) do
     Repo.all(
       from h in Hospital,
-      join: s in assoc(h, :hospital_schedules),
-      where: s.date == ^date,
-      preload: [hospital_schedules: s]
+        join: s in assoc(h, :hospital_schedules),
+        where: s.date == ^date,
+        preload: [hospital_schedules: s]
     )
   end
 

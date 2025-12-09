@@ -25,7 +25,14 @@ defmodule Medic.Patients.Patient do
   @doc false
   def changeset(patient, attrs) do
     patient
-    |> cast(attrs, [:first_name, :last_name, :date_of_birth, :phone, :emergency_contact, :profile_image_url])
+    |> cast(attrs, [
+      :first_name,
+      :last_name,
+      :date_of_birth,
+      :phone,
+      :emergency_contact,
+      :profile_image_url
+    ])
     |> validate_required([:first_name, :last_name])
     |> validate_phone()
     |> foreign_key_constraint(:user_id)
@@ -33,7 +40,9 @@ defmodule Medic.Patients.Patient do
 
   defp validate_phone(changeset) do
     case get_change(changeset, :phone) do
-      nil -> changeset
+      nil ->
+        changeset
+
       phone ->
         # Greek phone format: +30 followed by 10 digits, or local format
         if Regex.match?(~r/^(\+30)?[26][0-9]{9}$/, String.replace(phone, ~r/[\s\-]/, "")) do

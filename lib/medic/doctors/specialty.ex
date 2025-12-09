@@ -32,12 +32,16 @@ defmodule Medic.Doctors.Specialty do
     case get_change(changeset, :slug) do
       nil ->
         name = get_change(changeset, :name_en) || get_field(changeset, :name_en)
+
         if name do
-          slug = name |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-") |> String.trim("-")
+          slug =
+            name |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-") |> String.trim("-")
+
           put_change(changeset, :slug, slug)
         else
           changeset
         end
+
       _ ->
         changeset
     end

@@ -12,7 +12,7 @@ defmodule Medic.Notifications.Notification do
     field :read_at, :utc_datetime
     field :resource_id, :string
     field :resource_type, :string
-    
+
     belongs_to :user, Medic.Accounts.User
 
     timestamps(type: :utc_datetime)

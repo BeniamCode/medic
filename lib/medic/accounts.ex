@@ -3,7 +3,6 @@ defmodule Medic.Accounts do
   The Accounts context for user authentication and management.
   """
 
-
   alias Medic.Repo
   alias Medic.Accounts.{User, UserToken}
 

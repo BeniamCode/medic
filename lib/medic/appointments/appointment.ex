@@ -36,8 +36,14 @@ defmodule Medic.Appointments.Appointment do
   def changeset(appointment, attrs) do
     appointment
     |> cast(attrs, [
-      :starts_at, :ends_at, :duration_minutes, :appointment_type,
-      :status, :notes, :doctor_id, :patient_id
+      :starts_at,
+      :ends_at,
+      :duration_minutes,
+      :appointment_type,
+      :status,
+      :notes,
+      :doctor_id,
+      :patient_id
     ])
     |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)
@@ -91,8 +97,14 @@ defmodule Medic.Appointments.Appointment do
   def seed_changeset(appointment, attrs) do
     appointment
     |> cast(attrs, [
-      :starts_at, :ends_at, :duration_minutes, :status, :appointment_type,
-      :notes, :doctor_id, :patient_id
+      :starts_at,
+      :ends_at,
+      :duration_minutes,
+      :status,
+      :appointment_type,
+      :notes,
+      :doctor_id,
+      :patient_id
     ])
     |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)

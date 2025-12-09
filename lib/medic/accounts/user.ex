@@ -62,8 +62,12 @@ defmodule Medic.Accounts.User do
     changeset
     |> validate_required([:password])
     |> validate_length(:password, min: 8, max: 72)
-    |> validate_format(:password, ~r/[a-z]/, message: "must contain at least one lowercase letter")
-    |> validate_format(:password, ~r/[A-Z]/, message: "must contain at least one uppercase letter")
+    |> validate_format(:password, ~r/[a-z]/,
+      message: "must contain at least one lowercase letter"
+    )
+    |> validate_format(:password, ~r/[A-Z]/,
+      message: "must contain at least one uppercase letter"
+    )
     |> validate_format(:password, ~r/[0-9]/, message: "must contain at least one number")
     |> maybe_hash_password(opts)
   end

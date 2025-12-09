@@ -8,7 +8,14 @@ defmodule Medic.HospitalsTest do
 
     import Medic.HospitalsFixtures
 
-    @invalid_attrs %{name: nil, address: nil, city: nil, phone: nil, location_lat: nil, location_lng: nil}
+    @invalid_attrs %{
+      name: nil,
+      address: nil,
+      city: nil,
+      phone: nil,
+      location_lat: nil,
+      location_lng: nil
+    }
 
     test "list_hospitals/0 returns all hospitals" do
       hospital = hospital_fixture()
@@ -21,7 +28,14 @@ defmodule Medic.HospitalsTest do
     end
 
     test "create_hospital/1 with valid data creates a hospital" do
-      valid_attrs = %{name: "some name", address: "some address", city: "some city", phone: "some phone", location_lat: 120.5, location_lng: 120.5}
+      valid_attrs = %{
+        name: "some name",
+        address: "some address",
+        city: "some city",
+        phone: "some phone",
+        location_lat: 120.5,
+        location_lng: 120.5
+      }
 
       assert {:ok, %Hospital{} = hospital} = Hospitals.create_hospital(valid_attrs)
       assert hospital.name == "some name"
@@ -38,7 +52,15 @@ defmodule Medic.HospitalsTest do
 
     test "update_hospital/2 with valid data updates the hospital" do
       hospital = hospital_fixture()
-      update_attrs = %{name: "some updated name", address: "some updated address", city: "some updated city", phone: "some updated phone", location_lat: 456.7, location_lng: 456.7}
+
+      update_attrs = %{
+        name: "some updated name",
+        address: "some updated address",
+        city: "some updated city",
+        phone: "some updated phone",
+        location_lat: 456.7,
+        location_lng: 456.7
+      }
 
       assert {:ok, %Hospital{} = hospital} = Hospitals.update_hospital(hospital, update_attrs)
       assert hospital.name == "some updated name"

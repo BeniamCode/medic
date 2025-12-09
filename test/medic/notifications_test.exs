@@ -8,7 +8,14 @@ defmodule Medic.NotificationsTest do
 
     import Medic.NotificationsFixtures
 
-    @invalid_attrs %{message: nil, type: nil, title: nil, read_at: nil, resource_id: nil, resource_type: nil}
+    @invalid_attrs %{
+      message: nil,
+      type: nil,
+      title: nil,
+      read_at: nil,
+      resource_id: nil,
+      resource_type: nil
+    }
 
     test "list_notifications/0 returns all notifications" do
       notification = notification_fixture()
@@ -28,9 +35,19 @@ defmodule Medic.NotificationsTest do
           role: "patient"
         })
 
-      valid_attrs = %{message: "some message", type: "some type", title: "some title", read_at: ~U[2025-12-06 17:26:00Z], resource_id: "some resource_id", resource_type: "some resource_type", user_id: user.id}
+      valid_attrs = %{
+        message: "some message",
+        type: "some type",
+        title: "some title",
+        read_at: ~U[2025-12-06 17:26:00Z],
+        resource_id: "some resource_id",
+        resource_type: "some resource_type",
+        user_id: user.id
+      }
 
-      assert {:ok, %Notification{} = notification} = Notifications.create_notification(valid_attrs)
+      assert {:ok, %Notification{} = notification} =
+               Notifications.create_notification(valid_attrs)
+
       assert notification.message == "some message"
       assert notification.type == "some type"
       assert notification.title == "some title"
@@ -45,9 +62,19 @@ defmodule Medic.NotificationsTest do
 
     test "update_notification/2 with valid data updates the notification" do
       notification = notification_fixture()
-      update_attrs = %{message: "some updated message", type: "some updated type", title: "some updated title", read_at: ~U[2025-12-07 17:26:00Z], resource_id: "some updated resource_id", resource_type: "some updated resource_type"}
 
-      assert {:ok, %Notification{} = notification} = Notifications.update_notification(notification, update_attrs)
+      update_attrs = %{
+        message: "some updated message",
+        type: "some updated type",
+        title: "some updated title",
+        read_at: ~U[2025-12-07 17:26:00Z],
+        resource_id: "some updated resource_id",
+        resource_type: "some updated resource_type"
+      }
+
+      assert {:ok, %Notification{} = notification} =
+               Notifications.update_notification(notification, update_attrs)
+
       assert notification.message == "some updated message"
       assert notification.type == "some updated type"
       assert notification.title == "some updated title"
@@ -58,7 +85,10 @@ defmodule Medic.NotificationsTest do
 
     test "update_notification/2 with invalid data returns error changeset" do
       notification = notification_fixture()
-      assert {:error, %Ecto.Changeset{}} = Notifications.update_notification(notification, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Notifications.update_notification(notification, @invalid_attrs)
+
       assert notification == Notifications.get_notification!(notification.id)
     end
 

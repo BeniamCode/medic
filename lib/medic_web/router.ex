@@ -30,7 +30,6 @@ defmodule MedicWeb.Router do
     end
   end
 
-
   # Routes that require user to NOT be logged in
   scope "/", MedicWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]

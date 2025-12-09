@@ -32,8 +32,6 @@ defmodule Medic.Doctors.Doctor do
     field :review_count, :integer, default: 0
     field :consultation_fee, :decimal
 
-
-
     # Cached availability for fast search
     field :next_available_slot, :utc_datetime
 
@@ -46,9 +44,17 @@ defmodule Medic.Doctors.Doctor do
   def changeset(doctor, attrs) do
     doctor
     |> cast(attrs, [
-      :first_name, :last_name, :bio, :bio_el, :profile_image_url,
-      :location_lat, :location_lng, :address, :city,
-      :consultation_fee, :specialty_id
+      :first_name,
+      :last_name,
+      :bio,
+      :bio_el,
+      :profile_image_url,
+      :location_lat,
+      :location_lng,
+      :address,
+      :city,
+      :consultation_fee,
+      :specialty_id
     ])
     |> validate_required([:first_name, :last_name])
     |> validate_number(:consultation_fee, greater_than_or_equal_to: 0)
@@ -94,7 +100,8 @@ defmodule Medic.Doctors.Doctor do
   @doc """
   Returns the localized bio based on locale.
   """
-  def localized_bio(%__MODULE__{bio_el: bio_el}, locale) when locale in ["el", :el] and not is_nil(bio_el) do
+  def localized_bio(%__MODULE__{bio_el: bio_el}, locale)
+      when locale in ["el", :el] and not is_nil(bio_el) do
     bio_el
   end
 

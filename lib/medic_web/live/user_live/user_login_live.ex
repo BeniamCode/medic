@@ -56,15 +56,18 @@ defmodule MedicWeb.UserLoginLive do
 
             <div class="form-control">
               <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" name="user[remember_me]" class="checkbox checkbox-sm checkbox-primary" />
+                <input
+                  type="checkbox"
+                  name="user[remember_me]"
+                  class="checkbox checkbox-sm checkbox-primary"
+                />
                 <span class="label-text">Remember me</span>
               </label>
             </div>
 
             <div>
               <.button type="submit" class="btn btn-primary w-full" phx-disable-with="Signing in...">
-                <.icon name="hero-arrow-right-on-rectangle" class="size-5 mr-2" />
-                Sign In
+                <.icon name="hero-arrow-right-on-rectangle" class="size-5 mr-2" /> Sign In
               </.button>
             </div>
           </.form>
@@ -75,12 +78,10 @@ defmodule MedicWeb.UserLoginLive do
             <p class="text-base-content/70">Don't have an account?</p>
             <div class="flex gap-4 justify-center">
               <.link navigate={~p"/register"} class="btn btn-outline btn-primary">
-                <.icon name="hero-user-plus" class="size-5 mr-2" />
-                Patient Sign Up
+                <.icon name="hero-user-plus" class="size-5 mr-2" /> Patient Sign Up
               </.link>
               <.link navigate={~p"/register/doctor"} class="btn btn-outline">
-                <.icon name="hero-identification" class="size-5 mr-2" />
-                Doctor Sign Up
+                <.icon name="hero-identification" class="size-5 mr-2" /> Doctor Sign Up
               </.link>
             </div>
           </div>
