@@ -9,6 +9,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
   alias Medic.Scheduling.AvailabilityRule
   alias Medic.Appointments
   alias Medic.Patients.Patient
+  alias Phoenix.HTML.Form
 
   @days_of_week 1..7
 
@@ -216,25 +217,23 @@ defmodule MedicWeb.DoctorLive.Schedule do
         <input type="hidden" name="rule[day_of_week]" value={@editing_day} />
         <input type="hidden" name="rule[doctor_id]" value={@preloaded_user.doctor.id} />
 
+        <% active? =
+          Form.input_value(@form, :is_active)
+          |> case do
+            val when val in [false, "false", nil] -> false
+            _ -> true
+          end %>
+
         <div class="form-control border rounded-box p-4">
-          <label class="label cursor-pointer justify-start gap-4">
-            <input
-              type="checkbox"
-              name="rule[is_active]"
-              class="checkbox checkbox-primary"
-              checked={Ecto.Changeset.get_field(@form.source, :is_active, true)}
-              value="true"
-            />
-            <input type="hidden" name="rule[is_active]" value="false" />
-            <span class="label-text font-medium">Available on this day</span>
-          </label>
+          <.input
+            field={@form[:is_active]}
+            type="checkbox"
+            label="Available on this day"
+            class="checkbox checkbox-primary"
+          />
         </div>
 
-        <div class={
-          if !Ecto.Changeset.get_field(@form.source, :is_active, true),
-            do: "opacity-50 pointer-events-none space-y-4",
-            else: "space-y-4"
-        }>
+        <div class={["space-y-4", !active? && "opacity-50 pointer-events-none"]}>
           <div class="grid grid-cols-2 gap-4">
             <.input field={@form[:start_time]} type="time" label="Start Time" />
             <.input field={@form[:end_time]} type="time" label="End Time" />
