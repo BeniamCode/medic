@@ -19,8 +19,7 @@ defmodule MedicWeb.AppointmentLive.Show do
         </div>
         <div>
           <.link navigate={~p"/dashboard"} class="btn btn-ghost">
-            <.icon name="hero-arrow-left" class="size-4 mr-2" />
-            Back to Dashboard
+            <.icon name="hero-arrow-left" class="size-4 mr-2" /> Back to Dashboard
           </.link>
         </div>
       </div>
@@ -34,7 +33,7 @@ defmodule MedicWeb.AppointmentLive.Show do
                 <%= status_text(@appointment.status) %>
               </div>
             </div>
-            
+
             <div class="flex items-center gap-4">
               <div class="avatar placeholder">
                 <div class="bg-primary/10 text-primary rounded-full w-16">
@@ -46,7 +45,9 @@ defmodule MedicWeb.AppointmentLive.Show do
                   Dr. <%= @appointment.doctor.first_name %> <%= @appointment.doctor.last_name %>
                 </h4>
                 <%= if @appointment.doctor.specialty do %>
-                  <p class="text-sm text-base-content/70"><%= @appointment.doctor.specialty.name_en %></p>
+                  <p class="text-sm text-base-content/70">
+                    <%= @appointment.doctor.specialty.name_en %>
+                  </p>
                 <% end %>
               </div>
             </div>
@@ -101,7 +102,9 @@ defmodule MedicWeb.AppointmentLive.Show do
                 <p>Reason: <%= @appointment.cancellation_reason %></p>
               <% end %>
               <%= if @appointment.cancelled_at do %>
-                <p>Cancelled on <%= Calendar.strftime(@appointment.cancelled_at, "%B %d, %Y at %H:%M") %></p>
+                <p>
+                  Cancelled on <%= Calendar.strftime(@appointment.cancelled_at, "%B %d, %Y at %H:%M") %>
+                </p>
               <% end %>
             </div>
           </div>
@@ -110,20 +113,12 @@ defmodule MedicWeb.AppointmentLive.Show do
 
       <div class="flex items-center justify-end gap-2">
         <%= if @appointment.status in ["pending", "confirmed"] do %>
-          <button
-            phx-click="show_cancel_modal"
-            class="btn btn-warning btn-outline"
-          >
-            <.icon name="hero-x-mark" class="size-4 mr-2" />
-            Cancel Appointment
+          <button phx-click="show_cancel_modal" class="btn btn-warning btn-outline">
+            <.icon name="hero-x-mark" class="size-4 mr-2" /> Cancel Appointment
           </button>
         <% end %>
-        <button
-          phx-click="show_delete_modal"
-          class="btn btn-error"
-        >
-          <.icon name="hero-trash" class="size-4 mr-2" />
-          Delete
+        <button phx-click="show_delete_modal" class="btn btn-error">
+          <.icon name="hero-trash" class="size-4 mr-2" /> Delete
         </button>
       </div>
 
@@ -213,7 +208,9 @@ defmodule MedicWeb.AppointmentLive.Show do
   def handle_event("cancel_appointment", %{"reason" => reason}, socket) do
     reason = if reason == "", do: nil, else: reason
 
-    case Appointments.cancel_appointment(socket.assigns.appointment, reason) do
+    case Appointments.cancel_appointment(socket.assigns.appointment, reason,
+           cancelled_by: :patient
+         ) do
       {:ok, appointment} ->
         {:noreply,
          socket

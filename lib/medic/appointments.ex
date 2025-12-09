@@ -166,8 +166,11 @@ defmodule Medic.Appointments do
 
   @doc """
   Cancels an appointment.
+
+  Options:
+    * `:cancelled_by` - identifies who triggered the cancellation (`:patient`, `:doctor`, or `:system`).
   """
-  def cancel_appointment(%Appointment{} = appointment, reason \\ nil) do
+  def cancel_appointment(%Appointment{} = appointment, reason \\ nil, opts \\ []) do
     result =
       appointment
       |> Appointment.cancel_changeset(reason)
@@ -175,7 +178,8 @@ defmodule Medic.Appointments do
 
     case result do
       {:ok, updated_appointment} ->
-        notify_doctor_cancellation(updated_appointment)
+        updated_appointment = Repo.preload(updated_appointment, [:patient, :doctor])
+        maybe_notify_cancellation(updated_appointment, Keyword.get(opts, :cancelled_by, :patient))
         {:ok, updated_appointment}
 
       error ->
@@ -183,10 +187,17 @@ defmodule Medic.Appointments do
     end
   end
 
-  defp notify_doctor_cancellation(appointment) do
-    # Preload patient and doctor
-    appointment = Repo.preload(appointment, [:patient, :doctor])
+  defp maybe_notify_cancellation(appointment, :doctor) do
+    notify_patient_cancellation(appointment)
+  end
 
+  defp maybe_notify_cancellation(appointment, :patient) do
+    notify_doctor_cancellation(appointment)
+  end
+
+  defp maybe_notify_cancellation(_appointment, _), do: :ok
+
+  defp notify_doctor_cancellation(appointment) do
     if appointment.doctor do
       Notifications.create_notification(%{
         user_id: appointment.doctor.user_id,
@@ -194,6 +205,26 @@ defmodule Medic.Appointments do
         title: "Appointment Cancelled",
         message:
           "Appointment with #{appointment.patient.first_name} #{appointment.patient.last_name} has been cancelled.",
+        resource_id: appointment.id,
+        resource_type: "appointment"
+      })
+    end
+  end
+
+  defp notify_patient_cancellation(appointment) do
+    if appointment.patient do
+      message =
+        if appointment.cancellation_reason && appointment.cancellation_reason != "" do
+          "Your appointment with Dr. #{appointment.doctor.last_name} was cancelled: #{appointment.cancellation_reason}"
+        else
+          "Your appointment with Dr. #{appointment.doctor.last_name} was cancelled."
+        end
+
+      Notifications.create_notification(%{
+        user_id: appointment.patient.user_id,
+        type: "cancellation",
+        title: "Appointment Cancelled",
+        message: message,
         resource_id: appointment.id,
         resource_type: "appointment"
       })
