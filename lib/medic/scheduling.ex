@@ -162,6 +162,7 @@ defmodule Medic.Scheduling do
     |> case do
       {:ok, appointment} ->
         notify_doctor_booking(appointment)
+        Medic.Appointments.broadcast_doctor_event(appointment.doctor_id, :refresh_dashboard)
         {:ok, appointment}
 
       {:error, error} ->

@@ -101,11 +101,17 @@ defmodule MedicWeb.DoctorDashboardLive do
                                    "#{appointment.patient.first_name} #{appointment.patient.last_name}") ||
                               "Patient" %>
                           </div>
-                          <div class="text-sm opacity-50">
+                        <div class="text-sm opacity-50">
                             <%= if appointment.appointment_type == "telemedicine",
                               do: "Telemedicine",
                               else: "In-person" %>
                           </div>
+                          <%= if appointment.notes do %>
+                            <div class="text-xs text-base-content/70 mt-1 italic flex items-start gap-1">
+                              <.icon name="hero-chat-bubble-left" class="size-3 mt-0.5 shrink-0" />
+                              <span>"<%= appointment.notes %>"</span>
+                            </div>
+                          <% end %>
                         </td>
                         <td>
                           <div class="font-medium">

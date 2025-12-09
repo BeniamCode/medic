@@ -243,9 +243,9 @@ defmodule Medic.Appointments do
     PubSub.subscribe(Medic.PubSub, doctor_topic(doctor_id))
   end
 
-  defp broadcast_doctor_event(nil, _event), do: :ok
+  def broadcast_doctor_event(nil, _event), do: :ok
 
-  defp broadcast_doctor_event(doctor_id, event, payload \\ %{}) do
+  def broadcast_doctor_event(doctor_id, event, payload \\ %{}) do
     PubSub.broadcast(Medic.PubSub, doctor_topic(doctor_id), {event, payload})
   end
 

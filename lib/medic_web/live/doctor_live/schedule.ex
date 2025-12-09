@@ -334,6 +334,7 @@ defmodule MedicWeb.DoctorLive.Schedule do
 
     result =
       if existing_rule do
+        params = Map.drop(params, ["doctor_id"])
         Scheduling.update_availability_rule(existing_rule, params)
       else
         Scheduling.create_availability_rule(params)
@@ -347,6 +348,9 @@ defmodule MedicWeb.DoctorLive.Schedule do
          socket
          |> assign(rules: rules, editing_day: nil, form: nil)
          |> put_flash(:info, "Availability updated successfully")}
+
+      {:error, %Ash.Error.Invalid{changeset: changeset}} ->
+        {:noreply, assign(socket, form: to_form(changeset, as: "rule"))}
 
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset, as: "rule"))}
