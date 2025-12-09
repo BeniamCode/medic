@@ -49,6 +49,9 @@ defmodule Medic.Search do
       %{"name" => "consultation_fee", "type" => "float", "optional" => true},
       %{"name" => "location", "type" => "geopoint", "optional" => true},
       %{"name" => "verified", "type" => "bool"},
+      %{"name" => "title", "type" => "string", "optional" => true},
+      %{"name" => "pronouns", "type" => "string", "optional" => true},
+      %{"name" => "next_available_slot", "type" => "int64", "optional" => true},
       %{"name" => "has_cal_com", "type" => "bool"}
     ],
     "default_sorting_field" => "rating"
@@ -232,6 +235,13 @@ defmodule Medic.Search do
       review_count: doc["review_count"],
       consultation_fee: doc["consultation_fee"],
       verified: doc["verified"],
+      title: doc["title"],
+      pronouns: doc["pronouns"],
+      next_available_slot:
+        if(doc["next_available_slot"],
+          do: DateTime.from_unix!(doc["next_available_slot"]),
+          else: nil
+        ),
       has_cal_com: doc["has_cal_com"]
     }
   end
@@ -250,6 +260,10 @@ defmodule Medic.Search do
       "consultation_fee" =>
         if(doctor.consultation_fee, do: Decimal.to_float(doctor.consultation_fee), else: 0.0),
       "verified" => doctor.verified_at != nil,
+      "title" => doctor.title || "",
+      "pronouns" => doctor.pronouns || "",
+      "next_available_slot" =>
+        if(doctor.next_available_slot, do: DateTime.to_unix(doctor.next_available_slot), else: nil),
       "has_cal_com" => false
     }
 

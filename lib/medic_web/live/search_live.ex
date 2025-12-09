@@ -18,7 +18,7 @@ defmodule MedicWeb.SearchLive do
         <h1 class="text-3xl font-bold text-base-content">Find a Doctor</h1>
         <.form for={%{}} action={~p"/search"} method="get" class="w-full">
           <div class="flex flex-col sm:flex-row gap-3 items-center">
-            <label class="input input-lg input-bordered w-full bg-base-100 shadow-xl flex items-center gap-3">
+            <label class="input input-lg w-full bg-base-100 shadow-sm border border-base-200 flex items-center gap-3 focus-within:outline-none focus-within:ring-0 focus-within:border-base-300 transition-colors">
               <.icon name="hero-magnifying-glass" class="w-5 h-5 text-base-content/50" />
               <input
                 type="text"
@@ -405,17 +405,20 @@ defmodule MedicWeb.SearchLive do
                 <div class="card-body">
                   <div class="flex items-start gap-4 mb-2">
                     <div class="avatar placeholder">
-                      <div class="w-12 h-12 rounded-full bg-base-300 text-base-content">
+                      <div class="w-12 h-12 rounded-full bg-base-300 text-base-content ring-1 ring-base-200">
                         <span class="text-lg font-bold">
                           <%= String.at(doctor.first_name, 0) %><%= String.at(doctor.last_name, 0) %>
                         </span>
                       </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <h2 class="card-title text-base">
-                        Dr. <%= doctor.first_name %> <%= doctor.last_name %>
+                      <h2 class="card-title text-base flex items-baseline gap-2">
+                        <span><%= doctor.title %> <%= doctor.first_name %> <%= doctor.last_name %></span>
+                        <%= if doctor.pronouns do %>
+                          <span class="text-xs font-normal text-base-content/50 bg-base-200 px-1.5 py-0.5 rounded-full"><%= doctor.pronouns %></span>
+                        <% end %>
                       </h2>
-                      <p class="text-sm text-base-content/70 truncate">
+                      <p class="text-sm text-base-content/70 truncate font-medium text-primary">
                         <%= doctor.specialty_name || "General Practice" %>
                       </p>
                     </div>
@@ -423,28 +426,23 @@ defmodule MedicWeb.SearchLive do
 
                   <div class="flex flex-wrap gap-2 my-2">
                     <%= if doctor.verified do %>
-                      <div class="badge badge-success gap-1 text-success-content">
+                      <div class="badge badge-success gap-1 text-success-content badge-sm">
                         <.icon name="hero-check-badge" class="size-[1em]" /> Verified
-                      </div>
-                    <% end %>
-                    <%= if doctor.has_cal_com do %>
-                      <div class="badge badge-info gap-1 text-info-content">
-                        <.icon name="hero-calendar" class="size-[1em]" /> Online
                       </div>
                     <% end %>
                   </div>
 
-                  <div class="space-y-1 text-sm text-base-content/80">
+                  <div class="space-y-1.5 text-sm text-base-content/80 mt-3">
                     <div class="flex items-center gap-2">
-                      <.icon name="hero-star" class="size-[1.2em] text-warning" />
+                      <.icon name="hero-star-solid" class="size-[1.2em] text-warning" />
                       <span class="font-bold"><%= Float.round(doctor.rating || 0.0, 1) %></span>
-                      <span class="text-base-content/60">
+                      <span class="text-base-content/60 text-xs">
                         (<%= doctor.review_count || 0 %> reviews)
                       </span>
                     </div>
 
                     <%= if doctor.city do %>
-                      <div class="flex items-center gap-2">
+                      <div class="flex items-center gap-2 text-base-content/70">
                         <.icon name="hero-map-pin" class="size-[1.2em]" />
                         <%= doctor.city %>
                       </div>
@@ -452,13 +450,25 @@ defmodule MedicWeb.SearchLive do
 
                     <%= if doctor.consultation_fee do %>
                       <div class="flex items-center gap-2">
-                        <.icon name="hero-currency-euro" class="size-[1.2em]" />
+                        <.icon name="hero-currency-euro" class="size-[1.2em] text-base-content/60" />
                         <span>
-                          <span class="font-semibold">€<%= trunc(doctor.consultation_fee) %></span>
-                          / visit
+                          <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
+                          <span class="text-xs text-base-content/60 ml-0.5">initial visit</span>
                         </span>
                       </div>
                     <% end %>
+
+                    <%!-- Next Available Slot (Mock logic for now if nil) --%>
+                    <div class="flex items-center gap-2 text-success font-medium pt-1">
+                      <.icon name="hero-calendar" class="size-[1.2em]" />
+                      <span>
+                        <%= if doctor.next_available_slot do %>
+                          Next: <%= Calendar.strftime(doctor.next_available_slot, "%b %d, %H:%M") %>
+                        <% else %>
+                          Next available: Tomorrow
+                        <% end %>
+                      </span>
+                    </div>
                   </div>
 
                   <div class="justify-end card-actions mt-4">
@@ -778,12 +788,15 @@ defmodule MedicWeb.SearchLive do
           id: d.id,
           first_name: d.first_name,
           last_name: d.last_name,
+          title: d.title || "Dr.",
+          pronouns: d.pronouns,
           specialty_name: d.specialty && d.specialty.name_en,
           city: d.city,
           rating: d.rating || 0.0,
           review_count: d.review_count || 0,
           consultation_fee: d.consultation_fee && Decimal.to_float(d.consultation_fee),
           verified: d.verified_at != nil,
+          next_available_slot: d.next_available_slot,
           has_cal_com: false
         }
       end)

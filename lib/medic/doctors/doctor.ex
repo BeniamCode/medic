@@ -18,11 +18,23 @@ defmodule Medic.Doctors.Doctor do
 
     create :create do
       primary? true
-      accept [:first_name, :last_name, :bio, :bio_el, :profile_image_url, :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id, :user_id]
+      accept [
+        :first_name, :last_name, :bio, :bio_el, :profile_image_url,
+        :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id, :user_id,
+        :title, :pronouns, :registration_number, :years_of_experience, :hospital_affiliation, :academic_title, :telemedicine_available,
+        :board_certifications, :sub_specialties, :clinical_procedures, :conditions_treated, :languages, :insurance_networks,
+        :accessibility_items, :awards, :publications
+      ]
     end
 
     update :update do
-      accept [:first_name, :last_name, :bio, :bio_el, :profile_image_url, :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id]
+      accept [
+        :first_name, :last_name, :bio, :bio_el, :profile_image_url,
+        :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id,
+        :title, :pronouns, :registration_number, :years_of_experience, :hospital_affiliation, :academic_title, :telemedicine_available,
+        :board_certifications, :sub_specialties, :clinical_procedures, :conditions_treated, :languages, :insurance_networks,
+        :accessibility_items, :awards, :publications
+      ]
     end
 
     update :update_rating do
@@ -58,6 +70,24 @@ defmodule Medic.Doctors.Doctor do
     attribute :consultation_fee, :decimal
     attribute :next_available_slot, :utc_datetime
     attribute :verified_at, :utc_datetime
+
+    attribute :title, :string
+    attribute :pronouns, :string
+    attribute :registration_number, :string
+    attribute :years_of_experience, :integer
+    attribute :hospital_affiliation, :string
+    attribute :academic_title, :string
+    attribute :telemedicine_available, :boolean, default: false
+
+    attribute :board_certifications, {:array, :string}, default: []
+    attribute :sub_specialties, {:array, :string}, default: []
+    attribute :clinical_procedures, {:array, :string}, default: []
+    attribute :conditions_treated, {:array, :string}, default: []
+    attribute :languages, {:array, :string}, default: []
+    attribute :insurance_networks, {:array, :string}, default: []
+    attribute :accessibility_items, {:array, :string}, default: []
+    attribute :awards, {:array, :string}, default: []
+    attribute :publications, {:array, :string}, default: []
 
     timestamps()
   end
@@ -98,7 +128,23 @@ defmodule Medic.Doctors.Doctor do
       :address,
       :city,
       :consultation_fee,
-      :specialty_id
+      :specialty_id,
+      :title,
+      :pronouns,
+      :registration_number,
+      :years_of_experience,
+      :hospital_affiliation,
+      :academic_title,
+      :telemedicine_available,
+      :board_certifications,
+      :sub_specialties,
+      :clinical_procedures,
+      :conditions_treated,
+      :languages,
+      :insurance_networks,
+      :accessibility_items,
+      :awards,
+      :publications
     ])
     |> validate_required([:first_name, :last_name])
     |> validate_number(:consultation_fee, greater_than_or_equal_to: 0)
