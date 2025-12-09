@@ -1,0 +1,148 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: el\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/medic_web/components/layouts/app.html.heex:148
+#, elixir-autogen, elixir-format
+msgid "Appointments"
+msgstr "Ραντεβού"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:13
+#, elixir-autogen, elixir-format
+msgid "Browse doctors"
+msgstr "Περιήγηση γιατρών"
+
+#: lib/medic_web/components/layouts/app.html.heex:113
+#, elixir-autogen, elixir-format
+msgid "Dashboard"
+msgstr "Πίνακας Ελέγχου"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:47
+#, elixir-autogen, elixir-format
+msgid "Every doctor goes through verification so you can focus on care, not paperwork."
+msgstr "Κάθε γιατρός περνάει από επαλήθευση ώστε να εστιάζετε στη φροντίδα, όχι στη γραφειοκρατία."
+
+#: lib/medic_web/controllers/page_html/home.html.heex:8
+#, elixir-autogen, elixir-format
+msgid "Explore Medic's curated network of specialists, compare profiles, and book in seconds with our modern, easy-to-use interface."
+msgstr "Εξερευνήστε το δίκτυο ειδικών του Medic, συγκρίνετε προφίλ και κλείστε ραντεβού σε δευτερόλεπτα με τη σύγχρονη, εύχρηστη εφαρμογή μας."
+
+#: lib/medic_web/components/layouts/app.html.heex:163
+#, elixir-autogen, elixir-format
+msgid "Find Doctors"
+msgstr "Εύρεση Γιατρών"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Find caring doctors with a"
+msgstr "Βρείτε γιατρούς που νοιάζονται με μια"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:58
+#, elixir-autogen, elixir-format
+msgid "Friendly follow-ups"
+msgstr "Φιλικές υπενθυμίσεις"
+
+#: lib/medic_web/components/layouts/app.html.heex:98
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr "Αρχική"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Instant scheduling"
+msgstr "Άμεσος προγραμματισμός"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "Join as doctor"
+msgstr "Εγγραφή ως γιατρός"
+
+#: lib/medic_web/components/layouts/app.html.heex:68
+#, elixir-autogen, elixir-format
+msgid "Login"
+msgstr "Σύνδεση"
+
+#: lib/medic_web/components/layouts/app.html.heex:64
+#, elixir-autogen, elixir-format
+msgid "Logout"
+msgstr "Αποσύνδεση"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:3
+#, elixir-autogen, elixir-format
+msgid "Medical Excellence"
+msgstr "Ιατρική Αριστεία"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:60
+#, elixir-autogen, elixir-format
+msgid "Notifications, reminders, and notes stay in sync with your Medic dashboard."
+msgstr "Ειδοποιήσεις, υπενθυμίσεις και σημειώσεις παραμένουν συγχρονισμένες στον πίνακα ελέγχου του Medic."
+
+#: lib/medic_web/live/search_live.ex:165
+#, elixir-autogen, elixir-format
+msgid "On Duty Hospitals Today"
+msgstr "Εφημερεύοντα Νοσοκομεία Σήμερα"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:34
+#, elixir-autogen, elixir-format
+msgid "Pick an appointment slot straight from each doctor's profile."
+msgstr "Επιλέξτε ώρα ραντεβού απευθείας από το προφίλ κάθε γιατρού."
+
+#: lib/medic_web/components/layouts/app.html.heex:135
+#, elixir-autogen, elixir-format
+msgid "Profile"
+msgstr "Προφίλ"
+
+#: lib/medic_web/components/layouts/app.html.heex:124
+#, elixir-autogen, elixir-format
+msgid "Schedule"
+msgstr "Πρόγραμμα"
+
+#: lib/medic_web/components/layouts/app.html.heex:63
+#: lib/medic_web/components/layouts/app.html.heex:172
+#, elixir-autogen, elixir-format
+msgid "Settings"
+msgstr "Ρυθμίσεις"
+
+#: lib/medic_web/components/layouts/app.html.heex:183
+#, elixir-autogen, elixir-format
+msgid "Sign In"
+msgstr "Σύνδεση"
+
+#: lib/medic_web/components/layouts/app.html.heex:177
+#, elixir-autogen, elixir-format
+msgid "Sign Out"
+msgstr "Αποσύνδεση"
+
+#: lib/medic_web/components/layouts/app.html.heex:188
+#, elixir-autogen, elixir-format
+msgid "Sign Up"
+msgstr "Εγγραφή"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:45
+#, elixir-autogen, elixir-format
+msgid "Verified specialists"
+msgstr "Πιστοποιημένοι ειδικοί"
+
+#: lib/medic_web/components/core_components.ex:73
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr "κλείσιμο"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "experience"
+msgstr "εμπειρία"
+
+#: lib/medic_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "premium"
+msgstr "κορυφαία"

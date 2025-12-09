@@ -1,0 +1,148 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new messages manually only if they're dynamic
+## messages that can't be statically extracted.
+##
+## Run "mix gettext.extract" to bring this file up to
+## date. Leave "msgstr"s empty as changing them here has no
+## effect: edit them in PO (.po) files instead.
+#
+msgid ""
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:148
+#, elixir-autogen, elixir-format
+msgid "Appointments"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:13
+#, elixir-autogen, elixir-format
+msgid "Browse doctors"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:113
+#, elixir-autogen, elixir-format
+msgid "Dashboard"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:47
+#, elixir-autogen, elixir-format
+msgid "Every doctor goes through verification so you can focus on care, not paperwork."
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:8
+#, elixir-autogen, elixir-format
+msgid "Explore Medic's curated network of specialists, compare profiles, and book in seconds with our modern, easy-to-use interface."
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:163
+#, elixir-autogen, elixir-format
+msgid "Find Doctors"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Find caring doctors with a"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:58
+#, elixir-autogen, elixir-format
+msgid "Friendly follow-ups"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:98
+#, elixir-autogen, elixir-format
+msgid "Home"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Instant scheduling"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "Join as doctor"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:68
+#, elixir-autogen, elixir-format
+msgid "Login"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:64
+#, elixir-autogen, elixir-format
+msgid "Logout"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:3
+#, elixir-autogen, elixir-format
+msgid "Medical Excellence"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:60
+#, elixir-autogen, elixir-format
+msgid "Notifications, reminders, and notes stay in sync with your Medic dashboard."
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:165
+#, elixir-autogen, elixir-format
+msgid "On Duty Hospitals Today"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:34
+#, elixir-autogen, elixir-format
+msgid "Pick an appointment slot straight from each doctor's profile."
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:135
+#, elixir-autogen, elixir-format
+msgid "Profile"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:124
+#, elixir-autogen, elixir-format
+msgid "Schedule"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:63
+#: lib/medic_web/components/layouts/app.html.heex:172
+#, elixir-autogen, elixir-format
+msgid "Settings"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:183
+#, elixir-autogen, elixir-format
+msgid "Sign In"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:177
+#, elixir-autogen, elixir-format
+msgid "Sign Out"
+msgstr ""
+
+#: lib/medic_web/components/layouts/app.html.heex:188
+#, elixir-autogen, elixir-format
+msgid "Sign Up"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:45
+#, elixir-autogen, elixir-format
+msgid "Verified specialists"
+msgstr ""
+
+#: lib/medic_web/components/core_components.ex:73
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "experience"
+msgstr ""
+
+#: lib/medic_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "premium"
+msgstr ""

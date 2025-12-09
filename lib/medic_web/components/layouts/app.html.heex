@@ -1,8 +1,16 @@
 <div class="drawer lg:drawer-open bg-gradient-to-br from-base-100 via-base-200 to-secondary/20">
   <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
   <div class="drawer-content flex flex-col min-h-screen">
-    <%= if @current_user do %>
       <div class="fixed right-4 top-4 z-50 flex items-center gap-2">
+        <div class="dropdown dropdown-end">
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle bg-base-100/50 backdrop-blur shadow-sm">
+            <.icon name="hero-globe-alt" class="size-6" />
+          </div>
+          <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+            <li><a href="?locale=en" class={if @locale == "en", do: "active"}>English</a></li>
+            <li><a href="?locale=el" class={if @locale == "el", do: "active"}>Ελληνικά</a></li>
+          </ul>
+        </div>
         <button
           type="button"
           class="btn btn-circle btn-ghost bg-base-100/50 backdrop-blur shadow-sm hover:rotate-12 transition-transform duration-300"
@@ -14,12 +22,15 @@
           <.icon name="hero-moon" class="block dark:hidden size-6 text-primary" />
         </button>
 
-        <%= live_render(@socket, MedicWeb.NotificationLive,
-          id: :notification_bell,
-          session: %{"user_id" => @current_user.id}
-        ) %>
+        <%= if @current_user do %>
+          <%= live_render(@socket, MedicWeb.NotificationLive,
+            id: :notification_bell,
+            session: %{"user_id" => @current_user.id}
+          ) %>
+        <% end %>
       </div>
-    <% end %>
+
+
     <%!-- Navbar --%>
     <div class="navbar bg-base-100/80 border-b border-base-200 backdrop-blur lg:hidden">
       <div class="flex-none gap-2">
@@ -49,12 +60,12 @@
               tabindex="0"
               class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
             >
-              <li><a href="/settings">Settings</a></li>
-              <li><.link href="/logout" method="delete">Logout</.link></li>
+              <li><a href="/settings"><%= gettext("Settings") %></a></li>
+              <li><.link href="/logout" method="delete"><%= gettext("Logout") %></.link></li>
             </ul>
           </div>
         <% else %>
-          <a href="/login" class="btn btn-sm btn-ghost">Login</a>
+          <a href="/login" class="btn btn-sm btn-ghost"><%= gettext("Login") %></a>
         <% end %>
       </div>
     </div>
@@ -84,7 +95,7 @@
 
         <li>
           <a href="/" class={["rounded-xl", @socket.view == MedicWeb.HomeLive && "active"]}>
-            <.icon name="hero-home" class="size-5" /> Home
+            <.icon name="hero-home" class="size-5" /> <%= gettext("Home") %>
           </a>
         </li>
 
@@ -99,7 +110,7 @@
                   String.contains?(@socket.view |> to_string(), "DoctorDashboard") && "active"
                 ]}
               >
-                <.icon name="hero-squares-2x2" class="size-5" /> Dashboard
+                <.icon name="hero-squares-2x2" class="size-5" /> <%= gettext("Dashboard") %>
               </a>
             </li>
             <li>
@@ -110,7 +121,7 @@
                   String.contains?(@socket.view |> to_string(), "Schedule") && "active"
                 ]}
               >
-                <.icon name="hero-calendar-days" class="size-5" /> Schedule
+                <.icon name="hero-calendar-days" class="size-5" /> <%= gettext("Schedule") %>
               </a>
             </li>
             <li>
@@ -121,7 +132,7 @@
                   String.contains?(@socket.view |> to_string(), "Profile") && "active"
                 ]}
               >
-                <.icon name="hero-user-circle" class="size-5" /> Profile
+                <.icon name="hero-user-circle" class="size-5" /> <%= gettext("Profile") %>
               </a>
             </li>
           <% else %>
@@ -134,7 +145,7 @@
                   String.contains?(@socket.view |> to_string(), "PatientDashboard") && "active"
                 ]}
               >
-                <.icon name="hero-calendar" class="size-5" /> Appointments
+                <.icon name="hero-calendar" class="size-5" /> <%= gettext("Appointments") %>
               </a>
             </li>
           <% end %>
@@ -149,7 +160,7 @@
               String.contains?(@socket.view |> to_string(), "Search") && "active"
             ]}
           >
-            <.icon name="hero-magnifying-glass" class="size-5" /> Find Doctors
+            <.icon name="hero-magnifying-glass" class="size-5" /> <%= gettext("Find Doctors") %>
           </a>
         </li>
 
@@ -158,23 +169,23 @@
         <%= if @current_user do %>
           <li>
             <a href="/settings" class="rounded-xl">
-              <.icon name="hero-cog-6-tooth" class="size-5" /> Settings
+              <.icon name="hero-cog-6-tooth" class="size-5" /> <%= gettext("Settings") %>
             </a>
           </li>
           <li>
             <.link href="/logout" method="delete" class="text-error rounded-xl">
-              <.icon name="hero-arrow-right-on-rectangle" class="size-5" /> Sign Out
+              <.icon name="hero-arrow-right-on-rectangle" class="size-5" /> <%= gettext("Sign Out") %>
             </.link>
           </li>
         <% else %>
           <li>
             <a href="/login" class="rounded-xl">
-              <.icon name="hero-arrow-right-end-on-rectangle" class="size-5" /> Sign In
+              <.icon name="hero-arrow-right-end-on-rectangle" class="size-5" /> <%= gettext("Sign In") %>
             </a>
           </li>
           <li>
             <a href="/register" class="rounded-xl active">
-              <.icon name="hero-user-plus" class="size-5" /> Sign Up
+              <.icon name="hero-user-plus" class="size-5" /> <%= gettext("Sign Up") %>
             </a>
           </li>
         <% end %>

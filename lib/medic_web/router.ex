@@ -11,6 +11,7 @@ defmodule MedicWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
+    plug MedicWeb.Plugs.Locale
   end
 
   pipeline :api do
@@ -23,7 +24,7 @@ defmodule MedicWeb.Router do
 
     live_session :public,
       layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :mount_current_user}] do
+      on_mount: [{MedicWeb.UserAuth, :mount_current_user}, {MedicWeb.LiveHooks.Locale, :default}] do
       live "/", HomeLive
       live "/search", SearchLive
       live "/doctors/:id", DoctorLive.Show
@@ -36,7 +37,7 @@ defmodule MedicWeb.Router do
 
     live_session :redirect_if_user_is_authenticated,
       layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      on_mount: [{MedicWeb.UserAuth, :redirect_if_user_is_authenticated}, {MedicWeb.LiveHooks.Locale, :default}] do
       live "/login", UserLoginLive
       live "/register", UserRegistrationLive
       live "/register/doctor", UserRegistrationLive, :doctor
@@ -51,7 +52,7 @@ defmodule MedicWeb.Router do
 
     live_session :require_authenticated_user,
       layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}] do
+      on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}, {MedicWeb.LiveHooks.Locale, :default}] do
       live "/dashboard", DashboardLive
       live "/appointments/:id", AppointmentLive.Show
       live "/settings", SettingsLive
@@ -68,7 +69,7 @@ defmodule MedicWeb.Router do
 
     live_session :doctor_dashboard,
       layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}] do
+      on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}, {MedicWeb.LiveHooks.Locale, :default}] do
       live "/doctor", DoctorDashboardLive
       live "/doctor/profile", DoctorLive.Profile
     end
