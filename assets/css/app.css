@@ -58,7 +58,7 @@
   height: 500px;
 }
 
-.map-canvas > * {
+.map-canvas>* {
   width: 100% !important;
   height: 100% !important;
 }
@@ -71,10 +71,10 @@
   display: none;
 }
 
-[data-theme='night'] .theme-light-icon {
+[data-theme='dark'] .theme-light-icon {
   display: none;
 }
 
-[data-theme='night'] .theme-dark-icon {
+[data-theme='dark'] .theme-dark-icon {
   display: inline-flex;
 }
