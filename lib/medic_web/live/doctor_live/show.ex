@@ -16,7 +16,7 @@ defmodule MedicWeb.DoctorLive.Show do
       <div class="bg-base-100 border-b border-base-200 shadow-sm sticky top-0 z-30">
         <div class="max-w-6xl mx-auto py-6 px-4">
           <.link navigate={~p"/search"} class="btn btn-ghost btn-xs sm:btn-sm gap-1 mb-4 text-base-content/60 hover:text-primary transition-colors">
-            <.icon name="hero-arrow-left" class="w-4 h-4" /> Back to search
+            <.icon name="hero-arrow-left" class="w-4 h-4" /> <%= gettext("Back to search") %>
           </.link>
 
           <div class="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
@@ -43,7 +43,7 @@ defmodule MedicWeb.DoctorLive.Show do
                     <span><%= (@doctor.specialty && @doctor.specialty.name_en) || "General Practice" %></span>
                     <%= if @doctor.years_of_experience do %>
                       <span class="w-1.5 h-1.5 rounded-full bg-base-300"></span>
-                      <span class="text-base-content/70 text-base"><%= @doctor.years_of_experience %> Years Exp.</span>
+                      <span class="text-base-content/70 text-base"><%= @doctor.years_of_experience %> <%= gettext("Years Exp.") %></span>
                     <% end %>
                   </div>
                   
@@ -56,7 +56,7 @@ defmodule MedicWeb.DoctorLive.Show do
                   
                   <%= if @doctor.registration_number do %>
                     <div class="flex items-center gap-2 mt-1 text-sm text-base-content/60 font-mono">
-                      <span>Reg: <%= @doctor.registration_number %></span>
+                      <span><%= gettext("Reg:") %> <%= @doctor.registration_number %></span>
                     </div>
                   <% end %>
                 </div>
@@ -71,26 +71,26 @@ defmodule MedicWeb.DoctorLive.Show do
                     <div class="h-8 w-px bg-base-200 mx-1"></div>
                     <div class="flex flex-col leading-none text-xs text-base-content/60">
                       <span class="font-bold text-base-content"><%= @doctor.review_count || 0 %></span>
-                      <span>Verified Reviews</span>
+                      <span><%= gettext("Verified Reviews") %></span>
                     </div>
                   </div>
 
                   <%= if @doctor.verified_at do %>
                     <div class="badge badge-success badge-lg gap-1.5 text-success-content shadow-sm py-4">
-                      <.icon name="hero-check-badge" class="w-5 h-5" /> Verified Profile
+                      <.icon name="hero-check-badge" class="w-5 h-5" /> <%= gettext("Verified Profile") %>
                     </div>
                   <% end %>
                 </div>
               </div>
               
               <%!-- Action Buttons (Mobile Only) --%>
-              <div class="md:hidden mt-6 flex gap-3">
-                 <a href="#booking" class="btn btn-primary flex-1">Book Appointment</a>
-                 <%= if @doctor.telemedicine_available do %>
-                    <button class="btn btn-outline flex-1">
-                      <.icon name="hero-video-camera" class="w-5 h-5" /> Video Visit
-                    </button>
-                 <% end %>
+               <div class="md:hidden mt-6 flex gap-3">
+                  <a href="#booking" class="btn btn-primary flex-1"><%= gettext("Book Appointment") %></a>
+                  <%= if @doctor.telemedicine_available do %>
+                     <button class="btn btn-outline flex-1">
+                       <.icon name="hero-video-camera" class="w-5 h-5" /> <%= gettext("Video Visit") %>
+                     </button>
+                  <% end %>
               </div>
             </div>
           </div>
@@ -108,21 +108,21 @@ defmodule MedicWeb.DoctorLive.Show do
                           <.icon name="hero-calendar-days" class="w-6 h-6" />
                         </div>
                         <div>
-                           <h2 class="text-2xl font-bold">Book an Appointment</h2>
-                           <p class="text-base-content/70">Select a time that works for you</p>
+                           <h2 class="text-2xl font-bold"><%= gettext("Book an Appointment") %></h2>
+                           <p class="text-base-content/70"><%= gettext("Select a time that works for you") %></p>
                         </div>
                       </div>
                       
                       <div class="flex flex-col items-end gap-1">
                          <%= if @doctor.consultation_fee do %>
                             <div class="flex items-baseline gap-1">
-                               <span class="text-sm font-medium text-base-content/60">Consultation Fee:</span>
+                               <span class="text-sm font-medium text-base-content/60"><%= gettext("Consultation Fee:") %></span>
                                <span class="text-xl font-bold text-primary">€<%= @doctor.consultation_fee %></span>
                             </div>
                          <% end %>
                          <%= if @doctor.telemedicine_available do %>
                             <div class="badge badge-info gap-1 text-xs">
-                              <.icon name="hero-video-camera" class="w-3 h-3" /> Video Available
+                               <.icon name="hero-video-camera" class="w-3 h-3" /> <%= gettext("Video Available") %>
                             </div>
                          <% end %>
                       </div>
@@ -152,14 +152,14 @@ defmodule MedicWeb.DoctorLive.Show do
                   <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <.icon name="hero-academic-cap" class="w-6 h-6" />
                   </div>
-                  <h2 class="text-xl font-bold text-base-content">Clinical Expertise</h2>
+                  <h2 class="text-xl font-bold text-base-content"><%= gettext("Clinical Expertise") %></h2>
                </div>
                <div class="card-body p-6 space-y-6">
                   
                   <%!-- Sub-Specialties --%>
                    <%= if @doctor.sub_specialties != [] do %>
                     <div>
-                      <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">Specialized Focus</h3>
+                      <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3"><%= gettext("Specialized Focus") %></h3>
                       <div class="flex flex-wrap gap-2">
                         <%= for item <- @doctor.sub_specialties do %>
                           <span class="badge badge-lg badge-outline border-primary/30 text-primary-focus bg-primary/5 px-4 py-3"><%= item %></span>
@@ -173,7 +173,7 @@ defmodule MedicWeb.DoctorLive.Show do
                     <%= if @doctor.clinical_procedures != [] do %>
                       <div class="bg-base-50 rounded-xl p-4 border border-base-200/50">
                         <h3 class="font-semibold mb-3 flex items-center gap-2">
-                          <.icon name="hero-clipboard-document-list" class="w-4 h-4 text-secondary" /> Common Procedures
+                          <.icon name="hero-clipboard-document-list" class="w-4 h-4 text-secondary" /> <%= gettext("Common Procedures") %>
                         </h3>
                         <ul class="space-y-1.5 text-sm text-base-content/80 marker:text-secondary list-disc pl-4">
                           <%= for item <- @doctor.clinical_procedures do %>
@@ -187,7 +187,7 @@ defmodule MedicWeb.DoctorLive.Show do
                     <%= if @doctor.conditions_treated != [] do %>
                        <div class="bg-base-50 rounded-xl p-4 border border-base-200/50">
                         <h3 class="font-semibold mb-3 flex items-center gap-2">
-                          <.icon name="hero-heart" class="w-4 h-4 text-error/80" /> Conditions Treated
+                          <.icon name="hero-heart" class="w-4 h-4 text-error/80" /> <%= gettext("Conditions Treated") %>
                         </h3>
                         <ul class="space-y-1.5 text-sm text-base-content/80 marker:text-error/80 list-disc pl-4">
                           <%= for item <- @doctor.conditions_treated do %>
@@ -205,7 +205,7 @@ defmodule MedicWeb.DoctorLive.Show do
               <section class="card bg-base-100 shadow-md border border-base-200">
                 <div class="card-body p-8">
                   <div class="flex items-center gap-3 mb-4">
-                     <h2 class="text-xl font-bold">About Dr. <%= @doctor.last_name %></h2>
+                     <h2 class="text-xl font-bold"><%= gettext("About Dr.") %> <%= @doctor.last_name %></h2>
                      <div class="h-px bg-base-200 flex-1"></div>
                   </div>
                   <article class="prose prose-sm md:prose-base max-w-none text-base-content/80">
@@ -215,7 +215,7 @@ defmodule MedicWeb.DoctorLive.Show do
                   <%!-- Languages Spoken --%>
                   <%= if @doctor.languages != [] do %>
                     <div class="mt-8 pt-6 border-t border-base-200 flex items-center gap-4">
-                       <span class="text-sm font-semibold text-base-content/60">Languages Spoken:</span>
+                       <span class="text-sm font-semibold text-base-content/60"><%= gettext("Languages Spoken:") %></span>
                        <div class="flex flex-wrap gap-2">
                           <%= for lang <- @doctor.languages do %>
                             <div class="badge badge-ghost"><%= lang %></div>
@@ -231,12 +231,12 @@ defmodule MedicWeb.DoctorLive.Show do
             <%= if @doctor.board_certifications != [] || @doctor.awards != [] || @doctor.publications != [] do %>
               <section class="card bg-base-100 shadow-sm border border-base-200">
                 <div class="card-body p-6">
-                   <h2 class="text-lg font-bold mb-4">Credentials & Research</h2>
+                   <h2 class="text-lg font-bold mb-4"><%= gettext("Credentials & Research") %></h2>
                    
                    <div class="space-y-6">
                       <%= if @doctor.board_certifications != [] do %>
                         <div>
-                          <h3 class="text-sm font-semibold text-base-content/70 mb-2">Board Certifications</h3>
+                          <h3 class="text-sm font-semibold text-base-content/70 mb-2"><%= gettext("Board Certifications") %></h3>
                           <ul class="space-y-1">
                              <%= for cert <- @doctor.board_certifications do %>
                                 <li class="flex items-center gap-2 text-sm">
@@ -249,7 +249,7 @@ defmodule MedicWeb.DoctorLive.Show do
                       
                       <%= if @doctor.awards != [] do %>
                         <div>
-                          <h3 class="text-sm font-semibold text-base-content/70 mb-2">Awards & Recognition</h3>
+                          <h3 class="text-sm font-semibold text-base-content/70 mb-2"><%= gettext("Awards & Recognition") %></h3>
                            <ul class="space-y-1">
                              <%= for award <- @doctor.awards do %>
                                 <li class="flex items-start gap-2 text-sm">
@@ -262,7 +262,7 @@ defmodule MedicWeb.DoctorLive.Show do
 
                       <%= if @doctor.publications != [] do %>
                         <div>
-                           <h3 class="text-sm font-semibold text-base-content/70 mb-2">Selected Publications</h3>
+                           <h3 class="text-sm font-semibold text-base-content/70 mb-2"><%= gettext("Selected Publications") %></h3>
                            <ul class="space-y-2">
                              <%= for pub <- @doctor.publications do %>
                                 <li class="text-sm text-base-content/80 italic border-l-2 border-base-300 pl-3">
@@ -286,7 +286,7 @@ defmodule MedicWeb.DoctorLive.Show do
                 <div class="card-body p-5">
                    <h3 class="font-bold flex items-center gap-2 mb-3">
                       <.icon name="hero-map-pin" class="w-5 h-5 text-accent" />
-                      Location
+                      <%= gettext("Location") %>
                    </h3>
                    <div class="text-sm space-y-1">
                       <p class="font-medium"><%= @doctor.address %></p>
@@ -313,12 +313,12 @@ defmodule MedicWeb.DoctorLive.Show do
              <%!-- Insurance --%>
              <%= if @doctor.insurance_networks != [] do %>
                 <div class="card bg-base-100 shadow-md border border-base-200">
-                  <div class="card-body p-5">
-                     <h3 class="font-bold flex items-center gap-2 mb-3">
-                        <.icon name="hero-credit-card" class="w-5 h-5 text-secondary" />
-                        Insurance
-                     </h3>
-                     <div class="flex flex-wrap gap-2">
+                   <div class="card-body p-5">
+                      <h3 class="font-bold flex items-center gap-2 mb-3">
+                         <.icon name="hero-credit-card" class="w-5 h-5 text-secondary" />
+                         <%= gettext("Insurance") %>
+                      </h3>
+                      <div class="flex flex-wrap gap-2">
                        <%= for insurance <- @doctor.insurance_networks do %>
                          <div class="badge badge-outline"><%= insurance %></div>
                        <% end %>

@@ -14,12 +14,11 @@ defmodule MedicWeb.HomeLive do
         <div class="hero-content text-center relative z-10">
           <div class="max-w-3xl">
             <h1 class="text-5xl md:text-7xl font-bold leading-tight">
-              Find the right <span class="text-primary">doctor</span>
-              <br /> for you
+              <%= gettext("Find the right") %> <span class="text-primary"><%= gettext("doctor") %></span>
+              <br /> <%= gettext("for you") %>
             </h1>
             <p class="py-6 text-xl text-base-content/70 max-w-2xl mx-auto">
-              Search among hundreds of specialized doctors
-              and book your appointment instantly.
+              <%= gettext("Search among hundreds of specialized doctors and book your appointment instantly.") %>
             </p>
 
             <%!-- Search Bar --%>
@@ -33,12 +32,12 @@ defmodule MedicWeb.HomeLive do
                   <input
                     type="text"
                     name="q"
-                    placeholder="Search by doctor, specialty, or body part..."
+                    placeholder={gettext("Search by doctor, specialty, or body part...")}
                     class="input input-lg w-full pl-12 bg-base-100 border-base-300 focus:border-primary join-item"
                   />
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg join-item">
-                  Search
+                  <%= gettext("Search") %>
                 </button>
               </.form>
             </div>
@@ -55,7 +54,7 @@ defmodule MedicWeb.HomeLive do
                 <.icon name="hero-building-office-2" class="size-6" />
               </div>
               <div>
-                <h2 class="text-2xl font-bold">Hospitals On Duty Today</h2>
+                <h2 class="text-2xl font-bold"><%= gettext("Hospitals On Duty Today") %></h2>
                 <p class="text-sm text-base-content/60">
                   <%= Calendar.strftime(Date.utc_today(), "%A, %d %B %Y") %>
                 </p>
@@ -74,12 +73,12 @@ defmodule MedicWeb.HomeLive do
                           <%= hospital.city %>
                         </div>
                       </div>
-                      <div class="badge badge-secondary badge-outline text-xs">On Call</div>
+                      <div class="badge badge-secondary badge-outline text-xs"><%= gettext("On Call") %></div>
                     </div>
 
                     <div class="mt-4">
                       <div class="text-xs font-bold text-base-content/50 mb-2 uppercase tracking-wider">
-                        Departments
+                        <%= gettext("Departments") %>
                       </div>
                       <div class="flex flex-wrap gap-1.5">
                         <%= for schedule <- hospital.hospital_schedules do %>
@@ -102,7 +101,7 @@ defmodule MedicWeb.HomeLive do
       <%!-- Specialties Grid --%>
       <section class="py-16 px-4 bg-base-200">
         <div class="max-w-6xl mx-auto">
-          <h2 class="text-3xl font-bold text-center mb-12">Popular Specialties</h2>
+          <h2 class="text-3xl font-bold text-center mb-12"><%= gettext("Popular Specialties") %></h2>
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <%= for specialty <- @specialties do %>
               <.link
@@ -131,25 +130,25 @@ defmodule MedicWeb.HomeLive do
               <div class="stat-figure text-primary">
                 <.icon name="hero-users" class="size-8" />
               </div>
-              <div class="stat-title">Doctors</div>
+              <div class="stat-title"><%= gettext("Doctors") %></div>
               <div class="stat-value text-primary">600+</div>
-              <div class="stat-desc">Verified professionals</div>
+              <div class="stat-desc"><%= gettext("Verified professionals") %></div>
             </div>
             <div class="stat place-items-center">
               <div class="stat-figure text-secondary">
                 <.icon name="hero-calendar-days" class="size-8" />
               </div>
-              <div class="stat-title">Appointments</div>
+              <div class="stat-title"><%= gettext("Appointments") %></div>
               <div class="stat-value text-secondary">10K+</div>
-              <div class="stat-desc">Booked via Medic</div>
+              <div class="stat-desc"><%= gettext("Booked via Medic") %></div>
             </div>
             <div class="stat place-items-center">
               <div class="stat-figure text-accent">
                 <.icon name="hero-star" class="size-8" />
               </div>
-              <div class="stat-title">Rating</div>
+              <div class="stat-title"><%= gettext("Rating") %></div>
               <div class="stat-value text-accent">4.8</div>
-              <div class="stat-desc">From our users</div>
+              <div class="stat-desc"><%= gettext("From our users") %></div>
             </div>
           </div>
         </div>
@@ -158,16 +157,16 @@ defmodule MedicWeb.HomeLive do
       <%!-- How It Works --%>
       <section class="py-16 px-4 bg-base-200">
         <div class="max-w-4xl mx-auto">
-          <h2 class="text-3xl font-bold text-center mb-12">How It Works</h2>
+          <h2 class="text-3xl font-bold text-center mb-12"><%= gettext("How It Works") %></h2>
           <div class="grid md:grid-cols-3 gap-8">
             <div class="card bg-base-100 shadow-xl">
               <div class="card-body items-center text-center">
                 <div class="w-16 h-16 rounded-full bg-primary text-primary-content flex items-center justify-center text-2xl font-bold mb-4">
                   1
                 </div>
-                <h3 class="card-title">Search</h3>
+                <h3 class="card-title"><%= gettext("Search") %></h3>
                 <p class="text-base-content/70">
-                  Find the doctor you need by specialty, body part, or location
+                  <%= gettext("Find the doctor you need by specialty, body part, or location") %>
                 </p>
               </div>
             </div>
@@ -176,9 +175,9 @@ defmodule MedicWeb.HomeLive do
                 <div class="w-16 h-16 rounded-full bg-secondary text-secondary-content flex items-center justify-center text-2xl font-bold mb-4">
                   2
                 </div>
-                <h3 class="card-title">Choose Time</h3>
+                <h3 class="card-title"><%= gettext("Choose Time") %></h3>
                 <p class="text-base-content/70">
-                  See real-time availability and pick a convenient time slot
+                  <%= gettext("See real-time availability and pick a convenient time slot") %>
                 </p>
               </div>
             </div>
@@ -187,9 +186,9 @@ defmodule MedicWeb.HomeLive do
                 <div class="w-16 h-16 rounded-full bg-accent text-accent-content flex items-center justify-center text-2xl font-bold mb-4">
                   3
                 </div>
-                <h3 class="card-title">Confirm</h3>
+                <h3 class="card-title"><%= gettext("Confirm") %></h3>
                 <p class="text-base-content/70">
-                  Get confirmation and reminders for your appointment
+                  <%= gettext("Get confirmation and reminders for your appointment") %>
                 </p>
               </div>
             </div>
@@ -200,12 +199,12 @@ defmodule MedicWeb.HomeLive do
       <%!-- CTA Section --%>
       <section class="py-20 px-4 bg-base-100">
         <div class="max-w-4xl mx-auto text-center">
-          <h2 class="text-4xl font-bold mb-4">Are You a Doctor?</h2>
+          <h2 class="text-4xl font-bold mb-4"><%= gettext("Are You a Doctor?") %></h2>
           <p class="text-xl text-base-content/70 mb-8">
-            Join the Medic network and increase your visibility
+            <%= gettext("Join the Medic network and increase your visibility") %>
           </p>
           <.link navigate={~p"/register/doctor"} class="btn btn-primary btn-lg">
-            <.icon name="hero-identification" class="size-5 mr-2" /> Doctor Registration
+            <.icon name="hero-identification" class="size-5 mr-2" /> <%= gettext("Doctor Registration") %>
           </.link>
         </div>
       </section>

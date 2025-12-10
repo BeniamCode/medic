@@ -12,6 +12,7 @@ msgid ""
 msgstr ""
 
 #: lib/medic_web/components/layouts/app.html.heex:148
+#: lib/medic_web/live/home_live.ex:141
 #, elixir-autogen, elixir-format
 msgid "Appointments"
 msgstr ""
@@ -145,4 +146,410 @@ msgstr ""
 #: lib/medic_web/controllers/page_html/home.html.heex:5
 #, elixir-autogen, elixir-format
 msgid "premium"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:208
+#, elixir-autogen, elixir-format
+msgid "About Dr."
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:71
+#, elixir-autogen, elixir-format
+msgid "Active filters:"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:258
+#: lib/medic_web/live/search_live.ex:271
+#, elixir-autogen, elixir-format
+msgid "All Cities"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:216
+#: lib/medic_web/live/search_live.ex:229
+#, elixir-autogen, elixir-format
+msgid "All Specialties"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:350
+#, elixir-autogen, elixir-format
+msgid "Any"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:306
+#, elixir-autogen, elixir-format
+msgid "Any rating"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:202
+#, elixir-autogen, elixir-format
+msgid "Are You a Doctor?"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:252
+#, elixir-autogen, elixir-format
+msgid "Awards & Recognition"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:19
+#, elixir-autogen, elixir-format
+msgid "Back to search"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:239
+#, elixir-autogen, elixir-format
+msgid "Board Certifications"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:88
+#, elixir-autogen, elixir-format
+msgid "Book Appointment"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:111
+#, elixir-autogen, elixir-format
+msgid "Book an Appointment"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:143
+#, elixir-autogen, elixir-format
+msgid "Booked via Medic"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:178
+#, elixir-autogen, elixir-format
+msgid "Choose Time"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:250
+#, elixir-autogen, elixir-format
+msgid "City"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:392
+#, elixir-autogen, elixir-format
+msgid "Clear All Filters"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:127
+#, elixir-autogen, elixir-format
+msgid "Clear all"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:506
+#, elixir-autogen, elixir-format
+msgid "Clear all filters"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:155
+#, elixir-autogen, elixir-format
+msgid "Clinical Expertise"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:176
+#, elixir-autogen, elixir-format
+msgid "Common Procedures"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:190
+#, elixir-autogen, elixir-format
+msgid "Conditions Treated"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:189
+#, elixir-autogen, elixir-format
+msgid "Confirm"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:119
+#, elixir-autogen, elixir-format
+msgid "Consultation Fee:"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:234
+#, elixir-autogen, elixir-format
+msgid "Credentials & Research"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:81
+#, elixir-autogen, elixir-format
+msgid "Departments"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:207
+#, elixir-autogen, elixir-format
+msgid "Doctor Registration"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:133
+#, elixir-autogen, elixir-format
+msgid "Doctors"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:59
+#, elixir-autogen, elixir-format
+msgid "Filters"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "Find a Doctor"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:169
+#, elixir-autogen, elixir-format
+msgid "Find the doctor you need by specialty, body part, or location"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:17
+#, elixir-autogen, elixir-format
+msgid "Find the right"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:403
+#, elixir-autogen, elixir-format
+msgid "Found"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:151
+#, elixir-autogen, elixir-format
+msgid "From our users"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:191
+#, elixir-autogen, elixir-format
+msgid "Get confirmation and reminders for your appointment"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:48
+#, elixir-autogen, elixir-format
+msgid "Highest Rated"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:57
+#, elixir-autogen, elixir-format
+msgid "Hospitals On Duty Today"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:160
+#, elixir-autogen, elixir-format
+msgid "How It Works"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:319
+#, elixir-autogen, elixir-format
+msgid "Insurance"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:204
+#, elixir-autogen, elixir-format
+msgid "Join the Medic network and increase your visibility"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:218
+#, elixir-autogen, elixir-format
+msgid "Languages Spoken:"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:516
+#, elixir-autogen, elixir-format
+msgid "Load more results"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:289
+#, elixir-autogen, elixir-format
+msgid "Location"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:336
+#, elixir-autogen, elixir-format
+msgid "Max Price"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:53
+#, elixir-autogen, elixir-format
+msgid "Most Reviews"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:480
+#, elixir-autogen, elixir-format
+msgid "Next available: Tomorrow"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:478
+#, elixir-autogen, elixir-format
+msgid "Next:"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:501
+#, elixir-autogen, elixir-format
+msgid "No doctors found"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:408
+#, elixir-autogen, elixir-format
+msgid "No results found"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:76
+#, elixir-autogen, elixir-format
+msgid "On Call"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:122
+#: lib/medic_web/live/search_live.ex:363
+#, elixir-autogen, elixir-format
+msgid "Online Booking"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:104
+#, elixir-autogen, elixir-format
+msgid "Popular Specialties"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "Price: High to Low"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:49
+#, elixir-autogen, elixir-format
+msgid "Price: Low to High"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:149
+#: lib/medic_web/live/search_live.ex:294
+#, elixir-autogen, elixir-format
+msgid "Rating"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:59
+#, elixir-autogen, elixir-format
+msgid "Reg:"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:40
+#: lib/medic_web/live/home_live.ex:167
+#: lib/medic_web/live/search_live.ex:35
+#, elixir-autogen, elixir-format
+msgid "Search"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:21
+#, elixir-autogen, elixir-format
+msgid "Search among hundreds of specialized doctors and book your appointment instantly."
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:35
+#, elixir-autogen, elixir-format
+msgid "Search by doctor, specialty, or body part..."
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:27
+#, elixir-autogen, elixir-format
+msgid "Search by name, specialty, or body part..."
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:406
+#, elixir-autogen, elixir-format
+msgid "Searching..."
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:180
+#, elixir-autogen, elixir-format
+msgid "See real-time availability and pick a convenient time slot"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:112
+#, elixir-autogen, elixir-format
+msgid "Select a time that works for you"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:265
+#, elixir-autogen, elixir-format
+msgid "Selected Publications"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:42
+#, elixir-autogen, elixir-format
+msgid "Sort by"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:162
+#, elixir-autogen, elixir-format
+msgid "Specialized Focus"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:206
+#, elixir-autogen, elixir-format
+msgid "Specialty"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:442
+#, elixir-autogen, elixir-format
+msgid "Verified"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:377
+#, elixir-autogen, elixir-format
+msgid "Verified Only"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:80
+#, elixir-autogen, elixir-format
+msgid "Verified Profile"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:74
+#, elixir-autogen, elixir-format
+msgid "Verified Reviews"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:135
+#, elixir-autogen, elixir-format
+msgid "Verified professionals"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:125
+#, elixir-autogen, elixir-format
+msgid "Video Available"
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:91
+#, elixir-autogen, elixir-format
+msgid "Video Visit"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:487
+#, elixir-autogen, elixir-format
+msgid "View Profile"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:503
+#, elixir-autogen, elixir-format
+msgid "We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters."
+msgstr ""
+
+#: lib/medic_web/live/doctor_live/show.ex:46
+#, elixir-autogen, elixir-format
+msgid "Years Exp."
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:17
+#, elixir-autogen, elixir-format
+msgid "doctor"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:403
+#, elixir-autogen, elixir-format
+msgid "doctors"
+msgstr ""
+
+#: lib/medic_web/live/home_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "for you"
+msgstr ""
+
+#: lib/medic_web/live/search_live.ex:468
+#, elixir-autogen, elixir-format
+msgid "initial visit"
 msgstr ""

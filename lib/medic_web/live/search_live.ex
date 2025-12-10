@@ -15,7 +15,7 @@ defmodule MedicWeb.SearchLive do
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <%!-- Header with Search --%>
       <div class="mb-8 space-y-4">
-        <h1 class="text-3xl font-bold text-base-content">Find a Doctor</h1>
+        <h1 class="text-3xl font-bold text-base-content"><%= gettext("Find a Doctor") %></h1>
         <.form for={%{}} action={~p"/search"} method="get" class="w-full">
           <div class="flex flex-col sm:flex-row gap-3 items-center">
             <label class="input input-lg w-full bg-base-100 shadow-sm border border-base-200 flex items-center gap-3 focus-within:outline-none focus-within:ring-0 focus-within:border-base-300 transition-colors">
@@ -24,7 +24,7 @@ defmodule MedicWeb.SearchLive do
                 type="text"
                 id="search-input"
                 value={@query}
-                placeholder="Search by name, specialty, or body part..."
+                placeholder={gettext("Search by name, specialty, or body part...")}
                 phx-keyup="search"
                 phx-debounce="200"
                 class="grow"
@@ -32,31 +32,31 @@ defmodule MedicWeb.SearchLive do
               />
             </label>
             <button type="submit" class="btn btn-primary btn-lg w-full sm:w-auto gap-2 shadow-lg">
-              <.icon name="hero-arrow-path-rounded-square" class="w-5 h-5" /> Search
+              <.icon name="hero-arrow-path-rounded-square" class="w-5 h-5" /> <%= gettext("Search") %>
             </button>
           </div>
         </.form>
 
         <div class="flex flex-col gap-3">
           <div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
-            <span class="font-semibold uppercase tracking-wide">Sort by</span>
+            <span class="font-semibold uppercase tracking-wide"><%= gettext("Sort by") %></span>
             <select
               name="value"
               phx-change="sort"
               class="select select-bordered select-sm sm:select-md bg-base-100 shadow"
             >
-              <option value="rating" selected={@sort_by == "rating"}>Highest Rated</option>
-              <option value="price_low" selected={@sort_by == "price_low"}>Price: Low to High</option>
+              <option value="rating" selected={@sort_by == "rating"}><%= gettext("Highest Rated") %></option>
+              <option value="price_low" selected={@sort_by == "price_low"}><%= gettext("Price: Low to High") %></option>
               <option value="price_high" selected={@sort_by == "price_high"}>
-                Price: High to Low
+                <%= gettext("Price: High to Low") %>
               </option>
-              <option value="reviews" selected={@sort_by == "reviews"}>Most Reviews</option>
+              <option value="reviews" selected={@sort_by == "reviews"}><%= gettext("Most Reviews") %></option>
             </select>
           </div>
 
           <div class="flex gap-2 lg:hidden">
             <button class="btn btn-outline w-full justify-center" phx-click="toggle_filters">
-              <.icon name="hero-adjustments-horizontal" class="w-5 h-5" /> Filters
+              <.icon name="hero-adjustments-horizontal" class="w-5 h-5" /> <%= gettext("Filters") %>
               <%= if active_filter_count(assigns) > 0 do %>
                 <div class="badge badge-primary badge-sm"><%= active_filter_count(assigns) %></div>
               <% end %>
@@ -68,7 +68,7 @@ defmodule MedicWeb.SearchLive do
       <%!-- Active Filters Chips --%>
       <%= if has_active_filters?(assigns) do %>
         <div class="flex flex-wrap items-center gap-2 mb-6">
-          <span class="text-sm text-base-content/70">Active filters:</span>
+          <span class="text-sm text-base-content/70"><%= gettext("Active filters:") %></span>
 
           <%= if @selected_specialty do %>
             <button
@@ -119,12 +119,12 @@ defmodule MedicWeb.SearchLive do
               phx-value-filter="online_booking"
               class="badge badge-primary gap-1 p-3"
             >
-              Online Booking <.icon name="hero-x-mark" class="w-3 h-3" />
+              <%= gettext("Online Booking") %> <.icon name="hero-x-mark" class="w-3 h-3" />
             </button>
           <% end %>
 
           <button phx-click="clear_filters" class="btn btn-ghost btn-xs">
-            Clear all
+            <%= gettext("Clear all") %>
           </button>
         </div>
       <% end %>
@@ -203,7 +203,7 @@ defmodule MedicWeb.SearchLive do
               <%!-- Specialty Filter --%>
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-medium">Specialty</span>
+                  <span class="label-text font-medium"><%= gettext("Specialty") %></span>
                 </label>
                 <div class="dropdown w-full">
                   <div
@@ -213,7 +213,7 @@ defmodule MedicWeb.SearchLive do
                   >
                     <%= if @selected_specialty,
                       do: get_specialty_name(@specialties, @selected_specialty),
-                      else: "All Specialties" %>
+                      else: gettext("All Specialties") %>
                     <.icon name="hero-chevron-down" class="w-4 h-4" />
                   </div>
                   <ul
@@ -226,7 +226,7 @@ defmodule MedicWeb.SearchLive do
                         phx-value-value=""
                         class={if !@selected_specialty, do: "active"}
                       >
-                        All Specialties
+                        <%= gettext("All Specialties") %>
                       </a>
                     </li>
                     <%= for specialty <- @specialties do %>
@@ -247,7 +247,7 @@ defmodule MedicWeb.SearchLive do
               <%!-- City Filter --%>
               <div class="form-control w-full">
                 <label class="label">
-                  <span class="label-text font-medium">City</span>
+                  <span class="label-text font-medium"><%= gettext("City") %></span>
                 </label>
                 <div class="dropdown w-full">
                   <div
@@ -255,7 +255,7 @@ defmodule MedicWeb.SearchLive do
                     role="button"
                     class="btn btn-outline w-full justify-between font-normal"
                   >
-                    <%= if @selected_city, do: @selected_city, else: "All Cities" %>
+                    <%= if @selected_city, do: @selected_city, else: gettext("All Cities") %>
                     <.icon name="hero-chevron-down" class="w-4 h-4" />
                   </div>
                   <ul
@@ -268,7 +268,7 @@ defmodule MedicWeb.SearchLive do
                         phx-value-value=""
                         class={if !@selected_city, do: "active"}
                       >
-                        All Cities
+                        <%= gettext("All Cities") %>
                       </a>
                     </li>
                     <%= for city <- @cities do %>
@@ -291,7 +291,7 @@ defmodule MedicWeb.SearchLive do
               <%!-- Rating Filter --%>
               <div>
                 <h3 class="font-medium text-sm mb-3 flex items-center gap-2">
-                  <.icon name="hero-star" class="w-4 h-4 text-warning" /> Rating
+                  <.icon name="hero-star" class="w-4 h-4 text-warning" /> <%= gettext("Rating") %>
                 </h3>
                 <div class="space-y-2">
                   <label class="label cursor-pointer justify-start gap-3 p-0">
@@ -303,7 +303,7 @@ defmodule MedicWeb.SearchLive do
                       phx-click="filter_rating"
                       phx-value-value=""
                     />
-                    <span class="label-text">Any rating</span>
+                    <span class="label-text"><%= gettext("Any rating") %></span>
                   </label>
                   <label class="label cursor-pointer justify-start gap-3 p-0">
                     <input
@@ -333,7 +333,7 @@ defmodule MedicWeb.SearchLive do
               <%!-- Price Filter --%>
               <div>
                 <h3 class="font-medium text-sm mb-3 flex items-center gap-2">
-                  <.icon name="hero-currency-euro" class="w-4 h-4 text-success" /> Max Price
+                  <.icon name="hero-currency-euro" class="w-4 h-4 text-success" /> <%= gettext("Max Price") %>
                 </h3>
                 <input
                   type="range"
@@ -347,7 +347,7 @@ defmodule MedicWeb.SearchLive do
                 <div class="flex justify-between text-xs text-base-content/60 mt-2 font-medium">
                   <span>€30</span>
                   <span class="text-primary">
-                    <%= if @max_price, do: "≤ €#{@max_price}", else: "Any" %>
+                    <%= if @max_price, do: "≤ €#{@max_price}", else: gettext("Any") %>
                   </span>
                   <span>€200</span>
                 </div>
@@ -360,7 +360,7 @@ defmodule MedicWeb.SearchLive do
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <span class="label-text flex items-center gap-2">
-                      <.icon name="hero-calendar" class="w-4 h-4 text-info" /> Online Booking
+                      <.icon name="hero-calendar" class="w-4 h-4 text-info" /> <%= gettext("Online Booking") %>
                     </span>
                     <input
                       type="checkbox"
@@ -374,7 +374,7 @@ defmodule MedicWeb.SearchLive do
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <span class="label-text flex items-center gap-2">
-                      <.icon name="hero-check-badge" class="w-4 h-4 text-success" /> Verified Only
+                      <.icon name="hero-check-badge" class="w-4 h-4 text-success" /> <%= gettext("Verified Only") %>
                     </span>
                     <input
                       type="checkbox"
@@ -389,7 +389,7 @@ defmodule MedicWeb.SearchLive do
               <div class="divider my-0"></div>
 
               <button phx-click="clear_filters" class="btn btn-outline btn-sm w-full">
-                Clear All Filters
+                <%= gettext("Clear All Filters") %>
               </button>
             </div>
           </div>
@@ -400,12 +400,12 @@ defmodule MedicWeb.SearchLive do
           <%!-- Results Count --%>
           <div class="text-sm text-base-content/70 mb-6">
             <%= if @total > 0 do %>
-              Found <span class="font-bold text-base-content"><%= @total %></span> doctors
+              <%= gettext("Found") %> <span class="font-bold text-base-content"><%= @total %></span> <%= gettext("doctors") %>
             <% else %>
               <%= if @searching do %>
-                <span class="loading loading-spinner loading-xs"></span> Searching...
+                <span class="loading loading-spinner loading-xs"></span> <%= gettext("Searching...") %>
               <% else %>
-                No results found
+                <%= gettext("No results found") %>
               <% end %>
             <% end %>
           </div>
@@ -439,7 +439,7 @@ defmodule MedicWeb.SearchLive do
                   <div class="flex flex-wrap gap-2 my-2">
                     <%= if doctor.verified do %>
                       <div class="badge badge-success gap-1 text-success-content badge-sm">
-                        <.icon name="hero-check-badge" class="size-[1em]" /> Verified
+                        <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext("Verified") %>
                       </div>
                     <% end %>
                   </div>
@@ -465,7 +465,7 @@ defmodule MedicWeb.SearchLive do
                         <.icon name="hero-currency-euro" class="size-[1.2em] text-base-content/60" />
                         <span>
                           <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
-                          <span class="text-xs text-base-content/60 ml-0.5">initial visit</span>
+                          <span class="text-xs text-base-content/60 ml-0.5"><%= gettext("initial visit") %></span>
                         </span>
                       </div>
                     <% end %>
@@ -475,16 +475,16 @@ defmodule MedicWeb.SearchLive do
                       <.icon name="hero-calendar" class="size-[1.2em]" />
                       <span>
                         <%= if doctor.next_available_slot do %>
-                          Next: <%= Calendar.strftime(doctor.next_available_slot, "%b %d, %H:%M") %>
+                          <%= gettext("Next:") %> <%= Calendar.strftime(doctor.next_available_slot, "%b %d, %H:%M") %>
                         <% else %>
-                          Next available: Tomorrow
+                          <%= gettext("Next available: Tomorrow") %>
                         <% end %>
                       </span>
                     </div>
                   </div>
 
                   <div class="justify-end card-actions mt-4">
-                    <button class="btn btn-primary btn-sm">View Profile</button>
+                    <button class="btn btn-primary btn-sm"><%= gettext("View Profile") %></button>
                   </div>
                 </div>
               </.link>
@@ -498,12 +498,12 @@ defmodule MedicWeb.SearchLive do
                 <div class="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
                   <.icon name="hero-magnifying-glass" class="w-12 h-12 text-base-content/30" />
                 </div>
-                <h3 class="text-xl font-bold mb-2">No doctors found</h3>
+                <h3 class="text-xl font-bold mb-2"><%= gettext("No doctors found") %></h3>
                 <p class="text-base-content/70 max-w-md mx-auto mb-6">
-                  We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters.
+                  <%= gettext("We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters.") %>
                 </p>
                 <button phx-click="clear_filters" class="btn btn-primary">
-                  Clear all filters
+                  <%= gettext("Clear all filters") %>
                 </button>
               </div>
             </div>
@@ -513,7 +513,7 @@ defmodule MedicWeb.SearchLive do
           <%= if @has_more do %>
             <div class="text-center mt-12">
               <button phx-click="load_more" class="btn btn-outline btn-primary btn-wide">
-                Load more results <.icon name="hero-arrow-down" class="w-4 h-4" />
+                <%= gettext("Load more results") %> <.icon name="hero-arrow-down" class="w-4 h-4" />
               </button>
             </div>
           <% end %>
