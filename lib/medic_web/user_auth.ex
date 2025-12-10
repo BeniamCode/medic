@@ -25,12 +25,16 @@ defmodule MedicWeb.UserAuth do
   def log_in_user(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
+    
+    # For admins, always redirect to admin dashboard to avoid stuck redirect loops
+    redirect_path = 
+       if user.role == "admin", do: signed_in_path(user), else: user_return_to || signed_in_path(user)
 
     conn
     |> renew_session()
     |> put_token_in_session(token)
     |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: user_return_to || signed_in_path(user))
+    |> redirect(to: redirect_path)
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
@@ -130,6 +134,22 @@ defmodule MedicWeb.UserAuth do
     end
   end
 
+  def on_mount(:ensure_admin_user, _params, session, socket) do
+    socket = mount_current_user(socket, session)
+    user = socket.assigns.current_user
+
+    if user && user.role == "admin" do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "You must log in as an admin to access this page.")
+        |> Phoenix.LiveView.redirect(to: ~p"/medic/login")
+
+      {:halt, socket}
+    end
+  end
+
   def on_mount(:redirect_if_user_is_authenticated, _params, session, socket) do
     socket = mount_current_user(socket, session)
 
@@ -179,6 +199,23 @@ defmodule MedicWeb.UserAuth do
     end
   end
 
+  @doc """
+  Used for routes that require the user to be an admin.
+  """
+  def require_admin_user(conn, _opts) do
+    user = conn.assigns[:current_user]
+
+    if user && user.role == "admin" do
+      conn
+    else
+      conn
+      |> put_flash(:error, "You must log in as an admin to access this page.")
+      |> maybe_store_return_to()
+      |> redirect(to: ~p"/medic/login")
+      |> halt()
+    end
+  end
+
   defp put_token_in_session(conn, token) do
     conn
     |> put_session(:user_token, token)
@@ -192,5 +229,6 @@ defmodule MedicWeb.UserAuth do
   defp maybe_store_return_to(conn), do: conn
 
   defp signed_in_path(%{role: "doctor"}), do: ~p"/dashboard/doctor"
+  defp signed_in_path(%{role: "admin"}), do: ~p"/medic/dashboard"
   defp signed_in_path(_user), do: ~p"/dashboard"
 end

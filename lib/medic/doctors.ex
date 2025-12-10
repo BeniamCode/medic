@@ -8,6 +8,7 @@ defmodule Medic.Doctors do
   resources do
     resource Medic.Doctors.Doctor
     resource Medic.Doctors.Specialty
+    resource Medic.Doctors.Review
   end
 
   import Ecto.Query
@@ -147,7 +148,7 @@ defmodule Medic.Doctors do
     result =
       %Doctor{}
       |> Doctor.changeset(attrs)
-      |> Ecto.Changeset.put_assoc(:user, user)
+      |> Ecto.Changeset.put_change(:user_id, user.id)
       |> Repo.insert()
 
     case result do

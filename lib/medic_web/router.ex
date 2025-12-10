@@ -18,6 +18,10 @@ defmodule MedicWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :admin_layout do
+    plug :put_layout, html: {MedicWeb.Layouts, :admin}
+  end
+
   # Public routes
   scope "/", MedicWeb do
     pipe_through :browser
@@ -84,6 +88,34 @@ defmodule MedicWeb.Router do
 
       live_dashboard "/dashboard", metrics: MedicWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end
+
+  # --- Admin Routes ---
+  scope "/medic", MedicWeb do
+    pipe_through [:browser, :admin_layout]
+
+    # Admin Login (Unauthenticated)
+    live_session :admin_login,
+      on_mount: [{MedicWeb.UserAuth, :mount_current_user}, {MedicWeb.LiveHooks.Locale, :default}] do
+      live "/login", AdminLoginLive
+    end
+
+    # Authenticated Admin Routes
+    live_session :admin_dashboard,
+      on_mount: [{MedicWeb.UserAuth, :ensure_admin_user}, {MedicWeb.LiveHooks.Locale, :default}] do
+      # Dashboard
+       live "/dashboard", Admin.DashboardLive
+       
+       # CMS
+       live "/doctors", Admin.DoctorLive.Index, :index
+       live "/doctors/:id/edit", Admin.DoctorLive.Index, :edit
+
+       live "/patients", Admin.PatientLive.Index, :index
+       live "/patients/:id/edit", Admin.PatientLive.Index, :edit
+
+       live "/reviews", Admin.ReviewLive.Index, :index
+       live "/financials", Admin.FinancialLive, :index
     end
   end
 end

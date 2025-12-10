@@ -96,6 +96,7 @@ defmodule Medic.Doctors.Doctor do
     belongs_to :user, Medic.Accounts.User
     belongs_to :specialty, Medic.Doctors.Specialty
     has_many :appointments, Medic.Appointments.Appointment
+    has_many :reviews, Medic.Doctors.Review
   end
 
   calculations do

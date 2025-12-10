@@ -168,8 +168,12 @@ defmodule Medic.Accounts do
   Generates a session token.
   """
   def generate_user_session_token(user) do
-    {token, user_token} = UserToken.build_session_token(user)
-    Repo.insert!(user_token)
+    {token, user_token_attrs} = UserToken.build_session_token(user)
+    
+    UserToken
+    |> Ash.Changeset.for_create(:create, user_token_attrs)
+    |> Ash.create!()
+    
     token
   end
 
@@ -204,8 +208,12 @@ defmodule Medic.Accounts do
     if user.confirmed_at do
       {:error, :already_confirmed}
     else
-      {encoded_token, user_token} = UserToken.build_email_token(user, "confirm")
-      Repo.insert!(user_token)
+      {encoded_token, user_token_attrs} = UserToken.build_email_token(user, "confirm")
+      
+      UserToken
+      |> Ash.Changeset.for_create(:create, user_token_attrs)
+      |> Ash.create!()
+      
       # In production, send actual email via Swoosh
       {:ok, %{to: user.email, url: confirmation_url_fun.(encoded_token)}}
     end
@@ -245,8 +253,12 @@ defmodule Medic.Accounts do
   """
   def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
       when is_function(reset_password_url_fun, 1) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
-    Repo.insert!(user_token)
+    {encoded_token, user_token_attrs} = UserToken.build_email_token(user, "reset_password")
+    
+    UserToken
+    |> Ash.Changeset.for_create(:create, user_token_attrs)
+    |> Ash.create!()
+    
     {:ok, %{to: user.email, url: reset_password_url_fun.(encoded_token)}}
   end
 
