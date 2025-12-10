@@ -23,6 +23,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import { MapboxMap } from "./hooks/mapbox_map"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
@@ -86,7 +87,8 @@ const Hooks = {
         calLink: username
       });
     }
-  }
+  },
+  MapboxMap: MapboxMap
 };
 
 const getThemeColor = (variableName, fallbackVariable) => {

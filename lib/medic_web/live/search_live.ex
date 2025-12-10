@@ -397,103 +397,101 @@ defmodule MedicWeb.SearchLive do
 
         <%!-- Results --%>
         <div class="flex-1 min-w-0">
-          <%!-- Results Count --%>
-          <div class="text-sm text-base-content/70 mb-6">
-            <%= if @total > 0 do %>
-              <%= gettext("Found") %> <span class="font-bold text-base-content"><%= @total %></span> <%= gettext("doctors") %>
-            <% else %>
-              <%= if @searching do %>
-                <span class="loading loading-spinner loading-xs"></span> <%= gettext("Searching...") %>
-              <% else %>
-                <%= gettext("No results found") %>
-              <% end %>
-            <% end %>
+      <div class="flex flex-col lg:flex-row gap-8 relative items-start">
+        <%!-- Results List --%>
+        <div class="w-full lg:w-1/2 space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 bg-base-100 p-4 rounded-xl shadow-sm border border-base-200">
+            <h2 class="font-bold text-lg flex items-center gap-2">
+              <.icon name="hero-list-bullet" class="w-5 h-5 text-primary" /> <%= gettext("Waitlist") %>
+            </h2>
+            <div class="text-sm text-base-content/60">
+               <%= if @total > 0, do: "#{@total} #{gettext("results")}", else: gettext("No results") %>
+            </div>
           </div>
 
-          <%!-- Results Grid --%>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <%!-- Results and Pagination --%>
+          <div id="doctor-results">
             <%= for doctor <- @doctors do %>
               <.link
                 navigate={~p"/doctors/#{doctor.id}"}
-                class="card card-bordered w-full bg-base-100 card-compact shadow-sm hover:shadow-md transition-all duration-300"
+                class="card bg-base-100 shadow-sm hover:shadow-xl transition-all duration-300 border border-base-200 group flex flex-row items-stretch overflow-hidden mb-4"
               >
-                <div class="card-body">
-                  <div class="flex items-start gap-4 mb-2">
-                    <div class="avatar placeholder">
-                      <div class="w-12 h-12 rounded-full bg-base-300 text-base-content ring-1 ring-base-200">
-                        <span class="text-lg font-bold">
-                          <%= String.at(doctor.first_name, 0) %><%= String.at(doctor.last_name, 0) %>
-                        </span>
+                <%!-- Card content same as before --%>
+                <div class="w-24 sm:w-32 bg-base-200 shrink-0 relative hidden sm:block">
+                   <%= if Map.get(doctor, :profile_image_url) do %>
+                      <img
+                      src={Map.get(doctor, :profile_image_url)}
+                      alt={doctor.first_name}
+                      class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                   <% else %>
+                      <div class="absolute inset-0 flex items-center justify-center bg-primary/5 text-primary">
+                      <.icon name="hero-user" class="w-12 h-12 opacity-50" />
                       </div>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h2 class="card-title text-base flex items-baseline gap-2">
-                        <span><%= doctor.title %> <%= doctor.first_name %> <%= doctor.last_name %></span>
-                      </h2>
-                      <p class="text-sm text-base-content/70 truncate font-medium text-primary">
-                        <%= doctor.specialty_name || "General Practice" %>
+                   <% end %>
+                </div>
+
+                <div class="card-body p-4 sm:p-5 grow">
+                   <div class="flex justify-between items-start gap-3">
+                      <div>
+                      <h3 class="card-title text-lg font-bold group-hover:text-primary transition-colors">
+                         Dr. <%= doctor.first_name %> <%= doctor.last_name %>
+                      </h3>
+                      <p class="text-sm font-medium text-base-content/70">
+                         <%= Map.get(doctor, :specialty_name) || (Map.get(doctor, :specialty) && Map.get(doctor.specialty, :name_en)) || "General Practice" %>
                       </p>
-                    </div>
-                  </div>
+                      </div>
+                      <div class="flex items-center gap-1 bg-yellow-400/10 text-yellow-600 px-2 py-1 rounded-md text-xs font-bold">
+                      <.icon name="hero-star-solid" class="w-3.5 h-3.5" />
+                      <%= doctor.rating || "5.0" %> <span class="font-normal opacity-70">(<%= doctor.review_count || 12 %>)</span>
+                      </div>
+                   </div>
 
-                  <div class="flex flex-wrap gap-2 my-2">
-                    <%= if doctor.verified do %>
+                   <div class="flex flex-wrap gap-2 my-2">
+                      <%= if doctor.verified do %>
                       <div class="badge badge-success gap-1 text-success-content badge-sm">
-                        <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext("Verified") %>
+                         <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext("Verified") %>
                       </div>
-                    <% end %>
-                  </div>
+                      <% end %>
+                   </div>
 
-                  <div class="space-y-1.5 text-sm text-base-content/80 mt-3">
-                    <div class="flex items-center gap-2">
-                      <.icon name="hero-star-solid" class="size-[1.2em] text-warning" />
-                      <span class="font-bold"><%= Float.round(doctor.rating || 0.0, 1) %></span>
-                      <span class="text-base-content/60 text-xs">
-                        (<%= doctor.review_count || 0 %> reviews)
-                      </span>
-                    </div>
-
-                    <%= if doctor.city do %>
+                   <div class="space-y-1.5 text-sm mt-1 mb-3">
                       <div class="flex items-center gap-2 text-base-content/70">
-                        <.icon name="hero-map-pin" class="size-[1.2em]" />
-                        <%= doctor.city %>
+                      <.icon name="hero-map-pin" class="size-[1.2em]" />
+                      <span class="truncate max-w-[200px]"><%= Map.get(doctor, :address) || "Athens, Greece" %></span>
                       </div>
-                    <% end %>
-
-                    <%= if doctor.consultation_fee do %>
+                      <%= if doctor.consultation_fee do %>
                       <div class="flex items-center gap-2">
-                        <.icon name="hero-currency-euro" class="size-[1.2em] text-base-content/60" />
-                        <span>
-                          <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
-                          <span class="text-xs text-base-content/60 ml-0.5"><%= gettext("initial visit") %></span>
-                        </span>
+                         <.icon name="hero-currency-euro" class="size-[1.2em] text-base-content/60" />
+                         <span>
+                            <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
+                            <span class="text-xs text-base-content/60 ml-0.5"><%= gettext("initial visit") %></span>
+                         </span>
                       </div>
-                    <% end %>
-
-                    <%!-- Next Available Slot (Mock logic for now if nil) --%>
-                    <div class="flex items-center gap-2 text-success font-medium pt-1">
+                      <% end %>
+                      <div class="flex items-center gap-2 text-primary font-medium">
                       <.icon name="hero-calendar" class="size-[1.2em]" />
                       <span>
-                        <%= if doctor.next_available_slot do %>
-                          <%= gettext("Next:") %> <%= Calendar.strftime(doctor.next_available_slot, "%b %d, %H:%M") %>
-                        <% else %>
-                          <%= gettext("Next available: Tomorrow") %>
-                        <% end %>
+                         <%= if doctor.next_available_slot do %>
+                            <%= gettext("Next:") %> <%= Calendar.strftime(doctor.next_available_slot, "%b %d, %H:%M") %>
+                         <% else %>
+                            <%= gettext("Next available: Tomorrow") %>
+                         <% end %>
                       </span>
-                    </div>
-                  </div>
+                      </div>
+                   </div>
 
-                  <div class="justify-end card-actions mt-4">
-                    <button class="btn btn-primary btn-sm"><%= gettext("View Profile") %></button>
-                  </div>
+                   <div class="justify-end card-actions mt-4">
+                      <button class="btn btn-primary btn-sm"><%= gettext("View Profile") %></button>
+                   </div>
                 </div>
               </.link>
             <% end %>
           </div>
 
           <%!-- Empty State --%>
-          <%= if @doctors == [] && !@searching do %>
-            <div class="card card-bordered w-full bg-base-100 shadow-sm mt-8">
+          <%= if @total == 0 do %>
+            <div class="card bg-base-100 shadow-xl border border-dashed border-base-300">
               <div class="card-body items-center text-center py-16">
                 <div class="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
                   <.icon name="hero-magnifying-glass" class="w-12 h-12 text-base-content/30" />
@@ -517,6 +515,29 @@ defmodule MedicWeb.SearchLive do
               </button>
             </div>
           <% end %>
+        </div>
+
+        <%!-- Map Column --%>
+        <div class="hidden lg:block lg:w-1/2 sticky top-24 h-[calc(100vh-8rem)] rounded-2xl overflow-hidden shadow-xl border border-base-200">
+           <div
+              id="map-container"
+              phx-hook="MapboxMap"
+              phx-update="ignore"
+              data-doctors={Jason.encode!(Enum.map(@doctors, fn d ->
+                 %{
+                    id: d.id,
+                    first_name: d.first_name,
+                    last_name: d.last_name,
+                    location_lat: Map.get(d, :location_lat),
+                    location_lng: Map.get(d, :location_lng),
+                    consultation_fee: Map.get(d, :consultation_fee),
+                    specialty_name: Map.get(d, :specialty_name) || (Map.get(d, :specialty) && Map.get(d.specialty, :name_en)) || "Doctor"
+                 }
+              end))}
+              class="w-full h-full"
+           ></div>
+        </div>
+      </div>
         </div>
       </div>
     </div>

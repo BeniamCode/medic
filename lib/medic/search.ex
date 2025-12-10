@@ -39,6 +39,7 @@ defmodule Medic.Search do
       %{"name" => "first_name", "type" => "string"},
       %{"name" => "last_name", "type" => "string"},
       %{"name" => "full_name", "type" => "string"},
+      %{"name" => "profile_image_url", "type" => "string", "optional" => true},
       %{"name" => "specialty_name", "type" => "string", "optional" => true},
       %{"name" => "specialty_slug", "type" => "string", "optional" => true, "facet" => true},
       %{"name" => "bio", "type" => "string", "optional" => true},
@@ -242,7 +243,10 @@ defmodule Medic.Search do
           do: DateTime.from_unix!(doc["next_available_slot"]),
           else: nil
         ),
-      has_cal_com: doc["has_cal_com"]
+      has_cal_com: doc["has_cal_com"],
+      location_lat: if(doc["location"], do: Enum.at(doc["location"], 0), else: nil),
+      location_lng: if(doc["location"], do: Enum.at(doc["location"], 1), else: nil),
+      profile_image_url: doc["profile_image_url"]
     }
   end
 
@@ -252,6 +256,7 @@ defmodule Medic.Search do
       "first_name" => doctor.first_name || "",
       "last_name" => doctor.last_name || "",
       "full_name" => "#{doctor.first_name} #{doctor.last_name}",
+      "profile_image_url" => doctor.profile_image_url || "",
       "bio" => doctor.bio || "",
       "city" => doctor.city || "",
       "address" => doctor.address || "",
