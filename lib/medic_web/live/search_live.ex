@@ -36,7 +36,7 @@ defmodule MedicWeb.SearchLive do
               end)
             )
           }
-          class="w-full h-full"
+          class="map-canvas"
         >
         </div>
       </div>
