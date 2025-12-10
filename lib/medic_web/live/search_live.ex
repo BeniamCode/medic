@@ -13,6 +13,34 @@ defmodule MedicWeb.SearchLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <%!-- Map Container (Full Width) --%>
+      <div class="w-full h-[500px] mb-8 rounded-2xl overflow-hidden shadow-xl border border-base-200 relative z-0">
+        <div
+          id="map-container"
+          phx-hook="MapboxMap"
+          phx-update="ignore"
+          data-doctors={
+            Jason.encode!(
+              Enum.map(@doctors, fn d ->
+                %{
+                  id: d.id,
+                  first_name: d.first_name,
+                  last_name: d.last_name,
+                  location_lat: Map.get(d, :location_lat),
+                  location_lng: Map.get(d, :location_lng),
+                  consultation_fee: Map.get(d, :consultation_fee),
+                  specialty_name:
+                    Map.get(d, :specialty_name) ||
+                      (Map.get(d, :specialty) && Map.get(d.specialty, :name_en)) || "Doctor"
+                }
+              end)
+            )
+          }
+          class="w-full h-full"
+        >
+        </div>
+      </div>
+
       <%!-- Header with Search --%>
       <div class="mb-8 space-y-4">
         <h1 class="text-3xl font-bold text-base-content"><%= gettext("Find a Doctor") %></h1>
@@ -37,31 +65,13 @@ defmodule MedicWeb.SearchLive do
           </div>
         </.form>
 
-        <div class="flex flex-col gap-3">
-          <div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
-            <span class="font-semibold uppercase tracking-wide"><%= gettext("Sort by") %></span>
-            <select
-              name="value"
-              phx-change="sort"
-              class="select select-bordered select-sm sm:select-md bg-base-100 shadow"
-            >
-              <option value="rating" selected={@sort_by == "rating"}><%= gettext("Highest Rated") %></option>
-              <option value="price_low" selected={@sort_by == "price_low"}><%= gettext("Price: Low to High") %></option>
-              <option value="price_high" selected={@sort_by == "price_high"}>
-                <%= gettext("Price: High to Low") %>
-              </option>
-              <option value="reviews" selected={@sort_by == "reviews"}><%= gettext("Most Reviews") %></option>
-            </select>
-          </div>
-
-          <div class="flex gap-2 lg:hidden">
-            <button class="btn btn-outline w-full justify-center" phx-click="toggle_filters">
-              <.icon name="hero-adjustments-horizontal" class="w-5 h-5" /> <%= gettext("Filters") %>
-              <%= if active_filter_count(assigns) > 0 do %>
-                <div class="badge badge-primary badge-sm"><%= active_filter_count(assigns) %></div>
-              <% end %>
-            </button>
-          </div>
+        <div class="flex gap-2 lg:hidden">
+          <button class="btn btn-outline w-full justify-center" phx-click="toggle_filters">
+            <.icon name="hero-adjustments-horizontal" class="w-5 h-5" /> <%= gettext("Filters") %>
+            <%= if active_filter_count(assigns) > 0 do %>
+              <div class="badge badge-primary badge-sm"><%= active_filter_count(assigns) %></div>
+            <% end %>
+          </button>
         </div>
       </div>
 
@@ -152,27 +162,6 @@ defmodule MedicWeb.SearchLive do
       <% end %>
 
       <%!-- Main Content --%>
-      
-      <%!-- Map Container (Full Width) --%>
-      <div class="w-full h-[500px] mb-8 rounded-2xl overflow-hidden shadow-xl border border-base-200 relative z-0">
-         <div
-            id="map-container"
-            phx-hook="MapboxMap"
-            phx-update="ignore"
-            data-doctors={Jason.encode!(Enum.map(@doctors, fn d ->
-               %{
-                  id: d.id,
-                  first_name: d.first_name,
-                  last_name: d.last_name,
-                  location_lat: Map.get(d, :location_lat),
-                  location_lng: Map.get(d, :location_lng),
-                  consultation_fee: Map.get(d, :consultation_fee),
-                  specialty_name: Map.get(d, :specialty_name) || (Map.get(d, :specialty) && Map.get(d.specialty, :name_en)) || "Doctor"
-               }
-            end))}
-            class="w-full h-full"
-         ></div>
-      </div>
 
       <div class="flex flex-col lg:flex-row gap-8">
         <%!-- Filter Sidebar --%>
@@ -184,7 +173,9 @@ defmodule MedicWeb.SearchLive do
                 class="collapse-title text-sm font-bold text-secondary flex items-center gap-2 cursor-pointer hover:bg-base-200/50 transition-colors"
                 phx-click="toggle_on_duty"
               >
-                <.icon name="hero-building-office-2" class="w-5 h-5" /> <%= gettext("On Duty Hospitals Today") %>
+                <.icon name="hero-building-office-2" class="w-5 h-5" /> <%= gettext(
+                  "On Duty Hospitals Today"
+                ) %>
               </div>
               <div class="collapse-content text-xs">
                 <ul class="space-y-4 pt-2">
@@ -192,7 +183,7 @@ defmodule MedicWeb.SearchLive do
                     <li class="border-b border-base-content/10 last:border-0 pb-3 last:pb-0">
                       <div class="font-bold text-sm text-base-content"><%= hospital.name %></div>
                       <%= if hospital.address do %>
-                         <div class="flex items-start gap-1.5 mt-1 text-base-content/70">
+                        <div class="flex items-start gap-1.5 mt-1 text-base-content/70">
                           <.icon name="hero-map-pin" class="w-3.5 h-3.5 mt-0.5 shrink-0" />
                           <span><%= hospital.address %>, <%= hospital.city %></span>
                         </div>
@@ -200,14 +191,21 @@ defmodule MedicWeb.SearchLive do
                       <%= if hospital.phone do %>
                         <div class="flex items-center gap-1.5 mt-1 text-base-content/70">
                           <.icon name="hero-phone" class="w-3.5 h-3.5 shrink-0" />
-                          <a href={"tel:#{hospital.phone}"} class="hover:text-primary transition-colors"><%= hospital.phone %></a>
+                          <a
+                            href={"tel:#{hospital.phone}"}
+                            class="hover:text-primary transition-colors"
+                          >
+                            <%= hospital.phone %>
+                          </a>
                         </div>
                       <% end %>
 
                       <div class="text-base-content/60 mt-2 flex flex-wrap gap-1">
                         <%= for schedule <- hospital.hospital_schedules do %>
                           <%= for specialty <- schedule.specialties do %>
-                            <div class="badge badge-xs badge-secondary badge-outline"><%= specialty %></div>
+                            <div class="badge badge-xs badge-secondary badge-outline">
+                              <%= specialty %>
+                            </div>
                           <% end %>
                         <% end %>
                       </div>
@@ -355,7 +353,9 @@ defmodule MedicWeb.SearchLive do
               <%!-- Price Filter --%>
               <div>
                 <h3 class="font-medium text-sm mb-3 flex items-center gap-2">
-                  <.icon name="hero-currency-euro" class="w-4 h-4 text-success" /> <%= gettext("Max Price") %>
+                  <.icon name="hero-currency-euro" class="w-4 h-4 text-success" /> <%= gettext(
+                    "Max Price"
+                  ) %>
                 </h3>
                 <input
                   type="range"
@@ -382,7 +382,9 @@ defmodule MedicWeb.SearchLive do
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <span class="label-text flex items-center gap-2">
-                      <.icon name="hero-calendar" class="w-4 h-4 text-info" /> <%= gettext("Online Booking") %>
+                      <.icon name="hero-calendar" class="w-4 h-4 text-info" /> <%= gettext(
+                        "Online Booking"
+                      ) %>
                     </span>
                     <input
                       type="checkbox"
@@ -396,7 +398,9 @@ defmodule MedicWeb.SearchLive do
                 <div class="form-control">
                   <label class="label cursor-pointer">
                     <span class="label-text flex items-center gap-2">
-                      <.icon name="hero-check-badge" class="w-4 h-4 text-success" /> <%= gettext("Verified Only") %>
+                      <.icon name="hero-check-badge" class="w-4 h-4 text-success" /> <%= gettext(
+                        "Verified Only"
+                      ) %>
                     </span>
                     <input
                       type="checkbox"
@@ -424,10 +428,14 @@ defmodule MedicWeb.SearchLive do
             <div class="w-full space-y-6">
               <div class="flex flex-wrap items-center justify-between gap-4 bg-base-100 p-4 rounded-xl shadow-sm border border-base-200">
                 <h2 class="font-bold text-lg flex items-center gap-2">
-                  <.icon name="hero-list-bullet" class="w-5 h-5 text-primary" /> <%= gettext("Waitlist") %>
+                  <.icon name="hero-list-bullet" class="w-5 h-5 text-primary" /> <%= gettext(
+                    "Waitlist"
+                  ) %>
                 </h2>
                 <div class="text-sm text-base-content/60">
-                   <%= if @total > 0, do: "#{@total} #{gettext("results")}", else: gettext("No results") %>
+                  <%= if @total > 0,
+                    do: "#{@total} #{gettext("results")}",
+                    else: gettext("No results") %>
                 </div>
               </div>
 
@@ -440,73 +448,97 @@ defmodule MedicWeb.SearchLive do
                   >
                     <%!-- Card Image --%>
                     <div class="w-full h-48 bg-base-200 shrink-0 relative">
-                       <%= if Map.get(doctor, :profile_image_url) do %>
-                          <img
+                      <%= if Map.get(doctor, :profile_image_url) do %>
+                        <img
                           src={Map.get(doctor, :profile_image_url)}
                           alt={doctor.first_name}
                           class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          />
-                       <% else %>
-                          <div class="absolute inset-0 flex items-center justify-center bg-primary/5 text-primary">
+                        />
+                      <% else %>
+                        <div class="absolute inset-0 flex items-center justify-center bg-primary/5 text-primary">
                           <.icon name="hero-user" class="w-16 h-16 opacity-50" />
-                          </div>
-                       <% end %>
-                       
-                       <div class="absolute top-2 right-2 flex flex-col gap-1 items-end">
-                          <div class="flex items-center gap-1 bg-base-100/90 backdrop-blur-sm text-yellow-600 px-2 py-1 rounded-md text-xs font-bold shadow-sm">
-                             <.icon name="hero-star-solid" class="w-3.5 h-3.5" />
-                             <%= doctor.rating || "5.0" %> <span class="font-normal opacity-70">(<%= doctor.review_count || 12 %>)</span>
-                          </div>
-                       </div>
+                        </div>
+                      <% end %>
+
+                      <div class="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                        <div class="flex items-center gap-1 bg-base-100/90 backdrop-blur-sm text-yellow-600 px-2 py-1 rounded-md text-xs font-bold shadow-sm">
+                          <.icon name="hero-star-solid" class="w-3.5 h-3.5" />
+                          <%= doctor.rating || "5.0" %>
+                          <span class="font-normal opacity-70">
+                            (<%= doctor.review_count || 12 %>)
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
                     <div class="card-body p-4 sm:p-5 grow flex flex-col">
-                       <div class="flex-1">
-                          <h3 class="card-title text-lg font-bold group-hover:text-primary transition-colors line-clamp-1">
-                             Dr. <%= doctor.first_name %> <%= doctor.last_name %>
-                          </h3>
-                          <p class="text-sm font-medium text-base-content/70 mb-3">
-                             <%= Map.get(doctor, :specialty_name) || (Map.get(doctor, :specialty) && Map.get(doctor.specialty, :name_en)) || "General Practice" %>
-                          </p>
-                          
-                          <div class="flex flex-wrap gap-2 mb-3">
-                             <%= if doctor.verified do %>
-                             <div class="badge badge-success gap-1 text-success-content badge-sm badge-outline bg-success/5">
-                                <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext("Verified") %>
-                             </div>
-                             <% end %>
+                      <div class="flex-1">
+                        <h3 class="card-title text-lg font-bold group-hover:text-primary transition-colors line-clamp-1">
+                          Dr. <%= doctor.first_name %> <%= doctor.last_name %>
+                        </h3>
+                        <p class="text-sm font-medium text-base-content/70 mb-3">
+                          <%= Map.get(doctor, :specialty_name) ||
+                            (Map.get(doctor, :specialty) && Map.get(doctor.specialty, :name_en)) ||
+                            "General Practice" %>
+                        </p>
+
+                        <div class="flex flex-wrap gap-2 mb-3">
+                          <%= if doctor.verified do %>
+                            <div class="badge badge-success gap-1 text-success-content badge-sm badge-outline bg-success/5">
+                              <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext(
+                                "Verified"
+                              ) %>
+                            </div>
+                          <% end %>
+                        </div>
+
+                        <div class="space-y-2 text-sm text-base-content/80">
+                          <div class="flex items-start gap-2">
+                            <.icon
+                              name="hero-map-pin"
+                              class="size-[1.2em] mt-0.5 shrink-0 opacity-70"
+                            />
+                            <span class="line-clamp-2 leading-tight">
+                              <%= Map.get(doctor, :address) || "Athens, Greece" %>
+                            </span>
                           </div>
-    
-                          <div class="space-y-2 text-sm text-base-content/80">
-                             <div class="flex items-start gap-2">
-                                <.icon name="hero-map-pin" class="size-[1.2em] mt-0.5 shrink-0 opacity-70" />
-                                <span class="line-clamp-2 leading-tight"><%= Map.get(doctor, :address) || "Athens, Greece" %></span>
-                             </div>
-                             <%= if doctor.consultation_fee do %>
-                             <div class="flex items-center gap-2">
-                                <.icon name="hero-currency-euro" class="size-[1.2em] shrink-0 opacity-70" />
-                                <span>
-                                   <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
-                                   <span class="text-xs text-base-content/60 ml-0.5"><%= gettext("initial visit") %></span>
+                          <%= if doctor.consultation_fee do %>
+                            <div class="flex items-center gap-2">
+                              <.icon
+                                name="hero-currency-euro"
+                                class="size-[1.2em] shrink-0 opacity-70"
+                              />
+                              <span>
+                                <span class="font-semibold text-base-content">
+                                  €<%= trunc(doctor.consultation_fee) %>
                                 </span>
-                             </div>
-                             <% end %>
-                             <div class="flex items-center gap-2 text-primary font-medium pt-1">
-                                <.icon name="hero-calendar" class="size-[1.2em] shrink-0" />
-                                <span>
-                                   <%= if doctor.next_available_slot do %>
-                                      <%= gettext("Next:") %> <%= Calendar.strftime(doctor.next_available_slot, "%b %d") %>
-                                   <% else %>
-                                      <%= gettext("Tomorrow") %>
-                                   <% end %>
+                                <span class="text-xs text-base-content/60 ml-0.5">
+                                  <%= gettext("initial visit") %>
                                 </span>
-                             </div>
+                              </span>
+                            </div>
+                          <% end %>
+                          <div class="flex items-center gap-2 text-primary font-medium pt-1">
+                            <.icon name="hero-calendar" class="size-[1.2em] shrink-0" />
+                            <span>
+                              <%= if doctor.next_available_slot do %>
+                                <%= gettext("Next:") %> <%= Calendar.strftime(
+                                  doctor.next_available_slot,
+                                  "%b %d"
+                                ) %>
+                              <% else %>
+                                <%= gettext("Tomorrow") %>
+                              <% end %>
+                            </span>
                           </div>
-                       </div>
-    
-                       <div class="card-actions mt-4 pt-4 border-t border-base-content/10">
-                          <button class="btn btn-primary btn-sm w-full btn-outline hover:!text-white group-hover:btn-active"><%= gettext("View Profile") %></button>
-                       </div>
+                        </div>
+                      </div>
+
+                      <div class="card-actions mt-4 pt-4 border-t border-base-content/10">
+                        <button class="btn btn-primary btn-sm w-full btn-outline hover:!text-white group-hover:btn-active">
+                          <%= gettext("View Profile") %>
+                        </button>
+                      </div>
                     </div>
                   </.link>
                 <% end %>
@@ -521,7 +553,9 @@ defmodule MedicWeb.SearchLive do
                     </div>
                     <h3 class="text-xl font-bold mb-2"><%= gettext("No doctors found") %></h3>
                     <p class="text-base-content/70 max-w-md mx-auto mb-6">
-                      <%= gettext("We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters.") %>
+                      <%= gettext(
+                        "We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters."
+                      ) %>
                     </p>
                     <button phx-click="clear_filters" class="btn btn-primary">
                       <%= gettext("Clear all filters") %>
@@ -534,13 +568,14 @@ defmodule MedicWeb.SearchLive do
               <%= if @has_more do %>
                 <div class="text-center mt-12">
                   <button phx-click="load_more" class="btn btn-outline btn-primary btn-wide">
-                    <%= gettext("Load more results") %> <.icon name="hero-arrow-down" class="w-4 h-4" />
+                    <%= gettext("Load more results") %>
+                    <.icon name="hero-arrow-down" class="w-4 h-4" />
                   </button>
                 </div>
               <% end %>
             </div>
           </div>
-      </div>
+        </div>
       </div>
     </div>
     """
