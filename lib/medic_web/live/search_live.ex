@@ -151,7 +151,29 @@ defmodule MedicWeb.SearchLive do
         </div>
       <% end %>
 
-      <%!-- Main Content: Sidebar + Results --%>
+      <%!-- Main Content --%>
+      
+      <%!-- Map Container (Full Width) --%>
+      <div class="w-full h-[500px] mb-8 rounded-2xl overflow-hidden shadow-xl border border-base-200 relative z-0">
+         <div
+            id="map-container"
+            phx-hook="MapboxMap"
+            phx-update="ignore"
+            data-doctors={Jason.encode!(Enum.map(@doctors, fn d ->
+               %{
+                  id: d.id,
+                  first_name: d.first_name,
+                  last_name: d.last_name,
+                  location_lat: Map.get(d, :location_lat),
+                  location_lng: Map.get(d, :location_lng),
+                  consultation_fee: Map.get(d, :consultation_fee),
+                  specialty_name: Map.get(d, :specialty_name) || (Map.get(d, :specialty) && Map.get(d.specialty, :name_en)) || "Doctor"
+               }
+            end))}
+            class="w-full h-full"
+         ></div>
+      </div>
+
       <div class="flex flex-col lg:flex-row gap-8">
         <%!-- Filter Sidebar --%>
         <aside class={"w-full lg:w-72 shrink-0 space-y-6 #{if @show_filters, do: "block", else: "hidden lg:block"}"}>
@@ -397,148 +419,128 @@ defmodule MedicWeb.SearchLive do
 
         <%!-- Results --%>
         <div class="flex-1 min-w-0">
-      <div class="flex flex-col lg:flex-row gap-8 relative items-start">
-        <%!-- Results List --%>
-        <div class="w-full lg:w-1/2 space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-4 bg-base-100 p-4 rounded-xl shadow-sm border border-base-200">
-            <h2 class="font-bold text-lg flex items-center gap-2">
-              <.icon name="hero-list-bullet" class="w-5 h-5 text-primary" /> <%= gettext("Waitlist") %>
-            </h2>
-            <div class="text-sm text-base-content/60">
-               <%= if @total > 0, do: "#{@total} #{gettext("results")}", else: gettext("No results") %>
-            </div>
-          </div>
-
-          <%!-- Results and Pagination --%>
-          <div id="doctor-results">
-            <%= for doctor <- @doctors do %>
-              <.link
-                navigate={~p"/doctors/#{doctor.id}"}
-                class="card bg-base-100 shadow-sm hover:shadow-xl transition-all duration-300 border border-base-200 group flex flex-row items-stretch overflow-hidden mb-4"
-              >
-                <%!-- Card content same as before --%>
-                <div class="w-24 sm:w-32 bg-base-200 shrink-0 relative hidden sm:block">
-                   <%= if Map.get(doctor, :profile_image_url) do %>
-                      <img
-                      src={Map.get(doctor, :profile_image_url)}
-                      alt={doctor.first_name}
-                      class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                   <% else %>
-                      <div class="absolute inset-0 flex items-center justify-center bg-primary/5 text-primary">
-                      <.icon name="hero-user" class="w-12 h-12 opacity-50" />
-                      </div>
-                   <% end %>
+          <div class="flex flex-col gap-6 relative items-start">
+            <%!-- Results List --%>
+            <div class="w-full space-y-6">
+              <div class="flex flex-wrap items-center justify-between gap-4 bg-base-100 p-4 rounded-xl shadow-sm border border-base-200">
+                <h2 class="font-bold text-lg flex items-center gap-2">
+                  <.icon name="hero-list-bullet" class="w-5 h-5 text-primary" /> <%= gettext("Waitlist") %>
+                </h2>
+                <div class="text-sm text-base-content/60">
+                   <%= if @total > 0, do: "#{@total} #{gettext("results")}", else: gettext("No results") %>
                 </div>
-
-                <div class="card-body p-4 sm:p-5 grow">
-                   <div class="flex justify-between items-start gap-3">
-                      <div>
-                      <h3 class="card-title text-lg font-bold group-hover:text-primary transition-colors">
-                         Dr. <%= doctor.first_name %> <%= doctor.last_name %>
-                      </h3>
-                      <p class="text-sm font-medium text-base-content/70">
-                         <%= Map.get(doctor, :specialty_name) || (Map.get(doctor, :specialty) && Map.get(doctor.specialty, :name_en)) || "General Practice" %>
-                      </p>
-                      </div>
-                      <div class="flex items-center gap-1 bg-yellow-400/10 text-yellow-600 px-2 py-1 rounded-md text-xs font-bold">
-                      <.icon name="hero-star-solid" class="w-3.5 h-3.5" />
-                      <%= doctor.rating || "5.0" %> <span class="font-normal opacity-70">(<%= doctor.review_count || 12 %>)</span>
-                      </div>
-                   </div>
-
-                   <div class="flex flex-wrap gap-2 my-2">
-                      <%= if doctor.verified do %>
-                      <div class="badge badge-success gap-1 text-success-content badge-sm">
-                         <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext("Verified") %>
-                      </div>
-                      <% end %>
-                   </div>
-
-                   <div class="space-y-1.5 text-sm mt-1 mb-3">
-                      <div class="flex items-center gap-2 text-base-content/70">
-                      <.icon name="hero-map-pin" class="size-[1.2em]" />
-                      <span class="truncate max-w-[200px]"><%= Map.get(doctor, :address) || "Athens, Greece" %></span>
-                      </div>
-                      <%= if doctor.consultation_fee do %>
-                      <div class="flex items-center gap-2">
-                         <.icon name="hero-currency-euro" class="size-[1.2em] text-base-content/60" />
-                         <span>
-                            <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
-                            <span class="text-xs text-base-content/60 ml-0.5"><%= gettext("initial visit") %></span>
-                         </span>
-                      </div>
-                      <% end %>
-                      <div class="flex items-center gap-2 text-primary font-medium">
-                      <.icon name="hero-calendar" class="size-[1.2em]" />
-                      <span>
-                         <%= if doctor.next_available_slot do %>
-                            <%= gettext("Next:") %> <%= Calendar.strftime(doctor.next_available_slot, "%b %d, %H:%M") %>
-                         <% else %>
-                            <%= gettext("Next available: Tomorrow") %>
-                         <% end %>
-                      </span>
-                      </div>
-                   </div>
-
-                   <div class="justify-end card-actions mt-4">
-                      <button class="btn btn-primary btn-sm"><%= gettext("View Profile") %></button>
-                   </div>
-                </div>
-              </.link>
-            <% end %>
-          </div>
-
-          <%!-- Empty State --%>
-          <%= if @total == 0 do %>
-            <div class="card bg-base-100 shadow-xl border border-dashed border-base-300">
-              <div class="card-body items-center text-center py-16">
-                <div class="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
-                  <.icon name="hero-magnifying-glass" class="w-12 h-12 text-base-content/30" />
-                </div>
-                <h3 class="text-xl font-bold mb-2"><%= gettext("No doctors found") %></h3>
-                <p class="text-base-content/70 max-w-md mx-auto mb-6">
-                  <%= gettext("We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters.") %>
-                </p>
-                <button phx-click="clear_filters" class="btn btn-primary">
-                  <%= gettext("Clear all filters") %>
-                </button>
               </div>
-            </div>
-          <% end %>
 
-          <%!-- Load More --%>
-          <%= if @has_more do %>
-            <div class="text-center mt-12">
-              <button phx-click="load_more" class="btn btn-outline btn-primary btn-wide">
-                <%= gettext("Load more results") %> <.icon name="hero-arrow-down" class="w-4 h-4" />
-              </button>
-            </div>
-          <% end %>
-        </div>
+              <%!-- Results and Pagination --%>
+              <div id="doctor-results" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <%= for doctor <- @doctors do %>
+                  <.link
+                    navigate={~p"/doctors/#{doctor.id}"}
+                    class="card bg-base-100 shadow-sm hover:shadow-xl transition-all duration-300 border border-base-200 group flex flex-col items-stretch overflow-hidden h-full"
+                  >
+                    <%!-- Card Image --%>
+                    <div class="w-full h-48 bg-base-200 shrink-0 relative">
+                       <%= if Map.get(doctor, :profile_image_url) do %>
+                          <img
+                          src={Map.get(doctor, :profile_image_url)}
+                          alt={doctor.first_name}
+                          class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                       <% else %>
+                          <div class="absolute inset-0 flex items-center justify-center bg-primary/5 text-primary">
+                          <.icon name="hero-user" class="w-16 h-16 opacity-50" />
+                          </div>
+                       <% end %>
+                       
+                       <div class="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                          <div class="flex items-center gap-1 bg-base-100/90 backdrop-blur-sm text-yellow-600 px-2 py-1 rounded-md text-xs font-bold shadow-sm">
+                             <.icon name="hero-star-solid" class="w-3.5 h-3.5" />
+                             <%= doctor.rating || "5.0" %> <span class="font-normal opacity-70">(<%= doctor.review_count || 12 %>)</span>
+                          </div>
+                       </div>
+                    </div>
 
-        <%!-- Map Column --%>
-        <div class="hidden lg:block lg:w-1/2 sticky top-24 h-[calc(100vh-8rem)] rounded-2xl overflow-hidden shadow-xl border border-base-200">
-           <div
-              id="map-container"
-              phx-hook="MapboxMap"
-              phx-update="ignore"
-              data-doctors={Jason.encode!(Enum.map(@doctors, fn d ->
-                 %{
-                    id: d.id,
-                    first_name: d.first_name,
-                    last_name: d.last_name,
-                    location_lat: Map.get(d, :location_lat),
-                    location_lng: Map.get(d, :location_lng),
-                    consultation_fee: Map.get(d, :consultation_fee),
-                    specialty_name: Map.get(d, :specialty_name) || (Map.get(d, :specialty) && Map.get(d.specialty, :name_en)) || "Doctor"
-                 }
-              end))}
-              class="w-full h-full"
-           ></div>
-        </div>
+                    <div class="card-body p-4 sm:p-5 grow flex flex-col">
+                       <div class="flex-1">
+                          <h3 class="card-title text-lg font-bold group-hover:text-primary transition-colors line-clamp-1">
+                             Dr. <%= doctor.first_name %> <%= doctor.last_name %>
+                          </h3>
+                          <p class="text-sm font-medium text-base-content/70 mb-3">
+                             <%= Map.get(doctor, :specialty_name) || (Map.get(doctor, :specialty) && Map.get(doctor.specialty, :name_en)) || "General Practice" %>
+                          </p>
+                          
+                          <div class="flex flex-wrap gap-2 mb-3">
+                             <%= if doctor.verified do %>
+                             <div class="badge badge-success gap-1 text-success-content badge-sm badge-outline bg-success/5">
+                                <.icon name="hero-check-badge" class="size-[1em]" /> <%= gettext("Verified") %>
+                             </div>
+                             <% end %>
+                          </div>
+    
+                          <div class="space-y-2 text-sm text-base-content/80">
+                             <div class="flex items-start gap-2">
+                                <.icon name="hero-map-pin" class="size-[1.2em] mt-0.5 shrink-0 opacity-70" />
+                                <span class="line-clamp-2 leading-tight"><%= Map.get(doctor, :address) || "Athens, Greece" %></span>
+                             </div>
+                             <%= if doctor.consultation_fee do %>
+                             <div class="flex items-center gap-2">
+                                <.icon name="hero-currency-euro" class="size-[1.2em] shrink-0 opacity-70" />
+                                <span>
+                                   <span class="font-semibold text-base-content">€<%= trunc(doctor.consultation_fee) %></span>
+                                   <span class="text-xs text-base-content/60 ml-0.5"><%= gettext("initial visit") %></span>
+                                </span>
+                             </div>
+                             <% end %>
+                             <div class="flex items-center gap-2 text-primary font-medium pt-1">
+                                <.icon name="hero-calendar" class="size-[1.2em] shrink-0" />
+                                <span>
+                                   <%= if doctor.next_available_slot do %>
+                                      <%= gettext("Next:") %> <%= Calendar.strftime(doctor.next_available_slot, "%b %d") %>
+                                   <% else %>
+                                      <%= gettext("Tomorrow") %>
+                                   <% end %>
+                                </span>
+                             </div>
+                          </div>
+                       </div>
+    
+                       <div class="card-actions mt-4 pt-4 border-t border-base-content/10">
+                          <button class="btn btn-primary btn-sm w-full btn-outline hover:!text-white group-hover:btn-active"><%= gettext("View Profile") %></button>
+                       </div>
+                    </div>
+                  </.link>
+                <% end %>
+              </div>
+
+              <%!-- Empty State --%>
+              <%= if @total == 0 do %>
+                <div class="card bg-base-100 shadow-xl border border-dashed border-base-300">
+                  <div class="card-body items-center text-center py-16">
+                    <div class="w-24 h-24 bg-base-200 rounded-full flex items-center justify-center mb-4">
+                      <.icon name="hero-magnifying-glass" class="w-12 h-12 text-base-content/30" />
+                    </div>
+                    <h3 class="text-xl font-bold mb-2"><%= gettext("No doctors found") %></h3>
+                    <p class="text-base-content/70 max-w-md mx-auto mb-6">
+                      <%= gettext("We couldn't find any doctors matching your current filters. Try adjusting your search terms or removing some filters.") %>
+                    </p>
+                    <button phx-click="clear_filters" class="btn btn-primary">
+                      <%= gettext("Clear all filters") %>
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Load More --%>
+              <%= if @has_more do %>
+                <div class="text-center mt-12">
+                  <button phx-click="load_more" class="btn btn-outline btn-primary btn-wide">
+                    <%= gettext("Load more results") %> <.icon name="hero-arrow-down" class="w-4 h-4" />
+                  </button>
+                </div>
+              <% end %>
+            </div>
+          </div>
       </div>
-        </div>
       </div>
     </div>
     """
