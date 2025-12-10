@@ -68,4 +68,20 @@ defmodule MedicWeb.Layouts do
     </div>
     """
   end
+
+  def user_display_name(nil), do: nil
+
+  def user_display_name(%{doctor: %{first_name: first, last_name: last}})
+      when not is_nil(first) do
+    "Dr. #{first} #{last}"
+  end
+
+  def user_display_name(%{patient: %{first_name: first, last_name: last}})
+      when not is_nil(first) do
+    "#{first} #{last}"
+  end
+
+  def user_display_name(%{email: email}) do
+    email
+  end
 end

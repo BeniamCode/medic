@@ -18,6 +18,14 @@
           <li><a href="?locale=el" class={if @locale == "el", do: "active"}>Ελληνικά</a></li>
         </ul>
       </div>
+      <%= if @current_user do %>
+        <div class="hidden md:flex flex-col items-end pr-2 text-base-content">
+          <span class="text-xs text-base-content/60"><%= gettext("Signed in as") %></span>
+          <span class="text-sm font-semibold">
+            <%= MedicWeb.Layouts.user_display_name(@current_user) %>
+          </span>
+        </div>
+      <% end %>
       <button
         type="button"
         class="btn btn-circle btn-ghost bg-base-100/50 backdrop-blur shadow-sm hover:rotate-12 transition-transform duration-300"

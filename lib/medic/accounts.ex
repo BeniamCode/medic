@@ -12,6 +12,7 @@ defmodule Medic.Accounts do
 
   alias Medic.Repo
   alias Medic.Accounts.{User, UserToken}
+  alias Medic.{Doctors, Patients}
 
   ## Database getters
 
@@ -76,9 +77,19 @@ defmodule Medic.Accounts do
       {:error, %Ecto.Changeset{}}
   """
   def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
+    role = Map.get(attrs, "role") || Map.get(attrs, :role) || "patient"
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:user, User.registration_changeset(%User{}, attrs))
+    |> Ecto.Multi.run(:profile, fn _repo, %{user: user} ->
+      create_role_profile(user, role)
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{user: user}} -> {:ok, user}
+      {:error, :user, changeset, _} -> {:error, changeset}
+      {:error, :profile, changeset, _} -> {:error, changeset}
+    end
   end
 
   @doc """
@@ -169,11 +180,11 @@ defmodule Medic.Accounts do
   """
   def generate_user_session_token(user) do
     {token, user_token_attrs} = UserToken.build_session_token(user)
-    
+
     UserToken
     |> Ash.Changeset.for_create(:create, user_token_attrs)
     |> Ash.create!()
-    
+
     token
   end
 
@@ -182,7 +193,10 @@ defmodule Medic.Accounts do
   """
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query)
+
+    query
+    |> Repo.one()
+    |> maybe_preload_profile()
   end
 
   @doc """
@@ -191,6 +205,57 @@ defmodule Medic.Accounts do
   def delete_user_session_token(token) do
     Repo.delete_all(UserToken.by_token_and_context_query(token, "session"))
     :ok
+  end
+
+  defp maybe_preload_profile(nil), do: nil
+
+  defp maybe_preload_profile(user) do
+    Repo.preload(user, [:doctor, :patient])
+  end
+
+  defp create_role_profile(user, "doctor") do
+    {first, last} = inferred_names(user.email, default_last: "Doctor")
+    Doctors.create_doctor(user, %{first_name: first, last_name: last})
+  end
+
+  defp create_role_profile(user, "patient") do
+    {first, last} = inferred_names(user.email, default_last: "Patient")
+    Patients.create_patient(user, %{first_name: first, last_name: last})
+  end
+
+  defp create_role_profile(_user, _role), do: {:ok, nil}
+
+  defp inferred_names(nil, opts) do
+    {Keyword.get(opts, :default_first, "New"), Keyword.get(opts, :default_last, "User")}
+  end
+
+  defp inferred_names(email, opts) do
+    default_first = Keyword.get(opts, :default_first, "New")
+    default_last = Keyword.get(opts, :default_last, "User")
+
+    local_part =
+      email
+      |> String.split("@")
+      |> List.first()
+      |> to_string()
+      |> String.replace(~r/[^a-zA-Z]+/, " ")
+
+    parts =
+      local_part
+      |> String.split()
+      |> Enum.reject(&(&1 == ""))
+
+    case parts do
+      [first, last | _] -> {format_name(first), format_name(last)}
+      [single] -> {format_name(single), default_last}
+      _ -> {default_first, default_last}
+    end
+  end
+
+  defp format_name(name) do
+    name
+    |> String.downcase()
+    |> String.capitalize()
   end
 
   ## Confirmation
@@ -209,11 +274,11 @@ defmodule Medic.Accounts do
       {:error, :already_confirmed}
     else
       {encoded_token, user_token_attrs} = UserToken.build_email_token(user, "confirm")
-      
+
       UserToken
       |> Ash.Changeset.for_create(:create, user_token_attrs)
       |> Ash.create!()
-      
+
       # In production, send actual email via Swoosh
       {:ok, %{to: user.email, url: confirmation_url_fun.(encoded_token)}}
     end
@@ -254,11 +319,11 @@ defmodule Medic.Accounts do
   def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
       when is_function(reset_password_url_fun, 1) do
     {encoded_token, user_token_attrs} = UserToken.build_email_token(user, "reset_password")
-    
+
     UserToken
     |> Ash.Changeset.for_create(:create, user_token_attrs)
     |> Ash.create!()
-    
+
     {:ok, %{to: user.email, url: reset_password_url_fun.(encoded_token)}}
   end
 
