@@ -3,22 +3,38 @@ import {
   Box,
   Button,
   Card,
+  Container,
   Divider,
+  Grid,
   Group,
   List,
-  SimpleGrid,
+  Paper,
   Stack,
+  Tabs,
   Text,
   Textarea,
-  Title
+  ThemeIcon,
+  Title,
+  Avatar,
+  Rating,
+  rem,
+  SimpleGrid
 } from '@mantine/core'
-import { IconCalendar, IconClock, IconPhoneCall, IconShieldCheck, IconVideo } from '@tabler/icons-react'
-import type { ReactElement } from 'react'
+import {
+  IconCalendar,
+  IconClock,
+  IconMapPin,
+  IconPhoneCall,
+  IconShieldCheck,
+  IconVideo,
+  IconInfoCircle,
+  IconStethoscope,
+  IconUser,
+  IconMessageCircle
+} from '@tabler/icons-react'
 import { useState } from 'react'
 import { router } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
-
-import { PublicLayout } from '@/layouts/PublicLayout'
 import type { AppPageProps } from '@/types/app'
 
 export type DoctorProfile = {
@@ -55,26 +71,14 @@ type AvailabilityDay = {
 
 type PageProps = AppPageProps<{ doctor: DoctorProfile; availability: AvailabilityDay[] }>
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <Stack gap="xs">
-    <Title order={3} fz="lg">
-      {title}
-    </Title>
-    {children}
-  </Stack>
-)
-
-const ListPills = ({ items }: { items: string[] }) => (
-  <Group gap="xs" wrap="wrap">
-    {items.map((item) => (
-      <Badge key={item} color="gray" variant="light">
-        {item}
-      </Badge>
-    ))}
+const SectionTitle = ({ children, icon: Icon }: { children: React.ReactNode, icon?: any }) => (
+  <Group mb="md">
+    {Icon && <ThemeIcon variant="light" color="teal"><Icon size={18} /></ThemeIcon>}
+    <Title order={3} size="h4">{children}</Title>
   </Group>
 )
 
-const DoctorProfilePage = ({ doctor, app, auth, availability }: PageProps) => {
+export default function DoctorProfilePage({ doctor, app, auth, availability }: PageProps) {
   const { t } = useTranslation('default')
   const [selectedDateIndex, setSelectedDateIndex] = useState(0)
   const [selectedSlot, setSelectedSlot] = useState<{ starts_at: string; ends_at: string } | null>(null)
@@ -82,19 +86,6 @@ const DoctorProfilePage = ({ doctor, app, auth, availability }: PageProps) => {
   const [appointmentType, setAppointmentType] = useState<'in_person' | 'telemedicine'>(
     doctor.telemedicine_available ? 'in_person' : 'in_person'
   )
-
-  const heroSubtitle = [doctor.specialty?.name, doctor.city].filter(Boolean).join(' · ')
-  const heroImage =
-    doctor.profile_image_url ||
-    'https://images.unsplash.com/photo-1504435093301-4ff3a67e78f4?auto=format&fit=crop&w=500&q=80'
-
-  const nextSlot = doctor.next_available_slot
-    ? new Intl.DateTimeFormat(app.locale, {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      }).format(new Date(doctor.next_available_slot))
-    : null
 
   const days = availability || []
   const currentDay = days[selectedDateIndex]
@@ -117,217 +108,234 @@ const DoctorProfilePage = ({ doctor, app, auth, availability }: PageProps) => {
   }
 
   return (
-    <Stack gap="xl">
-      <Card shadow="lg" radius="xl" padding="xl">
-        <Group align="flex-start" gap="xl">
-          <Box w={{ base: '100%', sm: 200 }}>
-            <img src={heroImage} alt={doctor.full_name} className="w-full rounded-2xl object-cover" />
-          </Box>
-          <Stack gap="sm" flex={1}>
-            <Group gap="sm" align="center">
-              <Title order={1} fz={{ base: 'xl', sm: 36 }}>
-                {doctor.title || t('doctor.title_default', 'Dr.')} {doctor.full_name}
-              </Title>
-              {doctor.verified && (
-                <Badge leftSection={<IconShieldCheck size={14} />} color="teal" variant="light">
-                  {t('doctor.verified', 'Verified')}
-                </Badge>
-              )}
-            </Group>
-            <Text c="dimmed">{heroSubtitle}</Text>
-            <Group gap="md">
-              <Text fw={600}>{doctor.rating ? doctor.rating.toFixed(1) : '—'}</Text>
-              <Text c="dimmed">({doctor.review_count || 0} {t('doctor.reviews', 'reviews')})</Text>
-            </Group>
-            <Group gap="md">
-              {doctor.consultation_fee && (
-                <Text fw={600}>€{doctor.consultation_fee.toFixed(0)} {t('doctor.fee', 'per visit')}</Text>
-              )}
-              {doctor.telemedicine_available && (
-                <Badge color="indigo" leftSection={<IconVideo size={14} />}>
-                  {t('doctor.telemedicine', 'Video visits')}
-                </Badge>
-              )}
-            </Group>
-            <Group gap="md">
-              <Button href="#booking" component="a" leftSection={<IconCalendar size={16} />}>
-                {t('doctor.cta.book', 'Book appointment')}
-              </Button>
-              <Button variant="light" leftSection={<IconPhoneCall size={16} />}>
-                {t('doctor.cta.contact', 'Contact clinic')}
-              </Button>
-            </Group>
-            {nextSlot && (
-              <Badge variant="light" color="green">
-                {t('doctor.next_slot', { defaultValue: 'Next available {{slot}}', slot: nextSlot })}
-              </Badge>
-            )}
-          </Stack>
-        </Group>
-      </Card>
-
-      <Card withBorder padding="lg" radius="lg" id="booking">
-        <Stack gap="lg">
-          <Title order={3}>{t('doctor.booking.title', 'Book an appointment')}</Title>
-          {days.length === 0 ? (
-            <Text c="dimmed">{t('doctor.booking.no_availability', 'No availability published')}</Text>
-          ) : (
-            <>
-              <Group gap="sm" wrap="wrap">
-                {days.map((day, index) => (
-                  <Button
-                    key={day.date}
-                    variant={index === selectedDateIndex ? 'filled' : 'light'}
-                    onClick={() => {
-                      setSelectedDateIndex(index)
-                      setSelectedSlot(null)
-                    }}
-                  >
-                    {new Date(day.date).toLocaleDateString(app.locale, {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </Button>
-                ))}
-              </Group>
-              <Group gap="sm" wrap="wrap">
-                {currentDay?.slots.filter((slot) => slot.status === 'free').length ? (
-                  currentDay?.slots
-                    .filter((slot) => slot.status === 'free')
-                    .map((slot) => (
-                      <Button
-                        key={slot.starts_at}
-                        variant={selectedSlot?.starts_at === slot.starts_at ? 'filled' : 'outline'}
-                        onClick={() => setSelectedSlot(slot)}
-                        leftSection={<IconClock size={14} />}
-                      >
-                        {new Date(slot.starts_at).toLocaleTimeString(app.locale, {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </Button>
-                    ))
-                ) : (
-                  <Text c="dimmed">{t('doctor.booking.no_slots', 'No slots available')}</Text>
+    <Container size="xl" py="xl">
+      {/* Profile Header */}
+      <Card withBorder padding="xl" radius="lg" mb={40} shadow="sm">
+        <Grid align="center" gutter="xl">
+          <Grid.Col span={{ base: 12, sm: 'content' }}>
+            <Avatar
+              src={doctor.profile_image_url}
+              size={160}
+              radius="md"
+              color="teal"
+            >
+              {doctor.first_name[0]}
+            </Avatar>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 'auto' }}>
+            <Stack gap="xs">
+              <Group>
+                <Title order={1}>{doctor.title || 'Dr.'} {doctor.full_name}</Title>
+                {doctor.verified && (
+                  <Badge size="lg" color="teal" variant="light" leftSection={<IconShieldCheck size={14} />}>Verified</Badge>
                 )}
               </Group>
-              {doctor.telemedicine_available && (
-                <Group>
-                  <Button
-                    variant={appointmentType === 'in_person' ? 'filled' : 'light'}
-                    onClick={() => setAppointmentType('in_person')}
-                  >
-                    {t('doctor.booking.in_person', 'In person')}
-                  </Button>
-                  <Button
-                    variant={appointmentType === 'telemedicine' ? 'filled' : 'light'}
-                    onClick={() => setAppointmentType('telemedicine')}
-                  >
-                    {t('doctor.booking.telemed', 'Telemedicine')}
-                  </Button>
+
+              <Text size="lg" fw={500} c="dimmed">
+                {doctor.specialty?.name || 'General Practitioner'}
+                {doctor.hospital_affiliation && ` • ${doctor.hospital_affiliation}`}
+              </Text>
+
+              <Group gap="lg" mt="sm">
+                <Group gap={6}>
+                  <IconMapPin size={18} className="text-gray-500" />
+                  <Text>{doctor.city}</Text>
                 </Group>
-              )}
-              <Textarea
-                label={t('doctor.booking.notes', 'Notes for doctor')}
-                placeholder={t('doctor.booking.notes_placeholder', 'Symptoms, expectations…')}
-                value={notes}
-                onChange={(event) => setNotes(event.currentTarget.value)}
-              />
-              <Button onClick={handleBook} disabled={!selectedSlot}>
-                {t('doctor.booking.submit', 'Request appointment')}
-              </Button>
-            </>
-          )}
-        </Stack>
+                <Group gap={6}>
+                  <Rating value={doctor.rating || 0} readOnly />
+                  <Text fw={600}>{doctor.rating?.toFixed(1)}</Text>
+                  <Text c="dimmed">({doctor.review_count} reviews)</Text>
+                </Group>
+                {doctor.years_of_experience && (
+                  <Group gap={6}>
+                    <IconStethoscope size={18} className="text-gray-500" />
+                    <Text>{doctor.years_of_experience}+ Years Exp.</Text>
+                  </Group>
+                )}
+              </Group>
+            </Stack>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Card bg="teal.0" radius="md" p="lg" w="100%">
+              <Stack gap="xs" align="center">
+                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Consultation Fee</Text>
+                <Text size={rem(32)} fw={700} c="teal" lh={1}>
+                  {doctor.consultation_fee ? `€${doctor.consultation_fee}` : 'Ask'}
+                </Text>
+                {doctor.telemedicine_available && (
+                  <Badge color="blue" variant="dot">Video Available</Badge>
+                )}
+              </Stack>
+            </Card>
+          </Grid.Col>
+        </Grid>
       </Card>
 
-      <SimpleLayout doctor={doctor} t={t} />
-    </Stack>
+      <Grid gutter={40}>
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Tabs defaultValue="about" radius="md" color="teal">
+            <Tabs.List mb="xl">
+              <Tabs.Tab value="about" leftSection={<IconUser size={16} />}>About</Tabs.Tab>
+              <Tabs.Tab value="location" leftSection={<IconMapPin size={16} />}>Location</Tabs.Tab>
+              <Tabs.Tab value="reviews" leftSection={<IconMessageCircle size={16} />}>Reviews</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="about">
+              <Stack gap="xl">
+                <Box>
+                  <SectionTitle icon={IconInfoCircle}>Biography</SectionTitle>
+                  <Text lh={1.6}>{doctor.bio || "No biography available."}</Text>
+                </Box>
+
+                <Divider />
+
+                {doctor.sub_specialties.length > 0 && (
+                  <Box>
+                    <SectionTitle icon={IconStethoscope}>Special Interests</SectionTitle>
+                    <Group gap="xs">
+                      {doctor.sub_specialties.map(s => <Badge key={s} size="lg" variant="outline" color="gray">{s}</Badge>)}
+                    </Group>
+                  </Box>
+                )}
+
+                {(doctor.clinical_procedures.length > 0 || doctor.conditions_treated.length > 0) && (
+                  <Grid>
+                    <Grid.Col span={6}>
+                      <SectionTitle>Procedures</SectionTitle>
+                      <List spacing="xs" size="sm" center icon={<ThemeIcon color="teal" size={6} radius="xl"><IconStethoscope size={0} /></ThemeIcon>}>
+                        {doctor.clinical_procedures.map(p => <List.Item key={p}>{p}</List.Item>)}
+                      </List>
+                    </Grid.Col>
+                    <Grid.Col span={6}>
+                      <SectionTitle>Conditions</SectionTitle>
+                      <List spacing="xs" size="sm" center icon={<ThemeIcon color="teal" size={6} radius="xl"><IconStethoscope size={0} /></ThemeIcon>}>
+                        {doctor.conditions_treated.map(c => <List.Item key={c}>{c}</List.Item>)}
+                      </List>
+                    </Grid.Col>
+                  </Grid>
+                )}
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="location">
+              <Stack>
+                <SectionTitle icon={IconMapPin}>Practice Location</SectionTitle>
+                <Text size="lg">{doctor.address}, {doctor.city}</Text>
+                <Paper h={400} bg="gray.1" withBorder radius="md">
+                  {/* Map Implementation Placeholder */}
+                  <Stack align="center" justify="center" h="100%" c="dimmed">
+                    <IconMapPin size={40} />
+                    <Text>Map View</Text>
+                  </Stack>
+                </Paper>
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="reviews">
+              <Stack align="center" py="xl">
+                <Text c="dimmed">Reviews coming soon...</Text>
+              </Stack>
+            </Tabs.Panel>
+          </Tabs>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Stack style={{ position: 'sticky', top: 20 }}>
+            <Card shadow="sm" radius="lg" padding="xl" withBorder>
+              <Stack gap="lg">
+                <Title order={3} size="h4">{t('doctor.booking.title', 'Book Appointment')}</Title>
+
+                {doctor.telemedicine_available && (
+                  <Grid gutter="xs">
+                    <Grid.Col span={6}>
+                      <Button
+                        variant={appointmentType === 'in_person' ? 'filled' : 'light'}
+                        fullWidth
+                        onClick={() => setAppointmentType('in_person')}
+                        leftSection={<IconMapPin size={16} />}
+                      >
+                        Clinic
+                      </Button>
+                    </Grid.Col>
+                    <Grid.Col span={6}>
+                      <Button
+                        variant={appointmentType === 'telemedicine' ? 'filled' : 'light'}
+                        fullWidth
+                        onClick={() => setAppointmentType('telemedicine')}
+                        leftSection={<IconVideo size={16} />}
+                      >
+                        Video
+                      </Button>
+                    </Grid.Col>
+                  </Grid>
+                )}
+
+                {/* Date Selection */}
+                <Box>
+                  <Text fw={600} mb="xs">Select Date</Text>
+                  <Group gap="xs">
+                    {days.map((day, index) => (
+                      <Button
+                        key={day.date}
+                        variant={selectedDateIndex === index ? 'light' : 'default'}
+                        onClick={() => { setSelectedDateIndex(index); setSelectedSlot(null); }}
+                        size="compact-sm"
+                      >
+                        {new Date(day.date).toLocaleDateString(APP_LOCALE, { weekday: 'short', day: 'numeric' })}
+                      </Button>
+                    ))}
+                  </Group>
+                </Box>
+
+                <Divider />
+
+                {/* Slot Selection */}
+                <Box>
+                  <Text fw={600} mb="xs">Available Slots</Text>
+                  {currentDay?.slots?.length > 0 ? (
+                    <SimpleGrid cols={3} spacing="xs">
+                      {currentDay.slots
+                        .filter(slot => slot.status === 'free')
+                        .map(slot => (
+                          <Button
+                            key={slot.starts_at}
+                            variant={selectedSlot?.starts_at === slot.starts_at ? 'filled' : 'outline'}
+                            size="xs"
+                            onClick={() => setSelectedSlot(slot)}
+                            color="teal"
+                          >
+                            {new Date(slot.starts_at).toLocaleTimeString(APP_LOCALE, { hour: '2-digit', minute: '2-digit' })}
+                          </Button>
+                        ))
+                      }
+                    </SimpleGrid>
+                  ) : (
+                    <Text c="dimmed" size="sm">No slots available for this day.</Text>
+                  )}
+                </Box>
+
+                <Textarea
+                  placeholder="Reason for visit..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  minRows={3}
+                />
+
+                <Button size="lg" fullWidth onClick={handleBook} disabled={!selectedSlot}>
+                  Confirm Booking
+                </Button>
+
+                <Text size="xs" c="dimmed" ta="center">
+                  No payment required to book.
+                </Text>
+              </Stack>
+            </Card>
+          </Stack>
+        </Grid.Col>
+      </Grid>
+    </Container>
   )
 }
 
-const SimpleLayout = ({
-  doctor,
-  t
-}: {
-  doctor: DoctorProfile
-  t: ReturnType<typeof useTranslation>['t']
-}) => (
-  <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl">
-    <Stack gap="xl">
-      <Section title={t('doctor.sections.about', 'About')}>
-        <Text>{doctor.bio || t('doctor.sections.about_placeholder', 'Bio coming soon')}</Text>
-      </Section>
-
-      {doctor.sub_specialties.length > 0 && (
-        <Section title={t('doctor.sections.focus', 'Sub-specialties')}>
-          <ListPills items={doctor.sub_specialties} />
-        </Section>
-      )}
-
-      {doctor.clinical_procedures.length > 0 && (
-        <Section title={t('doctor.sections.procedures', 'Procedures')}>
-          <List spacing="xs">
-            {doctor.clinical_procedures.map((item) => (
-              <List.Item key={item}>{item}</List.Item>
-            ))}
-          </List>
-        </Section>
-      )}
-
-      {doctor.conditions_treated.length > 0 && (
-        <Section title={t('doctor.sections.conditions', 'Conditions treated')}>
-          <List spacing="xs">
-            {doctor.conditions_treated.map((item) => (
-              <List.Item key={item}>{item}</List.Item>
-            ))}
-          </List>
-        </Section>
-      )}
-    </Stack>
-
-    <Stack gap="xl">
-      <Card withBorder padding="lg" radius="lg">
-        <Stack gap="sm">
-          <Text fw={600}>{t('doctor.sections.details', 'Practice details')}</Text>
-          <Divider />
-          {doctor.hospital_affiliation && (
-            <Text>{doctor.hospital_affiliation}</Text>
-          )}
-          {doctor.address && <Text>{doctor.address}</Text>}
-          {doctor.languages.length > 0 && (
-            <Text c="dimmed">
-              {t('doctor.sections.languages', 'Languages')}: {doctor.languages.join(', ')}
-            </Text>
-          )}
-          {doctor.years_of_experience && (
-            <Text c="dimmed">
-              {doctor.years_of_experience}+ {t('doctor.sections.experience', 'years experience')}
-            </Text>
-          )}
-        </Stack>
-      </Card>
-
-      {doctor.awards.length > 0 && (
-        <Card withBorder padding="lg" radius="lg">
-          <Section title={t('doctor.sections.awards', 'Awards & recognition')}>
-            <List spacing="xs">
-              {doctor.awards.map((award) => (
-                <List.Item key={award}>{award}</List.Item>
-              ))}
-            </List>
-          </Section>
-        </Card>
-      )}
-    </Stack>
-  </SimpleGrid>
-)
-
-DoctorProfilePage.layout = (page: ReactElement<PageProps>) => (
-  <PublicLayout app={page.props.app} auth={page.props.auth}>
-    {page}
-  </PublicLayout>
-)
-
-export default DoctorProfilePage
+// Temporary constant until we pull from app props
+const APP_LOCALE = 'en-US'

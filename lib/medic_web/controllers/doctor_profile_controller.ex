@@ -15,7 +15,7 @@ defmodule MedicWeb.DoctorProfileController do
       |> assign_prop(:specialties, Enum.map(specialties, &specialty_option/1))
       |> render_inertia("Doctor/Profile")
     else
-      _ -> redirect(conn, to: ~p"/doctor")
+      _ -> redirect(conn, to: ~p"/dashboard/doctor")
     end
   end
 

@@ -5,6 +5,9 @@ export type SharedAuthUser = {
   email: string
   role: string
   confirmed_at: string | null
+  first_name?: string
+  last_name?: string
+  profile_image_url?: string | null
 }
 
 export type SharedAppProps = {

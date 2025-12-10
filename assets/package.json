@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "deploy": "npx tailwindcss --input=css/app.css --output=../priv/static/assets/css/app.css --minify",
-    "watch": "npx tailwindcss --input=css/app.css --output=../priv/static/assets/css/app.css --watch"
+    "deploy": "echo 'No CSS build step needed for Mantine'",
+    "watch": "echo 'No CSS watch step needed for Mantine'"
   },
   "keywords": [],
   "author": "",
@@ -14,8 +14,6 @@
     "@types/mapbox-gl": "^3.4.0",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
-    "daisyui": "^4.12.23",
-    "tailwindcss": "^3.4.17",
     "typescript": "^5.6.2"
   },
   "dependencies": {
@@ -30,7 +28,6 @@
     "@mantine/form": "^7.13.0",
     "@mantine/notifications": "^7.13.0",
     "@tabler/icons-react": "^3.22.0",
-    "@tailwindcss/forms": "^0.5.10",
     "date-fns": "^3.6.0",
     "i18next": "^23.15.1",
     "mapbox-gl": "^3.6.0",

@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import AppLayout from '../layouts/AppShell'
 
 export type PageComponent<P = Record<string, unknown>> = ComponentType<P> & {
   layout?: (page: React.ReactNode) => React.ReactNode
@@ -9,7 +10,9 @@ type Loader = () => Promise<{ default: PageComponent<any> }>
 const pageRegistry: Record<string, Loader> = {
   'Public/Home': () => import('./public/Home'),
   'Public/Search': () => import('./public/Search'),
-  'Public/DoctorProfile': () => import('./public/DoctorProfile')
+  'Public/DoctorProfile': () => import('./public/DoctorProfile'),
+  'Auth/Login': () => import('./auth/Login'),
+  'Auth/Register': () => import('./auth/Register')
 }
 
 const privatePages: Record<string, Loader> = {
@@ -33,5 +36,8 @@ export const resolvePage = async (name: string) => {
     throw new Error(`Unknown Inertia page: ${name}`)
   }
 
-  return loader()
+  const page = await loader()
+  page.default.layout ??= (pageNode: React.ReactNode) => <AppLayout>{pageNode} </AppLayout>
+
+  return page
 }

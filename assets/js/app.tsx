@@ -3,7 +3,7 @@ import '@mantine/dates/styles.css'
 import '@mantine/notifications/styles.css'
 import '../css/app.css'
 
-import { MantineProvider } from '@mantine/core'
+import { MantineProvider, createTheme } from '@mantine/core'
 import { InertiaProgress } from '@inertiajs/progress'
 import { createInertiaApp, router } from '@inertiajs/react'
 import { Notifications } from '@mantine/notifications'
@@ -14,9 +14,49 @@ import { ensureI18n } from '@/lib/i18n'
 import type { AppPageProps, SharedAppProps } from '@/types/app'
 import { resolvePage } from '@/pages'
 
-const theme = {
-  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-}
+const theme = createTheme({
+  primaryColor: 'teal',
+  colors: {
+    teal: [
+      '#F0FDFA',
+      '#CCFBF1',
+      '#99F6E4',
+      '#5EEAD4',
+      '#2DD4BF',
+      '#14B8A6',
+      '#0D9488',
+      '#0F766E',
+      '#115E59',
+      '#134E4A'
+    ]
+  },
+  defaultRadius: 'md',
+  fontFamily: 'Inter, system-ui, sans-serif',
+  headings: {
+    fontFamily: 'Inter, system-ui, sans-serif',
+    fontWeight: '700'
+  },
+  components: {
+    Button: {
+      defaultProps: {
+        radius: 'md',
+        fw: 600
+      }
+    },
+    Input: {
+      defaultProps: {
+        radius: 'md'
+      }
+    },
+    Card: {
+      defaultProps: {
+        radius: 'lg',
+        shadow: 'sm',
+        withBorder: true
+      }
+    }
+  }
+})
 
 createInertiaApp<AppPageProps>({
   progress: { showSpinner: false },

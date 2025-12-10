@@ -1,10 +1,8 @@
-import { Badge, Button, Card, Group, Stack, Text, Title } from '@mantine/core'
-import { IconCalendar, IconCheck, IconClock, IconX } from '@tabler/icons-react'
+import { Badge, Button, Card, Container, Grid, Group, SimpleGrid, Stack, Text, ThemeIcon, Timeline, Title, Avatar, ActionIcon } from '@mantine/core'
+import { IconCalendar, IconCheck, IconClock, IconX, IconStethoscope, IconArrowRight, IconDotsVertical, IconCalendarEvent } from '@tabler/icons-react'
 import { Link } from '@inertiajs/react'
-import { formatDistanceToNowStrict, parseISO } from 'date-fns'
+import { formatDistanceToNowStrict, parseISO, format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
-
-import { PublicLayout } from '@/layouts/PublicLayout'
 import type { AppPageProps } from '@/types/app'
 
 type Appointment = {
@@ -15,7 +13,8 @@ type Appointment = {
     id: string
     first_name: string
     last_name: string
-    specialty?: string | null
+    specialty_name?: string | null
+    profile_image_url?: string | null
   }
 }
 
@@ -40,99 +39,147 @@ const statusColor: Record<string, string> = {
   no_show: 'gray'
 }
 
-const DashboardPage = ({ app, auth, patient, upcoming_appointments, past_appointments, stats }: PageProps) => {
+export default function DashboardPage({ app, auth, patient, upcoming_appointments, past_appointments, stats }: PageProps) {
   const { t } = useTranslation('default')
 
   return (
-    <PublicLayout app={app} auth={auth}>
-      <Stack gap="xl">
-        <div>
-          <Title order={2}>{t('dashboard.title', 'Welcome back')}, {patient.first_name}</Title>
-          <Text c="dimmed">{t('dashboard.subtitle', 'Stay on top of your care plan')}</Text>
-        </div>
+    <Container size="xl" py="xl">
+      <Group justify="space-between" mb="xl">
+        <Stack gap={0}>
+          <Title order={2}>Good morning, {patient.first_name}</Title>
+          <Text c="dimmed">Here is your health overview for today.</Text>
+        </Stack>
+        <Button leftSection={<IconStethoscope size={20} />} component={Link} href="/search" variant="filled" color="teal">
+          Find Specialist
+        </Button>
+      </Group>
 
-        <Group grow>
-          <StatCard icon={<IconCalendar size={20} />} label={t('dashboard.stats.upcoming', 'Upcoming')} value={stats.upcoming} />
-          <StatCard icon={<IconCheck size={20} />} label={t('dashboard.stats.completed', 'Completed')} value={stats.completed} />
-          <StatCard icon={<IconX size={20} />} label={t('dashboard.stats.cancelled', 'Cancelled')} value={stats.cancelled} />
-        </Group>
+      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg" mb={40}>
+        <StatCard
+          icon={IconCalendarEvent}
+          color="blue"
+          label="Upcoming Visits"
+          value={stats.upcoming}
+          desc="Scheduled appointments"
+        />
+        <StatCard
+          icon={IconCheck}
+          color="teal"
+          label="Completed"
+          value={stats.completed}
+          desc="Past consultations"
+        />
+        <StatCard
+          icon={IconX}
+          color="red"
+          label="Cancelled"
+          value={stats.cancelled}
+          desc="Missed or cancelled"
+        />
+      </SimpleGrid>
 
-        <Card shadow="sm" padding="lg" radius="lg" withBorder>
-          <Group justify="space-between" align="center">
-            <Title order={3}>{t('dashboard.upcoming.title', 'Upcoming appointments')}</Title>
-            <Button component={Link} href="/search" variant="light">
-              {t('dashboard.upcoming.cta', 'Book new visit')}
-            </Button>
-          </Group>
-          <Stack gap="md" mt="md">
-            {upcoming_appointments.length === 0 ? (
-              <Text c="dimmed">{t('dashboard.upcoming.empty', 'No appointments scheduled')}</Text>
+      <Grid gutter="xl">
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <Card withBorder radius="lg" padding="xl">
+            <Group justify="space-between" mb="lg">
+              <Title order={3}>Upcoming Appointments</Title>
+              <ActionIcon variant="subtle" color="gray"><IconDotsVertical size={18} /></ActionIcon>
+            </Group>
+
+            {upcoming_appointments.length > 0 ? (
+              <Stack gap="md">
+                {upcoming_appointments.map(appt => (
+                  <AppointmentCard key={appt.id} appointment={appt} />
+                ))}
+              </Stack>
             ) : (
-              upcoming_appointments.map((appt) => <AppointmentRow key={appt.id} appointment={appt} />)
+              <Stack align="center" py={40} bg="gray.0" style={{ borderRadius: 12 }}>
+                <ThemeIcon color="gray" variant="light" size={48} radius="xl">
+                  <IconCalendar size={24} />
+                </ThemeIcon>
+                <Text fw={500} mt="sm">No upcoming appointments</Text>
+                <Text size="sm" c="dimmed">Book a consultation to get started</Text>
+                <Button component={Link} href="/search" variant="light" mt="xs">Book Now</Button>
+              </Stack>
             )}
-          </Stack>
-        </Card>
-
-        {past_appointments.length > 0 && (
-          <Card shadow="sm" padding="lg" radius="lg" withBorder>
-            <Title order={3}>{t('dashboard.past.title', 'Recent history')}</Title>
-            <Stack gap="md" mt="md">
-              {past_appointments.map((appt) => (
-                <AppointmentRow key={appt.id} appointment={appt} compact />
-              ))}
-            </Stack>
           </Card>
-        )}
-      </Stack>
-    </PublicLayout>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Card withBorder radius="lg" padding="xl">
+            <Title order={4} mb="lg">Recent History</Title>
+            <Timeline active={0} bulletSize={24} lineWidth={2}>
+              {past_appointments.slice(0, 5).map(appt => (
+                <Timeline.Item
+                  key={appt.id}
+                  bullet={<IconCheck size={12} />}
+                  title={`Dr. ${appt.doctor.last_name}`}
+                  color={statusColor[appt.status]}
+                >
+                  <Text c="dimmed" size="xs" mt={4}>
+                    {format(parseISO(appt.starts_at), 'MMM d, yyyy')}
+                  </Text>
+                  <Text size="xs" mt={4}>
+                    {appt.status}
+                  </Text>
+                </Timeline.Item>
+              ))}
+              {past_appointments.length === 0 && (
+                <Text c="dimmed" size="sm">No past history.</Text>
+              )}
+            </Timeline>
+          </Card>
+        </Grid.Col>
+      </Grid>
+    </Container>
   )
 }
 
-const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) => (
-  <Card padding="md" radius="lg" withBorder>
-    <Group gap="sm" align="center">
-      <div className="rounded-full bg-blue-50 p-2 text-blue-600">{icon}</div>
-      <div>
-        <Text size="xs" c="dimmed">
-          {label}
-        </Text>
-        <Text size="xl" fw={700} lh={1.2}>
-          {value}
-        </Text>
-      </div>
-    </Group>
-  </Card>
-)
-
-const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
-  const { t } = useTranslation('default')
-  const startsAt = parseISO(appointment.starts_at)
-  const human = formatDistanceToNowStrict(startsAt, { addSuffix: true })
-
+function StatCard({ icon: Icon, label, value, color, desc }: any) {
   return (
-    <Card padding="md" radius="lg" withBorder>
-      <Group justify="space-between" align="center">
-        <Stack gap={4}>
-          <Text fw={600}>
-            Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
-          </Text>
-          <Text size="sm" c="dimmed">
-            {appointment.doctor.specialty || t('dashboard.appt.general', 'General practice')}
-          </Text>
-          <Group gap="xs">
-            <IconClock size={14} />
-            <Text size="sm">{human}</Text>
-          </Group>
-        </Stack>
-        <Group gap="sm">
-          <Badge color={statusColor[appointment.status] || 'gray'}>{appointment.status}</Badge>
-          <Button component={Link} href={`/appointments/${appointment.id}`} variant="light" size="sm">
-            {t('dashboard.appt.view', 'View')}
-          </Button>
-        </Group>
+    <Card withBorder radius="lg" padding="lg">
+      <Group>
+        <ThemeIcon size={48} radius="md" variant="light" color={color}>
+          <Icon size={24} />
+        </ThemeIcon>
+        <div>
+          <Text c="dimmed" size="xs" fw={700} tt="uppercase">{label}</Text>
+          <Text fw={700} size="xl" lh={1}>{value}</Text>
+          <Text c="dimmed" size="xs">{desc}</Text>
+        </div>
       </Group>
     </Card>
   )
 }
 
-export default DashboardPage
+function AppointmentCard({ appointment }: { appointment: Appointment }) {
+  const date = parseISO(appointment.starts_at)
+
+  return (
+    <Card withBorder radius="md" padding="md">
+      <Group wrap="nowrap">
+        <Stack align="center" gap={0} bg="teal.0" p="xs" style={{ borderRadius: 8, minWidth: 70 }}>
+          <Text size="xs" c="teal" fw={700} tt="uppercase">{format(date, 'MMM')}</Text>
+          <Text size="xl" fw={700} lh={1} c="teal">{format(date, 'd')}</Text>
+        </Stack>
+
+        <Group justify="space-between" w="100%" align="flex-start">
+          <div>
+            <Text fw={600}>Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}</Text>
+            <Text size="sm" c="dimmed">{appointment.doctor.specialty_name || 'General Practice'}</Text>
+            <Group gap={6} mt={4}>
+              <IconClock size={14} className="text-gray-500" />
+              <Text size="xs" c="dimmed">{format(date, 'h:mm a')} ({formatDistanceToNowStrict(date, { addSuffix: true })})</Text>
+            </Group>
+          </div>
+          <Stack align="flex-end" gap="xs">
+            <Badge color={statusColor[appointment.status]}>{appointment.status}</Badge>
+            <Button component={Link} href={`/appointments/${appointment.id}`} variant="default" size="xs">
+              Manage
+            </Button>
+          </Stack>
+        </Group>
+      </Group>
+    </Card>
+  )
+}

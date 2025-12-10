@@ -37,18 +37,13 @@ defmodule MedicWeb.Router do
   scope "/", MedicWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
-    live_session :redirect_if_user_is_authenticated,
-      layout: {MedicWeb.Layouts, :app},
-      on_mount: [
-        {MedicWeb.UserAuth, :redirect_if_user_is_authenticated},
-        {MedicWeb.LiveHooks.Locale, :default}
-      ] do
-      live "/login", UserLoginLive
-      live "/register", UserRegistrationLive
-      live "/register/doctor", UserRegistrationLive, :doctor
-    end
-
+    get "/login", UserSessionController, :new
     post "/login", UserSessionController, :create
+    get "/register", UserRegistrationController, :new
+    post "/register", UserRegistrationController, :create
+
+    # TODO: Implement Doctor Registration in React
+    # get "/register/doctor", UserRegistrationController, :new_doctor
   end
 
   # Authenticated routes for all users
