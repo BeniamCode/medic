@@ -44,7 +44,7 @@ defmodule Medic.MixProject do
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.17"},
+      {:phoenix_live_view, "~> 0.20.17", override: true},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
@@ -65,6 +65,7 @@ defmodule Medic.MixProject do
       {:bandit, "~> 1.5"},
       {:live_view_native, "~> 0.3.0"},
       {:live_view_native_swiftui, "~> 0.3.0"},
+      {:inertia, "~> 2.5"},
       {:bcrypt_elixir, "~> 3.0"},
       {:faker, "~> 0.18", only: [:dev, :test]},
       {:ex_typesense, "~> 0.7"},
@@ -72,7 +73,8 @@ defmodule Medic.MixProject do
       {:ash, "~> 3.0"},
       {:ash_postgres, "~> 2.0"},
       {:ash_phoenix, "~> 2.0"},
-      {:igniter, "~> 0.1"}, # Helpful for Ash generators
+      # Helpful for Ash generators
+      {:igniter, "~> 0.1"},
       {:timex, "~> 3.7"},
       {:oban, "~> 2.17"},
       {:nimble_csv, "~> 1.2"}
