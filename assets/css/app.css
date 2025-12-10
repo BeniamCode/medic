@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @plugin "daisyui/theme" {
-  name: "bumblebee";
+  name: "medic";
   default: false;
   prefersdark: false;
   color-scheme: "light";

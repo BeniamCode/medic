@@ -103,6 +103,7 @@ module.exports = {
                     "--noise": "1",
                 },
             },
+            "night",
         ],
     },
 }
