@@ -64,6 +64,11 @@
             </.link>
           </li>
           <li>
+            <.link navigate={~p"/medic/on_duty"} class={if String.contains?(@socket.view |> to_string(), "OnDuty"), do: "active"}>
+               <.icon name="hero-calendar" class="size-5" /> On Duty
+            </.link>
+          </li>
+          <li>
             <.link navigate={~p"/medic/reviews"} class={if String.contains?(@socket.view |> to_string(), "Review"), do: "active"}>
                <.icon name="hero-star" class="size-5" /> Reviews
             </.link>

@@ -114,6 +114,8 @@ defmodule MedicWeb.Router do
        live "/patients", Admin.PatientLive.Index, :index
        live "/patients/:id/edit", Admin.PatientLive.Index, :edit
 
+       live "/on_duty", Admin.OnDutyLive
+
        live "/reviews", Admin.ReviewLive.Index, :index
        live "/financials", Admin.FinancialLive, :index
     end
