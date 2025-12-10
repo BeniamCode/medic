@@ -62,3 +62,19 @@
   width: 100% !important;
   height: 100% !important;
 }
+
+.theme-light-icon {
+  display: inline-flex;
+}
+
+.theme-dark-icon {
+  display: none;
+}
+
+[data-theme='night'] .theme-light-icon {
+  display: none;
+}
+
+[data-theme='night'] .theme-dark-icon {
+  display: inline-flex;
+}

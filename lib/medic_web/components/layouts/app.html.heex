@@ -16,10 +16,8 @@
           class="btn btn-circle btn-ghost bg-base-100/50 backdrop-blur shadow-sm hover:rotate-12 transition-transform duration-300"
           phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "toggle"})}
         >
-          <!-- Sun for Light Mode -->
-          <.icon name="hero-sun" class="hidden dark:block size-6 text-warning" />
-           <!-- Moon for Dark Mode -->
-          <.icon name="hero-moon" class="block dark:hidden size-6 text-primary" />
+          <.icon name="hero-sun" class="theme-light-icon size-6 text-warning" />
+          <.icon name="hero-moon" class="theme-dark-icon size-6 text-primary" />
         </button>
 
         <%= if @current_user do %>
@@ -34,11 +32,14 @@
     <%!-- Navbar --%>
     <div class="navbar bg-base-100/80 border-b border-base-200 backdrop-blur lg:hidden">
       <div class="flex-none gap-2">
-        <label class="swap swap-rotate btn btn-ghost btn-circle">
-          <input type="checkbox" class="theme-controller" value="medic" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "bumblebee"})} />
-          <.icon name="hero-sun" class="swap-on fill-current size-6" />
-          <.icon name="hero-moon" class="swap-off fill-current size-6" />
-        </label>
+        <button
+          type="button"
+          class="btn btn-circle btn-ghost bg-base-100/50 backdrop-blur shadow-sm"
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "toggle"})}
+        >
+          <.icon name="hero-sun" class="theme-light-icon size-6 text-warning" />
+          <.icon name="hero-moon" class="theme-dark-icon size-6 text-primary" />
+        </button>
         <label for="my-drawer-2" class="btn btn-square btn-ghost drawer-button lg:hidden">
           <.icon name="hero-bars-3" class="size-6" />
         </label>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="el" data-theme="medic">
+<html lang="el" data-theme="bumblebee">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,7 +14,8 @@
     </script>
     <script>
       (() => {
-        const defaultTheme = "medic";
+        const defaultTheme = "bumblebee";
+        const darkTheme = "night";
         const setTheme = (theme) => {
           const applied = theme === "system" ? defaultTheme : (theme || defaultTheme);
 
@@ -43,14 +44,16 @@
         });
         
         window.addEventListener("phx:set-theme", (e) => {
-          // If a specific theme is provided, use it. Otherwise toggle.
-          if (e.detail && e.detail.theme && e.detail.theme !== "toggle") {
-            setTheme(e.detail.theme);
-          } else {
-            // Toggle logic
+          const requested = e.detail && e.detail.theme;
+
+          if (requested === "toggle") {
             const current = document.documentElement.getAttribute("data-theme");
-            const next = current === "medic" ? "bumblebee" : "medic";
+            const next = current === darkTheme ? defaultTheme : darkTheme;
             setTheme(next);
+          } else if (requested) {
+            setTheme(requested);
+          } else {
+            setTheme(defaultTheme);
           }
         });
       })();
