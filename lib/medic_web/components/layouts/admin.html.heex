@@ -47,34 +47,34 @@
           
           <li class="menu-title opacity-50 uppercase text-xs font-bold mt-2">Overview</li>
           <li>
-            <.link navigate={~p"/medic/dashboard"} class={if String.contains?(@socket.view |> to_string(), "Dashboard"), do: "active"}>
+            <.link navigate={~p"/medic/dashboard"} class={nav_link_class(assigns, "Dashboard", "/medic/dashboard")}>
               <.icon name="hero-home" class="size-5" /> Dashboard
             </.link>
           </li>
           
           <li class="menu-title opacity-50 uppercase text-xs font-bold mt-4">Management</li>
           <li>
-            <.link navigate={~p"/medic/doctors"} class={if String.contains?(@socket.view |> to_string(), "Doctor"), do: "active"}>
+            <.link navigate={~p"/medic/doctors"} class={nav_link_class(assigns, "Doctor", "/medic/doctors")}>
                <.icon name="hero-users" class="size-5" /> Doctors
             </.link>
           </li>
           <li>
-            <.link navigate={~p"/medic/patients"} class={if String.contains?(@socket.view |> to_string(), "Patient"), do: "active"}>
+            <.link navigate={~p"/medic/patients"} class={nav_link_class(assigns, "Patient", "/medic/patients")}>
                <.icon name="hero-user-group" class="size-5" /> Patients
             </.link>
           </li>
           <li>
-            <.link navigate={~p"/medic/on_duty"} class={if String.contains?(@socket.view |> to_string(), "OnDuty"), do: "active"}>
+            <.link navigate={~p"/medic/on_duty"} class={nav_link_class(assigns, "OnDuty", "/medic/on_duty")}>
                <.icon name="hero-calendar" class="size-5" /> On Duty
             </.link>
           </li>
           <li>
-            <.link navigate={~p"/medic/reviews"} class={if String.contains?(@socket.view |> to_string(), "Review"), do: "active"}>
+            <.link navigate={~p"/medic/reviews"} class={nav_link_class(assigns, "Review", "/medic/reviews")}>
                <.icon name="hero-star" class="size-5" /> Reviews
             </.link>
           </li>
            <li>
-            <.link navigate={~p"/medic/financials"} class={if String.contains?(@socket.view |> to_string(), "Financial"), do: "active"}>
+            <.link navigate={~p"/medic/financials"} class={nav_link_class(assigns, "Financial", "/medic/financials")}>
                <.icon name="hero-banknotes" class="size-5" /> Financials
             </.link>
           </li>

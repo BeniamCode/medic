@@ -38,11 +38,14 @@ defmodule MedicWeb do
 
   def controller do
     quote do
-      use Phoenix.Controller, formats: [:html, :json]
+      use Phoenix.Controller,
+        formats: [:html, :json],
+        layouts: [html: MedicWeb.Layouts]
 
       use Gettext, backend: MedicWeb.Gettext
 
       import Plug.Conn
+      import Inertia.Controller
 
       unquote(verified_routes())
     end
@@ -84,6 +87,7 @@ defmodule MedicWeb do
 
       # HTML escaping functionality
       import Phoenix.HTML
+      import Inertia.HTML
       # Core UI components
       import MedicWeb.CoreComponents
 

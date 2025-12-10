@@ -84,4 +84,45 @@ defmodule MedicWeb.Layouts do
   def user_display_name(%{email: email}) do
     email
   end
+
+  attr :unread, :integer, default: 0
+
+  def notification_bell(assigns) do
+    ~H"""
+    <a href="/notifications" class="btn btn-ghost btn-circle">
+      <div class="indicator">
+        <.icon name="hero-bell" class="size-5" />
+        <%= if @unread > 0 do %>
+          <span class="badge badge-primary badge-xs indicator-item">
+            <%= if @unread > 9, do: "9+", else: @unread %>
+          </span>
+        <% end %>
+      </div>
+    </a>
+    """
+  end
+
+  def nav_link_class(assigns, view_pattern, path, opts \\ []) do
+    match_type = Keyword.get(opts, :match, :exact)
+
+    active =
+      cond do
+        assigns[:socket] ->
+          String.contains?(to_string(assigns[:socket].view), view_pattern)
+
+        assigns[:conn] ->
+          current_path = assigns[:conn].request_path
+
+          if match_type == :prefix do
+            String.starts_with?(current_path, path)
+          else
+            current_path == path
+          end
+
+        true ->
+          false
+      end
+
+    if active, do: "active"
+  end
 end

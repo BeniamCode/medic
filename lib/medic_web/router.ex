@@ -6,12 +6,14 @@ defmodule MedicWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug Inertia.Plug
     plug :fetch_live_flash
     plug :put_root_layout, html: {MedicWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_user
     plug MedicWeb.Plugs.Locale
+    plug MedicWeb.Plugs.InertiaContext
   end
 
   pipeline :api do
@@ -26,13 +28,9 @@ defmodule MedicWeb.Router do
   scope "/", MedicWeb do
     pipe_through :browser
 
-    live_session :public,
-      layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :mount_current_user}, {MedicWeb.LiveHooks.Locale, :default}] do
-      live "/", HomeLive
-      live "/search", SearchLive
-      live "/doctors/:id", DoctorLive.Show
-    end
+    get "/", PageController, :home
+    get "/search", SearchController, :index
+    get "/doctors/:id", DoctorController, :show
   end
 
   # Routes that require user to NOT be logged in
@@ -41,7 +39,10 @@ defmodule MedicWeb.Router do
 
     live_session :redirect_if_user_is_authenticated,
       layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :redirect_if_user_is_authenticated}, {MedicWeb.LiveHooks.Locale, :default}] do
+      on_mount: [
+        {MedicWeb.UserAuth, :redirect_if_user_is_authenticated},
+        {MedicWeb.LiveHooks.Locale, :default}
+      ] do
       live "/login", UserLoginLive
       live "/register", UserRegistrationLive
       live "/register/doctor", UserRegistrationLive, :doctor
@@ -56,14 +57,23 @@ defmodule MedicWeb.Router do
 
     live_session :require_authenticated_user,
       layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}, {MedicWeb.LiveHooks.Locale, :default}] do
-      live "/dashboard", DashboardLive
-      live "/appointments/:id", AppointmentLive.Show
-      live "/settings", SettingsLive
-      live "/onboarding/doctor", DoctorOnboardingLive
-      live "/doctor/schedule", DoctorLive.Schedule
+      on_mount: [
+        {MedicWeb.UserAuth, :ensure_authenticated},
+        {MedicWeb.LiveHooks.Locale, :default}
+      ] do
+      get "/dashboard", DashboardController, :show
+      get "/appointments/:id", AppointmentsController, :show
+      get "/settings", SettingsController, :show
+      get "/onboarding/doctor", DoctorOnboardingController, :show
+      post "/onboarding/doctor", DoctorOnboardingController, :update
+      get "/doctor/schedule", DoctorScheduleController, :show
+      post "/doctor/schedule", DoctorScheduleController, :update
+      delete "/doctor/schedule/:id", DoctorScheduleController, :delete
+      post "/notifications/mark_all", NotificationController, :mark_all
+      get "/notifications", NotificationController, :index
     end
 
+    post "/doctors/:id/book", DoctorController, :book
     delete "/logout", UserSessionController, :delete
   end
 
@@ -71,12 +81,8 @@ defmodule MedicWeb.Router do
   scope "/dashboard", MedicWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live_session :doctor_dashboard,
-      layout: {MedicWeb.Layouts, :app},
-      on_mount: [{MedicWeb.UserAuth, :ensure_authenticated}, {MedicWeb.LiveHooks.Locale, :default}] do
-      live "/doctor", DoctorDashboardLive
-      live "/doctor/profile", DoctorLive.Profile
-    end
+    get "/doctor", DoctorDashboardController, :show
+    get "/doctor/profile", DoctorProfileController, :show
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -105,19 +111,19 @@ defmodule MedicWeb.Router do
     live_session :admin_dashboard,
       on_mount: [{MedicWeb.UserAuth, :ensure_admin_user}, {MedicWeb.LiveHooks.Locale, :default}] do
       # Dashboard
-       live "/dashboard", Admin.DashboardLive
-       
-       # CMS
-       live "/doctors", Admin.DoctorLive.Index, :index
-       live "/doctors/:id/edit", Admin.DoctorLive.Index, :edit
+      live "/dashboard", Admin.DashboardLive
 
-       live "/patients", Admin.PatientLive.Index, :index
-       live "/patients/:id/edit", Admin.PatientLive.Index, :edit
+      # CMS
+      live "/doctors", Admin.DoctorLive.Index, :index
+      live "/doctors/:id/edit", Admin.DoctorLive.Index, :edit
 
-       live "/on_duty", Admin.OnDutyLive
+      live "/patients", Admin.PatientLive.Index, :index
+      live "/patients/:id/edit", Admin.PatientLive.Index, :edit
 
-       live "/reviews", Admin.ReviewLive.Index, :index
-       live "/financials", Admin.FinancialLive, :index
+      live "/on_duty", Admin.OnDutyLive
+
+      live "/reviews", Admin.ReviewLive.Index, :index
+      live "/financials", Admin.FinancialLive, :index
     end
   end
 end

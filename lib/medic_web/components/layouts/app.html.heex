@@ -36,10 +36,7 @@
       </button>
 
       <%= if @current_user do %>
-        <%= live_render(@socket, MedicWeb.NotificationLive,
-          id: :notification_bell,
-          session: %{"user_id" => @current_user.id}
-        ) %>
+        <.notification_bell unread={@app.unread_count || 0} />
       <% end %>
     </div>
 
@@ -110,7 +107,7 @@
         </li>
 
         <li>
-          <a href="/" class={["rounded-xl", @socket.view == MedicWeb.HomeLive && "active"]}>
+          <a href="/" class="rounded-xl">
             <.icon name="hero-home" class="size-5" /> <%= gettext("Home") %>
           </a>
         </li>
@@ -123,7 +120,7 @@
                 href="/dashboard/doctor"
                 class={[
                   "rounded-xl",
-                  String.contains?(@socket.view |> to_string(), "DoctorDashboard") && "active"
+                  nav_link_class(assigns, "DoctorDashboard", "/dashboard/doctor")
                 ]}
               >
                 <.icon name="hero-squares-2x2" class="size-5" /> <%= gettext("Dashboard") %>
@@ -134,7 +131,7 @@
                 href="/doctor/schedule"
                 class={[
                   "rounded-xl",
-                  String.contains?(@socket.view |> to_string(), "Schedule") && "active"
+                  nav_link_class(assigns, "Schedule", "/doctor/schedule")
                 ]}
               >
                 <.icon name="hero-calendar-days" class="size-5" /> <%= gettext("Schedule") %>
@@ -145,7 +142,7 @@
                 href="/dashboard/doctor/profile"
                 class={[
                   "rounded-xl",
-                  String.contains?(@socket.view |> to_string(), "Profile") && "active"
+                  nav_link_class(assigns, "Profile", "/dashboard/doctor/profile")
                 ]}
               >
                 <.icon name="hero-user-circle" class="size-5" /> <%= gettext("Profile") %>
@@ -158,7 +155,7 @@
                 href="/dashboard"
                 class={[
                   "rounded-xl",
-                  String.contains?(@socket.view |> to_string(), "PatientDashboard") && "active"
+                  nav_link_class(assigns, "PatientDashboard", "/dashboard")
                 ]}
               >
                 <.icon name="hero-calendar" class="size-5" /> <%= gettext("Appointments") %>
@@ -173,7 +170,7 @@
             href="/search"
             class={[
               "rounded-xl",
-              String.contains?(@socket.view |> to_string(), "Search") && "active"
+                  nav_link_class(assigns, "Search", "/search", match: :prefix)
             ]}
           >
             <.icon name="hero-magnifying-glass" class="size-5" /> <%= gettext("Find Doctors") %>
