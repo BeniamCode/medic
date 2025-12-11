@@ -1569,3 +1569,32 @@
 176 silly fetch manifest @use-gesture/react@^10.3.1
 177 silly packumentCache full:https://registry.npmjs.org/@use-gesture%2freact cache-miss
 178 http fetch GET https://registry.npmjs.org/@use-gesture%2freact attempt 1 failed with ENOTFOUND
+179 http fetch GET https://registry.npmjs.org/@use-gesture%2freact attempt 2 failed with ENOTFOUND
+180 http fetch GET https://registry.npmjs.org/@use-gesture%2freact attempt 3 failed with ENOTFOUND
+181 silly fetch manifest suspend-react@^0.1.3
+182 silly packumentCache full:https://registry.npmjs.org/suspend-react cache-miss
+183 http fetch GET https://registry.npmjs.org/suspend-react attempt 1 failed with ENOTFOUND
+184 http fetch GET https://registry.npmjs.org/suspend-react attempt 2 failed with ENOTFOUND
+185 http fetch GET https://registry.npmjs.org/suspend-react attempt 3 failed with ENOTFOUND
+186 silly fetch manifest use-sync-external-store@^1.4.0
+187 silly packumentCache full:https://registry.npmjs.org/use-sync-external-store cache-miss
+188 http fetch GET https://registry.npmjs.org/use-sync-external-store attempt 1 failed with ENOTFOUND
+189 http fetch GET https://registry.npmjs.org/use-sync-external-store attempt 2 failed with ENOTFOUND
+190 http fetch GET https://registry.npmjs.org/use-sync-external-store attempt 3 failed with ENOTFOUND
+191 silly placeDep node_modules/@react-three/drei @use-gesture/react@ OK for: @react-three/drei@10.7.7 want: ^10.3.1
+192 silly placeDep node_modules/@react-three/drei suspend-react@ OK for: @react-three/drei@10.7.7 want: ^0.1.3
+193 silly placeDep node_modules/@react-three/drei use-sync-external-store@ OK for: @react-three/drei@10.7.7 want: ^1.4.0
+194 silly fetch manifest its-fine@^2.0.0
+195 silly packumentCache full:https://registry.npmjs.org/its-fine cache-miss
+196 http fetch GET https://registry.npmjs.org/its-fine attempt 1 failed with ENOTFOUND
+197 http fetch GET https://registry.npmjs.org/its-fine attempt 2 failed with ENOTFOUND
+198 http fetch GET https://registry.npmjs.org/its-fine attempt 3 failed with ENOTFOUND
+199 silly fetch manifest react-reconciler@^0.31.0
+200 silly packumentCache full:https://registry.npmjs.org/react-reconciler cache-miss
+201 http fetch GET https://registry.npmjs.org/react-reconciler attempt 1 failed with ENOTFOUND
+202 http fetch GET https://registry.npmjs.org/react-reconciler attempt 2 failed with ENOTFOUND
+203 http fetch GET https://registry.npmjs.org/react-reconciler attempt 3 failed with ENOTFOUND
+204 silly fetch manifest react-use-measure@^2.1.7
+205 silly packumentCache full:https://registry.npmjs.org/react-use-measure cache-miss
+206 http fetch GET https://registry.npmjs.org/react-use-measure attempt 1 failed with ENOTFOUND
+207 http fetch GET https://registry.npmjs.org/react-use-measure attempt 2 failed with ENOTFOUND
