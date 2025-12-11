@@ -1,0 +1,73 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.2
+2 info using node@v22.17.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/.npmrc
+5 silly config load:file:/Users/beniam/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm install @react-three/fiber@8.16.8 @react-three/drei@9.108.3 three@0.166.1 gsap@3.12.5 @gsap/react@2.1.1
+8 verbose argv "install" "@react-three/fiber@8.16.8" "@react-three/drei@9.108.3" "three@0.166.1" "gsap@3.12.5" "@gsap/react@2.1.1" "--legacy-peer-deps"
+9 verbose logfile logs-max:10 dir:/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/.npm-cache/_logs/2025-12-11T13_26_20_566Z-
+10 verbose logfile /Users/beniam/Documents/CODE/LOMI/MEDIC/medic/.npm-cache/_logs/2025-12-11T13_26_20_566Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with ENOTFOUND
+14 silly idealTree buildDeps
+15 silly fetch manifest @gsap/react@2.1.1
+16 silly packumentCache full:https://registry.npmjs.org/@gsap%2freact cache-miss
+17 http fetch GET https://registry.npmjs.org/@gsap%2freact attempt 1 failed with ENOTFOUND
+18 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with ENOTFOUND
+19 http fetch GET https://registry.npmjs.org/@gsap%2freact attempt 2 failed with ENOTFOUND
+20 http fetch GET https://registry.npmjs.org/npm attempt 3 failed with ENOTFOUND
+21 http fetch GET https://registry.npmjs.org/@gsap%2freact attempt 3 failed with ENOTFOUND
+22 silly fetch manifest @react-three/drei@9.108.3
+23 silly packumentCache full:https://registry.npmjs.org/@react-three%2fdrei cache-miss
+24 http fetch GET https://registry.npmjs.org/@react-three%2fdrei attempt 1 failed with ENOTFOUND
+25 http fetch GET https://registry.npmjs.org/@react-three%2fdrei attempt 2 failed with ENOTFOUND
+26 http fetch GET https://registry.npmjs.org/@react-three%2fdrei attempt 3 failed with ENOTFOUND
+27 silly fetch manifest @react-three/fiber@8.16.8
+28 silly packumentCache full:https://registry.npmjs.org/@react-three%2ffiber cache-miss
+29 http fetch GET https://registry.npmjs.org/@react-three%2ffiber attempt 1 failed with ENOTFOUND
+30 http fetch GET https://registry.npmjs.org/@react-three%2ffiber attempt 2 failed with ENOTFOUND
+31 http fetch GET https://registry.npmjs.org/@react-three%2ffiber attempt 3 failed with ENOTFOUND
+32 silly fetch manifest gsap@3.12.5
+33 silly packumentCache full:https://registry.npmjs.org/gsap cache-miss
+34 http fetch GET https://registry.npmjs.org/gsap attempt 1 failed with ENOTFOUND
+35 http fetch GET https://registry.npmjs.org/gsap attempt 2 failed with ENOTFOUND
+36 http fetch GET https://registry.npmjs.org/gsap attempt 3 failed with ENOTFOUND
+37 silly fetch manifest three@0.166.1
+38 silly packumentCache full:https://registry.npmjs.org/three cache-miss
+39 http fetch GET https://registry.npmjs.org/three attempt 1 failed with ENOTFOUND
+40 http fetch GET https://registry.npmjs.org/three attempt 2 failed with ENOTFOUND
+41 http fetch GET https://registry.npmjs.org/three attempt 3 failed with ENOTFOUND
+42 silly placeDep ROOT @gsap/react@ REPLACE for: medic_assets@1.0.0 want: 2.1.1
+43 silly placeDep ROOT @react-three/drei@ REPLACE for: medic_assets@1.0.0 want: 9.108.3
+44 silly placeDep ROOT @react-three/fiber@ REPLACE for: medic_assets@1.0.0 want: 8.16.8
+45 silly placeDep ROOT gsap@ REPLACE for: medic_assets@1.0.0 want: 3.12.5
+46 silly placeDep ROOT three@ REPLACE for: medic_assets@1.0.0 want: 0.166.1
+47 verbose type system
+48 verbose stack FetchError: request to https://registry.npmjs.org/@gsap%2freact failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+48 verbose stack     at ClientRequest.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/minipass-fetch/lib/index.js:130:14)
+48 verbose stack     at ClientRequest.emit (node:events:518:28)
+48 verbose stack     at emitErrorEvent (node:_http_client:104:11)
+48 verbose stack     at _destroy (node:_http_client:898:9)
+48 verbose stack     at onSocketNT (node:_http_client:918:5)
+48 verbose stack     at process.processTicksAndRejections (node:internal/process/task_queues:91:21)
+49 error code ENOTFOUND
+50 error syscall getaddrinfo
+51 error errno ENOTFOUND
+52 error network request to https://registry.npmjs.org/@gsap%2freact failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org
+53 error network This is a problem related to network connectivity.
+53 error network In most cases you are behind a proxy or have bad network settings.
+53 error network
+53 error network If you are behind a proxy, please make sure that the
+53 error network 'proxy' config is set properly.  See: 'npm help config'
+54 silly unfinished npm timer reify 1765459580818
+55 silly unfinished npm timer reify:loadTrees 1765459580819
+56 verbose cwd /Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets
+57 verbose os Darwin 24.6.0
+58 verbose node v22.17.0
+59 verbose npm  v10.9.2
+60 verbose exit 1
+61 verbose code 1
+62 error A complete log of this run can be found in: /Users/beniam/Documents/CODE/LOMI/MEDIC/medic/.npm-cache/_logs/2025-12-11T13_26_20_566Z-debug-0.log

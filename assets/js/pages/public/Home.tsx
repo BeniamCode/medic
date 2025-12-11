@@ -1,8 +1,9 @@
 import { ActionIcon, Badge, Button, Card, Container, Grid, Group, SimpleGrid, Stack, Text, ThemeIcon, Title, rem } from '@mantine/core'
-import { IconArrowRight, IconCalendar, IconDeviceLaptop, IconHeartRateMonitor, IconSearch, IconShieldCheck, IconStethoscope, IconUserCheck } from '@tabler/icons-react'
+import { IconCalendar, IconDeviceLaptop, IconSearch, IconShieldCheck, IconStethoscope, IconUserCheck } from '@tabler/icons-react'
 import { Link } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
 import type { AppPageProps } from '@/types/app'
+import { LoopAnimation } from '@/components/LoopAnimation'
 
 const features = [
   {
@@ -80,14 +81,8 @@ export default function HomePage({ app, auth }: AppPageProps) {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 6 }} visibleFrom="md">
-            {/* Abstract Medical Illustration Placeholder */}
-            <Card radius={30} bg="teal.0" h={400} withBorder style={{ borderStyle: 'dashed', borderColor: 'var(--mantine-color-teal-3)' }}>
-              <Stack align="center" justify="center" h="100%">
-                <ThemeIcon size={80} radius="xl" variant="light" color="teal">
-                  <IconHeartRateMonitor size={40} />
-                </ThemeIcon>
-                <Text c="teal.6" fw={600}>Medical Illustration</Text>
-              </Stack>
+            <Card radius={30} padding={0} h={400} withBorder style={{ overflow: 'hidden', background: 'linear-gradient(135deg, #042527, #0b4246)' }}>
+              <LoopAnimation />
             </Card>
           </Grid.Col>
         </Grid>

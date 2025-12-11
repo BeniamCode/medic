@@ -1,0 +1,1571 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.9.2
+2 info using node@v22.17.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/.npmrc
+5 silly config load:file:/Users/beniam/.npmrc
+6 silly config load:file:/usr/local/etc/npmrc
+7 verbose title npm uninstall @react-three/fiber @react-three/drei @gsap/react
+8 verbose argv "uninstall" "@react-three/fiber" "@react-three/drei" "@gsap/react"
+9 verbose logfile logs-max:10 dir:/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/.npm-cache/_logs/2025-12-11T13_32_49_361Z-
+10 verbose logfile /Users/beniam/Documents/CODE/LOMI/MEDIC/medic/.npm-cache/_logs/2025-12-11T13_32_49_361Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest three@^0.166.1
+15 silly packumentCache full:https://registry.npmjs.org/three cache-miss
+16 http fetch GET https://registry.npmjs.org/three attempt 1 failed with ENOTFOUND
+17 http fetch GET https://registry.npmjs.org/three attempt 2 failed with ENOTFOUND
+18 http fetch GET https://registry.npmjs.org/three attempt 3 failed with ENOTFOUND
+19 silly placeDep ROOT three@ REPLACE for: medic_assets@1.0.0 want: ^0.166.1
+20 silly fetch manifest @inertiajs/inertia@^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0
+21 silly packumentCache full:https://registry.npmjs.org/@inertiajs%2finertia cache-miss
+22 http fetch GET https://registry.npmjs.org/@inertiajs%2finertia attempt 1 failed with ENOTFOUND
+23 http fetch GET https://registry.npmjs.org/@inertiajs%2finertia attempt 2 failed with ENOTFOUND
+24 http fetch GET https://registry.npmjs.org/@inertiajs%2finertia attempt 3 failed with ENOTFOUND
+25 silly placeDep ROOT @inertiajs/inertia@ OK for: @inertiajs/progress@0.2.7 want: ^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0
+26 warn ERESOLVE overriding peer dependency {
+26 warn ERESOLVE   code: 'ERESOLVE',
+26 warn ERESOLVE   edge: {
+26 warn ERESOLVE     type: 'peer',
+26 warn ERESOLVE     name: '@inertiajs/inertia',
+26 warn ERESOLVE     spec: '^0.6.0 || ^0.7.0 || ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0',
+26 warn ERESOLVE     error: 'INVALID',
+26 warn ERESOLVE     from: {
+26 warn ERESOLVE       name: '@inertiajs/progress',
+26 warn ERESOLVE       version: '0.2.7',
+26 warn ERESOLVE       location: 'node_modules/@inertiajs/progress',
+26 warn ERESOLVE       isWorkspace: false,
+26 warn ERESOLVE       dependents: [Array]
+26 warn ERESOLVE     }
+26 warn ERESOLVE   },
+26 warn ERESOLVE   dep: {
+26 warn ERESOLVE     name: '@inertiajs/inertia',
+26 warn ERESOLVE     version: undefined,
+26 warn ERESOLVE     errors: [ [FetchError] ],
+26 warn ERESOLVE     package: {},
+26 warn ERESOLVE     whileInstalling: {
+26 warn ERESOLVE       name: '@inertiajs/progress',
+26 warn ERESOLVE       version: '0.2.7',
+26 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@inertiajs/progress'
+26 warn ERESOLVE     },
+26 warn ERESOLVE     location: 'node_modules/@inertiajs/inertia',
+26 warn ERESOLVE     isWorkspace: false,
+26 warn ERESOLVE     dependents: [ [Object] ]
+26 warn ERESOLVE   },
+26 warn ERESOLVE   force: false,
+26 warn ERESOLVE   isMine: true,
+26 warn ERESOLVE   strictPeerDeps: false,
+26 warn ERESOLVE   current: {
+26 warn ERESOLVE     name: '@inertiajs/inertia',
+26 warn ERESOLVE     version: undefined,
+26 warn ERESOLVE     errors: [ [FetchError] ],
+26 warn ERESOLVE     package: {},
+26 warn ERESOLVE     location: 'node_modules/@inertiajs/inertia',
+26 warn ERESOLVE     isWorkspace: false,
+26 warn ERESOLVE     dependents: []
+26 warn ERESOLVE   }
+26 warn ERESOLVE }
+27 silly fetch manifest dayjs@>=1.0.0
+28 silly packumentCache full:https://registry.npmjs.org/dayjs cache-miss
+29 http fetch GET https://registry.npmjs.org/dayjs attempt 1 failed with ENOTFOUND
+30 http fetch GET https://registry.npmjs.org/dayjs attempt 2 failed with ENOTFOUND
+31 http fetch GET https://registry.npmjs.org/dayjs attempt 3 failed with ENOTFOUND
+32 silly placeDep ROOT dayjs@ OK for: @mantine/dates@7.17.8 want: >=1.0.0
+33 warn ERESOLVE overriding peer dependency {
+33 warn ERESOLVE   code: 'ERESOLVE',
+33 warn ERESOLVE   edge: {
+33 warn ERESOLVE     type: 'peer',
+33 warn ERESOLVE     name: 'dayjs',
+33 warn ERESOLVE     spec: '>=1.0.0',
+33 warn ERESOLVE     error: 'INVALID',
+33 warn ERESOLVE     from: {
+33 warn ERESOLVE       name: '@mantine/dates',
+33 warn ERESOLVE       version: '7.17.8',
+33 warn ERESOLVE       location: 'node_modules/@mantine/dates',
+33 warn ERESOLVE       isWorkspace: false,
+33 warn ERESOLVE       dependents: [Array]
+33 warn ERESOLVE     }
+33 warn ERESOLVE   },
+33 warn ERESOLVE   dep: {
+33 warn ERESOLVE     name: 'dayjs',
+33 warn ERESOLVE     version: undefined,
+33 warn ERESOLVE     errors: [ [FetchError] ],
+33 warn ERESOLVE     package: {},
+33 warn ERESOLVE     whileInstalling: {
+33 warn ERESOLVE       name: '@mantine/dates',
+33 warn ERESOLVE       version: '7.17.8',
+33 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@mantine/dates'
+33 warn ERESOLVE     },
+33 warn ERESOLVE     location: 'node_modules/dayjs',
+33 warn ERESOLVE     isWorkspace: false,
+33 warn ERESOLVE     dependents: [ [Object] ]
+33 warn ERESOLVE   },
+33 warn ERESOLVE   force: false,
+33 warn ERESOLVE   isMine: true,
+33 warn ERESOLVE   strictPeerDeps: false,
+33 warn ERESOLVE   current: {
+33 warn ERESOLVE     name: 'dayjs',
+33 warn ERESOLVE     version: undefined,
+33 warn ERESOLVE     errors: [ [FetchError] ],
+33 warn ERESOLVE     package: {},
+33 warn ERESOLVE     location: 'node_modules/dayjs',
+33 warn ERESOLVE     isWorkspace: false,
+33 warn ERESOLVE     dependents: []
+33 warn ERESOLVE   }
+33 warn ERESOLVE }
+34 silly fetch manifest react@^19
+35 silly packumentCache full:https://registry.npmjs.org/react cache-miss
+36 http fetch GET https://registry.npmjs.org/react attempt 1 failed with ENOTFOUND
+37 http fetch GET https://registry.npmjs.org/react attempt 2 failed with ENOTFOUND
+38 http fetch GET https://registry.npmjs.org/react attempt 3 failed with ENOTFOUND
+39 silly fetch manifest react-dom@^19
+40 silly packumentCache full:https://registry.npmjs.org/react-dom cache-miss
+41 http fetch GET https://registry.npmjs.org/react-dom attempt 1 failed with ENOTFOUND
+42 http fetch GET https://registry.npmjs.org/react-dom attempt 2 failed with ENOTFOUND
+43 http fetch GET https://registry.npmjs.org/react-dom attempt 3 failed with ENOTFOUND
+44 silly fetch manifest @monogrid/gainmap-js@^3.0.6
+45 silly packumentCache full:https://registry.npmjs.org/@monogrid%2fgainmap-js cache-miss
+46 http fetch GET https://registry.npmjs.org/@monogrid%2fgainmap-js attempt 1 failed with ENOTFOUND
+47 http fetch GET https://registry.npmjs.org/@monogrid%2fgainmap-js attempt 2 failed with ENOTFOUND
+48 http fetch GET https://registry.npmjs.org/@monogrid%2fgainmap-js attempt 3 failed with ENOTFOUND
+49 silly fetch manifest camera-controls@^3.1.0
+50 silly packumentCache full:https://registry.npmjs.org/camera-controls cache-miss
+51 http fetch GET https://registry.npmjs.org/camera-controls attempt 1 failed with ENOTFOUND
+52 http fetch GET https://registry.npmjs.org/camera-controls attempt 2 failed with ENOTFOUND
+53 http fetch GET https://registry.npmjs.org/camera-controls attempt 3 failed with ENOTFOUND
+54 silly fetch manifest maath@^0.10.8
+55 silly packumentCache full:https://registry.npmjs.org/maath cache-miss
+56 http fetch GET https://registry.npmjs.org/maath attempt 1 failed with ENOTFOUND
+57 http fetch GET https://registry.npmjs.org/maath attempt 2 failed with ENOTFOUND
+58 http fetch GET https://registry.npmjs.org/maath attempt 3 failed with ENOTFOUND
+59 silly fetch manifest meshline@^3.3.1
+60 silly packumentCache full:https://registry.npmjs.org/meshline cache-miss
+61 http fetch GET https://registry.npmjs.org/meshline attempt 1 failed with ENOTFOUND
+62 http fetch GET https://registry.npmjs.org/meshline attempt 2 failed with ENOTFOUND
+63 http fetch GET https://registry.npmjs.org/meshline attempt 3 failed with ENOTFOUND
+64 silly fetch manifest three-mesh-bvh@^0.8.3
+65 silly packumentCache full:https://registry.npmjs.org/three-mesh-bvh cache-miss
+66 http fetch GET https://registry.npmjs.org/three-mesh-bvh attempt 1 failed with ENOTFOUND
+67 http fetch GET https://registry.npmjs.org/three-mesh-bvh attempt 2 failed with ENOTFOUND
+68 http fetch GET https://registry.npmjs.org/three-mesh-bvh attempt 3 failed with ENOTFOUND
+69 silly fetch manifest three-stdlib@^2.35.6
+70 silly packumentCache full:https://registry.npmjs.org/three-stdlib cache-miss
+71 http fetch GET https://registry.npmjs.org/three-stdlib attempt 1 failed with ENOTFOUND
+72 http fetch GET https://registry.npmjs.org/three-stdlib attempt 2 failed with ENOTFOUND
+73 http fetch GET https://registry.npmjs.org/three-stdlib attempt 3 failed with ENOTFOUND
+74 silly fetch manifest troika-three-text@^0.52.4
+75 silly packumentCache full:https://registry.npmjs.org/troika-three-text cache-miss
+76 http fetch GET https://registry.npmjs.org/troika-three-text attempt 1 failed with ENOTFOUND
+77 http fetch GET https://registry.npmjs.org/troika-three-text attempt 2 failed with ENOTFOUND
+78 http fetch GET https://registry.npmjs.org/troika-three-text attempt 3 failed with ENOTFOUND
+79 silly placeDep node_modules/@react-three/drei @monogrid/gainmap-js@ OK for: @react-three/drei@10.7.7 want: ^3.0.6
+80 silly placeDep node_modules/@react-three/drei camera-controls@ OK for: @react-three/drei@10.7.7 want: ^3.1.0
+81 silly placeDep node_modules/@react-three/drei maath@ OK for: @react-three/drei@10.7.7 want: ^0.10.8
+82 silly placeDep node_modules/@react-three/drei meshline@ OK for: @react-three/drei@10.7.7 want: ^3.3.1
+83 silly placeDep ROOT react@ REPLACE for: @react-three/drei@10.7.7 want: ^19
+84 warn ERESOLVE overriding peer dependency {
+84 warn ERESOLVE   code: 'ERESOLVE',
+84 warn ERESOLVE   edge: {
+84 warn ERESOLVE     type: 'peer',
+84 warn ERESOLVE     name: 'react',
+84 warn ERESOLVE     spec: '>=16.8.0',
+84 warn ERESOLVE     from: {
+84 warn ERESOLVE       name: '@emotion/react',
+84 warn ERESOLVE       version: '11.14.0',
+84 warn ERESOLVE       location: 'node_modules/@emotion/react',
+84 warn ERESOLVE       isWorkspace: false,
+84 warn ERESOLVE       dependents: [Array]
+84 warn ERESOLVE     }
+84 warn ERESOLVE   },
+84 warn ERESOLVE   dep: {
+84 warn ERESOLVE     name: 'react',
+84 warn ERESOLVE     version: undefined,
+84 warn ERESOLVE     errors: [ [FetchError] ],
+84 warn ERESOLVE     package: {},
+84 warn ERESOLVE     whileInstalling: {
+84 warn ERESOLVE       name: '@react-three/drei',
+84 warn ERESOLVE       version: '10.7.7',
+84 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+84 warn ERESOLVE     },
+84 warn ERESOLVE     location: 'node_modules/react',
+84 warn ERESOLVE     isWorkspace: false,
+84 warn ERESOLVE     dependents: [ [Object] ]
+84 warn ERESOLVE   },
+84 warn ERESOLVE   force: false,
+84 warn ERESOLVE   isMine: false,
+84 warn ERESOLVE   strictPeerDeps: false,
+84 warn ERESOLVE   current: {
+84 warn ERESOLVE     name: 'react',
+84 warn ERESOLVE     version: '18.3.1',
+84 warn ERESOLVE     location: 'node_modules/react',
+84 warn ERESOLVE     isWorkspace: false,
+84 warn ERESOLVE     dependents: [
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object], [Object],
+84 warn ERESOLVE       [Object], [Object], [Object]
+84 warn ERESOLVE     ]
+84 warn ERESOLVE   }
+84 warn ERESOLVE }
+85 warn ERESOLVE overriding peer dependency {
+85 warn ERESOLVE   code: 'ERESOLVE',
+85 warn ERESOLVE   edge: {
+85 warn ERESOLVE     type: 'peer',
+85 warn ERESOLVE     name: 'react',
+85 warn ERESOLVE     spec: '>=16.8.0',
+85 warn ERESOLVE     from: {
+85 warn ERESOLVE       name: '@emotion/react',
+85 warn ERESOLVE       version: '11.14.0',
+85 warn ERESOLVE       location: 'node_modules/@emotion/react',
+85 warn ERESOLVE       isWorkspace: false,
+85 warn ERESOLVE       dependents: [Array]
+85 warn ERESOLVE     }
+85 warn ERESOLVE   },
+85 warn ERESOLVE   dep: {
+85 warn ERESOLVE     name: 'react',
+85 warn ERESOLVE     version: undefined,
+85 warn ERESOLVE     errors: [ [FetchError] ],
+85 warn ERESOLVE     package: {},
+85 warn ERESOLVE     whileInstalling: {
+85 warn ERESOLVE       name: '@react-three/drei',
+85 warn ERESOLVE       version: '10.7.7',
+85 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+85 warn ERESOLVE     },
+85 warn ERESOLVE     location: 'node_modules/react',
+85 warn ERESOLVE     isWorkspace: false,
+85 warn ERESOLVE     dependents: [ [Object] ]
+85 warn ERESOLVE   },
+85 warn ERESOLVE   force: false,
+85 warn ERESOLVE   isMine: false,
+85 warn ERESOLVE   strictPeerDeps: false,
+85 warn ERESOLVE   current: {
+85 warn ERESOLVE     name: 'react',
+85 warn ERESOLVE     version: '18.3.1',
+85 warn ERESOLVE     location: 'node_modules/react',
+85 warn ERESOLVE     isWorkspace: false,
+85 warn ERESOLVE     dependents: [
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object], [Object],
+85 warn ERESOLVE       [Object], [Object], [Object]
+85 warn ERESOLVE     ]
+85 warn ERESOLVE   }
+85 warn ERESOLVE }
+86 warn ERESOLVE overriding peer dependency {
+86 warn ERESOLVE   code: 'ERESOLVE',
+86 warn ERESOLVE   edge: {
+86 warn ERESOLVE     type: 'peer',
+86 warn ERESOLVE     name: 'react',
+86 warn ERESOLVE     spec: '>=16.8.0',
+86 warn ERESOLVE     from: {
+86 warn ERESOLVE       name: '@emotion/styled',
+86 warn ERESOLVE       version: '11.14.1',
+86 warn ERESOLVE       location: 'node_modules/@emotion/styled',
+86 warn ERESOLVE       isWorkspace: false,
+86 warn ERESOLVE       dependents: [Array]
+86 warn ERESOLVE     }
+86 warn ERESOLVE   },
+86 warn ERESOLVE   dep: {
+86 warn ERESOLVE     name: 'react',
+86 warn ERESOLVE     version: undefined,
+86 warn ERESOLVE     errors: [ [FetchError] ],
+86 warn ERESOLVE     package: {},
+86 warn ERESOLVE     whileInstalling: {
+86 warn ERESOLVE       name: '@react-three/drei',
+86 warn ERESOLVE       version: '10.7.7',
+86 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+86 warn ERESOLVE     },
+86 warn ERESOLVE     location: 'node_modules/react',
+86 warn ERESOLVE     isWorkspace: false,
+86 warn ERESOLVE     dependents: [ [Object] ]
+86 warn ERESOLVE   },
+86 warn ERESOLVE   force: false,
+86 warn ERESOLVE   isMine: false,
+86 warn ERESOLVE   strictPeerDeps: false,
+86 warn ERESOLVE   current: {
+86 warn ERESOLVE     name: 'react',
+86 warn ERESOLVE     version: '18.3.1',
+86 warn ERESOLVE     location: 'node_modules/react',
+86 warn ERESOLVE     isWorkspace: false,
+86 warn ERESOLVE     dependents: [
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object], [Object],
+86 warn ERESOLVE       [Object], [Object], [Object]
+86 warn ERESOLVE     ]
+86 warn ERESOLVE   }
+86 warn ERESOLVE }
+87 warn ERESOLVE overriding peer dependency {
+87 warn ERESOLVE   code: 'ERESOLVE',
+87 warn ERESOLVE   edge: {
+87 warn ERESOLVE     type: 'peer',
+87 warn ERESOLVE     name: 'react',
+87 warn ERESOLVE     spec: '^16.9.0 || ^17.0.0 || ^18.0.0 || ^19.0.0',
+87 warn ERESOLVE     from: {
+87 warn ERESOLVE       name: '@inertiajs/react',
+87 warn ERESOLVE       version: '1.3.0',
+87 warn ERESOLVE       location: 'node_modules/@inertiajs/react',
+87 warn ERESOLVE       isWorkspace: false,
+87 warn ERESOLVE       dependents: [Array]
+87 warn ERESOLVE     }
+87 warn ERESOLVE   },
+87 warn ERESOLVE   dep: {
+87 warn ERESOLVE     name: 'react',
+87 warn ERESOLVE     version: undefined,
+87 warn ERESOLVE     errors: [ [FetchError] ],
+87 warn ERESOLVE     package: {},
+87 warn ERESOLVE     whileInstalling: {
+87 warn ERESOLVE       name: '@react-three/drei',
+87 warn ERESOLVE       version: '10.7.7',
+87 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+87 warn ERESOLVE     },
+87 warn ERESOLVE     location: 'node_modules/react',
+87 warn ERESOLVE     isWorkspace: false,
+87 warn ERESOLVE     dependents: [ [Object] ]
+87 warn ERESOLVE   },
+87 warn ERESOLVE   force: false,
+87 warn ERESOLVE   isMine: false,
+87 warn ERESOLVE   strictPeerDeps: false,
+87 warn ERESOLVE   current: {
+87 warn ERESOLVE     name: 'react',
+87 warn ERESOLVE     version: '18.3.1',
+87 warn ERESOLVE     location: 'node_modules/react',
+87 warn ERESOLVE     isWorkspace: false,
+87 warn ERESOLVE     dependents: [
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object], [Object],
+87 warn ERESOLVE       [Object], [Object], [Object]
+87 warn ERESOLVE     ]
+87 warn ERESOLVE   }
+87 warn ERESOLVE }
+88 warn ERESOLVE overriding peer dependency {
+88 warn ERESOLVE   code: 'ERESOLVE',
+88 warn ERESOLVE   edge: {
+88 warn ERESOLVE     type: 'peer',
+88 warn ERESOLVE     name: 'react',
+88 warn ERESOLVE     spec: '^18.x || ^19.x',
+88 warn ERESOLVE     from: {
+88 warn ERESOLVE       name: '@mantine/core',
+88 warn ERESOLVE       version: '7.17.8',
+88 warn ERESOLVE       location: 'node_modules/@mantine/core',
+88 warn ERESOLVE       isWorkspace: false,
+88 warn ERESOLVE       dependents: [Array]
+88 warn ERESOLVE     }
+88 warn ERESOLVE   },
+88 warn ERESOLVE   dep: {
+88 warn ERESOLVE     name: 'react',
+88 warn ERESOLVE     version: undefined,
+88 warn ERESOLVE     errors: [ [FetchError] ],
+88 warn ERESOLVE     package: {},
+88 warn ERESOLVE     whileInstalling: {
+88 warn ERESOLVE       name: '@react-three/drei',
+88 warn ERESOLVE       version: '10.7.7',
+88 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+88 warn ERESOLVE     },
+88 warn ERESOLVE     location: 'node_modules/react',
+88 warn ERESOLVE     isWorkspace: false,
+88 warn ERESOLVE     dependents: [ [Object] ]
+88 warn ERESOLVE   },
+88 warn ERESOLVE   force: false,
+88 warn ERESOLVE   isMine: false,
+88 warn ERESOLVE   strictPeerDeps: false,
+88 warn ERESOLVE   current: {
+88 warn ERESOLVE     name: 'react',
+88 warn ERESOLVE     version: '18.3.1',
+88 warn ERESOLVE     location: 'node_modules/react',
+88 warn ERESOLVE     isWorkspace: false,
+88 warn ERESOLVE     dependents: [
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object], [Object],
+88 warn ERESOLVE       [Object], [Object], [Object]
+88 warn ERESOLVE     ]
+88 warn ERESOLVE   }
+88 warn ERESOLVE }
+89 warn ERESOLVE overriding peer dependency {
+89 warn ERESOLVE   code: 'ERESOLVE',
+89 warn ERESOLVE   edge: {
+89 warn ERESOLVE     type: 'peer',
+89 warn ERESOLVE     name: 'react',
+89 warn ERESOLVE     spec: '^18.x || ^19.x',
+89 warn ERESOLVE     from: {
+89 warn ERESOLVE       name: '@mantine/core',
+89 warn ERESOLVE       version: '7.17.8',
+89 warn ERESOLVE       location: 'node_modules/@mantine/core',
+89 warn ERESOLVE       isWorkspace: false,
+89 warn ERESOLVE       dependents: [Array]
+89 warn ERESOLVE     }
+89 warn ERESOLVE   },
+89 warn ERESOLVE   dep: {
+89 warn ERESOLVE     name: 'react',
+89 warn ERESOLVE     version: undefined,
+89 warn ERESOLVE     errors: [ [FetchError] ],
+89 warn ERESOLVE     package: {},
+89 warn ERESOLVE     whileInstalling: {
+89 warn ERESOLVE       name: '@react-three/drei',
+89 warn ERESOLVE       version: '10.7.7',
+89 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+89 warn ERESOLVE     },
+89 warn ERESOLVE     location: 'node_modules/react',
+89 warn ERESOLVE     isWorkspace: false,
+89 warn ERESOLVE     dependents: [ [Object] ]
+89 warn ERESOLVE   },
+89 warn ERESOLVE   force: false,
+89 warn ERESOLVE   isMine: false,
+89 warn ERESOLVE   strictPeerDeps: false,
+89 warn ERESOLVE   current: {
+89 warn ERESOLVE     name: 'react',
+89 warn ERESOLVE     version: '18.3.1',
+89 warn ERESOLVE     location: 'node_modules/react',
+89 warn ERESOLVE     isWorkspace: false,
+89 warn ERESOLVE     dependents: [
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object], [Object],
+89 warn ERESOLVE       [Object], [Object], [Object]
+89 warn ERESOLVE     ]
+89 warn ERESOLVE   }
+89 warn ERESOLVE }
+90 warn ERESOLVE overriding peer dependency {
+90 warn ERESOLVE   code: 'ERESOLVE',
+90 warn ERESOLVE   edge: {
+90 warn ERESOLVE     type: 'peer',
+90 warn ERESOLVE     name: 'react',
+90 warn ERESOLVE     spec: '^18.x || ^19.x',
+90 warn ERESOLVE     from: {
+90 warn ERESOLVE       name: '@mantine/core',
+90 warn ERESOLVE       version: '7.17.8',
+90 warn ERESOLVE       location: 'node_modules/@mantine/core',
+90 warn ERESOLVE       isWorkspace: false,
+90 warn ERESOLVE       dependents: [Array]
+90 warn ERESOLVE     }
+90 warn ERESOLVE   },
+90 warn ERESOLVE   dep: {
+90 warn ERESOLVE     name: 'react',
+90 warn ERESOLVE     version: undefined,
+90 warn ERESOLVE     errors: [ [FetchError] ],
+90 warn ERESOLVE     package: {},
+90 warn ERESOLVE     whileInstalling: {
+90 warn ERESOLVE       name: '@react-three/drei',
+90 warn ERESOLVE       version: '10.7.7',
+90 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+90 warn ERESOLVE     },
+90 warn ERESOLVE     location: 'node_modules/react',
+90 warn ERESOLVE     isWorkspace: false,
+90 warn ERESOLVE     dependents: [ [Object] ]
+90 warn ERESOLVE   },
+90 warn ERESOLVE   force: false,
+90 warn ERESOLVE   isMine: false,
+90 warn ERESOLVE   strictPeerDeps: false,
+90 warn ERESOLVE   current: {
+90 warn ERESOLVE     name: 'react',
+90 warn ERESOLVE     version: '18.3.1',
+90 warn ERESOLVE     location: 'node_modules/react',
+90 warn ERESOLVE     isWorkspace: false,
+90 warn ERESOLVE     dependents: [
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object], [Object],
+90 warn ERESOLVE       [Object], [Object], [Object]
+90 warn ERESOLVE     ]
+90 warn ERESOLVE   }
+90 warn ERESOLVE }
+91 warn ERESOLVE overriding peer dependency {
+91 warn ERESOLVE   code: 'ERESOLVE',
+91 warn ERESOLVE   edge: {
+91 warn ERESOLVE     type: 'peer',
+91 warn ERESOLVE     name: 'react',
+91 warn ERESOLVE     spec: '^18.x || ^19.x',
+91 warn ERESOLVE     from: {
+91 warn ERESOLVE       name: '@mantine/dates',
+91 warn ERESOLVE       version: '7.17.8',
+91 warn ERESOLVE       location: 'node_modules/@mantine/dates',
+91 warn ERESOLVE       isWorkspace: false,
+91 warn ERESOLVE       dependents: [Array]
+91 warn ERESOLVE     }
+91 warn ERESOLVE   },
+91 warn ERESOLVE   dep: {
+91 warn ERESOLVE     name: 'react',
+91 warn ERESOLVE     version: undefined,
+91 warn ERESOLVE     errors: [ [FetchError] ],
+91 warn ERESOLVE     package: {},
+91 warn ERESOLVE     whileInstalling: {
+91 warn ERESOLVE       name: '@react-three/drei',
+91 warn ERESOLVE       version: '10.7.7',
+91 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+91 warn ERESOLVE     },
+91 warn ERESOLVE     location: 'node_modules/react',
+91 warn ERESOLVE     isWorkspace: false,
+91 warn ERESOLVE     dependents: [ [Object] ]
+91 warn ERESOLVE   },
+91 warn ERESOLVE   force: false,
+91 warn ERESOLVE   isMine: false,
+91 warn ERESOLVE   strictPeerDeps: false,
+91 warn ERESOLVE   current: {
+91 warn ERESOLVE     name: 'react',
+91 warn ERESOLVE     version: '18.3.1',
+91 warn ERESOLVE     location: 'node_modules/react',
+91 warn ERESOLVE     isWorkspace: false,
+91 warn ERESOLVE     dependents: [
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object], [Object],
+91 warn ERESOLVE       [Object], [Object], [Object]
+91 warn ERESOLVE     ]
+91 warn ERESOLVE   }
+91 warn ERESOLVE }
+92 warn ERESOLVE overriding peer dependency {
+92 warn ERESOLVE   code: 'ERESOLVE',
+92 warn ERESOLVE   edge: {
+92 warn ERESOLVE     type: 'peer',
+92 warn ERESOLVE     name: 'react',
+92 warn ERESOLVE     spec: '^18.x || ^19.x',
+92 warn ERESOLVE     from: {
+92 warn ERESOLVE       name: '@mantine/form',
+92 warn ERESOLVE       version: '7.17.8',
+92 warn ERESOLVE       location: 'node_modules/@mantine/form',
+92 warn ERESOLVE       isWorkspace: false,
+92 warn ERESOLVE       dependents: [Array]
+92 warn ERESOLVE     }
+92 warn ERESOLVE   },
+92 warn ERESOLVE   dep: {
+92 warn ERESOLVE     name: 'react',
+92 warn ERESOLVE     version: undefined,
+92 warn ERESOLVE     errors: [ [FetchError] ],
+92 warn ERESOLVE     package: {},
+92 warn ERESOLVE     whileInstalling: {
+92 warn ERESOLVE       name: '@react-three/drei',
+92 warn ERESOLVE       version: '10.7.7',
+92 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+92 warn ERESOLVE     },
+92 warn ERESOLVE     location: 'node_modules/react',
+92 warn ERESOLVE     isWorkspace: false,
+92 warn ERESOLVE     dependents: [ [Object] ]
+92 warn ERESOLVE   },
+92 warn ERESOLVE   force: false,
+92 warn ERESOLVE   isMine: false,
+92 warn ERESOLVE   strictPeerDeps: false,
+92 warn ERESOLVE   current: {
+92 warn ERESOLVE     name: 'react',
+92 warn ERESOLVE     version: '18.3.1',
+92 warn ERESOLVE     location: 'node_modules/react',
+92 warn ERESOLVE     isWorkspace: false,
+92 warn ERESOLVE     dependents: [
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object], [Object],
+92 warn ERESOLVE       [Object], [Object], [Object]
+92 warn ERESOLVE     ]
+92 warn ERESOLVE   }
+92 warn ERESOLVE }
+93 warn ERESOLVE overriding peer dependency {
+93 warn ERESOLVE   code: 'ERESOLVE',
+93 warn ERESOLVE   edge: {
+93 warn ERESOLVE     type: 'peer',
+93 warn ERESOLVE     name: 'react',
+93 warn ERESOLVE     spec: '^18.x || ^19.x',
+93 warn ERESOLVE     from: {
+93 warn ERESOLVE       name: '@mantine/hooks',
+93 warn ERESOLVE       version: '7.17.8',
+93 warn ERESOLVE       location: 'node_modules/@mantine/hooks',
+93 warn ERESOLVE       isWorkspace: false,
+93 warn ERESOLVE       dependents: [Array]
+93 warn ERESOLVE     }
+93 warn ERESOLVE   },
+93 warn ERESOLVE   dep: {
+93 warn ERESOLVE     name: 'react',
+93 warn ERESOLVE     version: undefined,
+93 warn ERESOLVE     errors: [ [FetchError] ],
+93 warn ERESOLVE     package: {},
+93 warn ERESOLVE     whileInstalling: {
+93 warn ERESOLVE       name: '@react-three/drei',
+93 warn ERESOLVE       version: '10.7.7',
+93 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+93 warn ERESOLVE     },
+93 warn ERESOLVE     location: 'node_modules/react',
+93 warn ERESOLVE     isWorkspace: false,
+93 warn ERESOLVE     dependents: [ [Object] ]
+93 warn ERESOLVE   },
+93 warn ERESOLVE   force: false,
+93 warn ERESOLVE   isMine: false,
+93 warn ERESOLVE   strictPeerDeps: false,
+93 warn ERESOLVE   current: {
+93 warn ERESOLVE     name: 'react',
+93 warn ERESOLVE     version: '18.3.1',
+93 warn ERESOLVE     location: 'node_modules/react',
+93 warn ERESOLVE     isWorkspace: false,
+93 warn ERESOLVE     dependents: [
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object], [Object],
+93 warn ERESOLVE       [Object], [Object], [Object]
+93 warn ERESOLVE     ]
+93 warn ERESOLVE   }
+93 warn ERESOLVE }
+94 warn ERESOLVE overriding peer dependency {
+94 warn ERESOLVE   code: 'ERESOLVE',
+94 warn ERESOLVE   edge: {
+94 warn ERESOLVE     type: 'peer',
+94 warn ERESOLVE     name: 'react',
+94 warn ERESOLVE     spec: '^18.x || ^19.x',
+94 warn ERESOLVE     from: {
+94 warn ERESOLVE       name: '@mantine/hooks',
+94 warn ERESOLVE       version: '7.17.8',
+94 warn ERESOLVE       location: 'node_modules/@mantine/hooks',
+94 warn ERESOLVE       isWorkspace: false,
+94 warn ERESOLVE       dependents: [Array]
+94 warn ERESOLVE     }
+94 warn ERESOLVE   },
+94 warn ERESOLVE   dep: {
+94 warn ERESOLVE     name: 'react',
+94 warn ERESOLVE     version: undefined,
+94 warn ERESOLVE     errors: [ [FetchError] ],
+94 warn ERESOLVE     package: {},
+94 warn ERESOLVE     whileInstalling: {
+94 warn ERESOLVE       name: '@react-three/drei',
+94 warn ERESOLVE       version: '10.7.7',
+94 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+94 warn ERESOLVE     },
+94 warn ERESOLVE     location: 'node_modules/react',
+94 warn ERESOLVE     isWorkspace: false,
+94 warn ERESOLVE     dependents: [ [Object] ]
+94 warn ERESOLVE   },
+94 warn ERESOLVE   force: false,
+94 warn ERESOLVE   isMine: false,
+94 warn ERESOLVE   strictPeerDeps: false,
+94 warn ERESOLVE   current: {
+94 warn ERESOLVE     name: 'react',
+94 warn ERESOLVE     version: '18.3.1',
+94 warn ERESOLVE     location: 'node_modules/react',
+94 warn ERESOLVE     isWorkspace: false,
+94 warn ERESOLVE     dependents: [
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object], [Object],
+94 warn ERESOLVE       [Object], [Object], [Object]
+94 warn ERESOLVE     ]
+94 warn ERESOLVE   }
+94 warn ERESOLVE }
+95 warn ERESOLVE overriding peer dependency {
+95 warn ERESOLVE   code: 'ERESOLVE',
+95 warn ERESOLVE   edge: {
+95 warn ERESOLVE     type: 'peer',
+95 warn ERESOLVE     name: 'react',
+95 warn ERESOLVE     spec: '^18.x || ^19.x',
+95 warn ERESOLVE     from: {
+95 warn ERESOLVE       name: '@mantine/hooks',
+95 warn ERESOLVE       version: '7.17.8',
+95 warn ERESOLVE       location: 'node_modules/@mantine/hooks',
+95 warn ERESOLVE       isWorkspace: false,
+95 warn ERESOLVE       dependents: [Array]
+95 warn ERESOLVE     }
+95 warn ERESOLVE   },
+95 warn ERESOLVE   dep: {
+95 warn ERESOLVE     name: 'react',
+95 warn ERESOLVE     version: undefined,
+95 warn ERESOLVE     errors: [ [FetchError] ],
+95 warn ERESOLVE     package: {},
+95 warn ERESOLVE     whileInstalling: {
+95 warn ERESOLVE       name: '@react-three/drei',
+95 warn ERESOLVE       version: '10.7.7',
+95 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+95 warn ERESOLVE     },
+95 warn ERESOLVE     location: 'node_modules/react',
+95 warn ERESOLVE     isWorkspace: false,
+95 warn ERESOLVE     dependents: [ [Object] ]
+95 warn ERESOLVE   },
+95 warn ERESOLVE   force: false,
+95 warn ERESOLVE   isMine: false,
+95 warn ERESOLVE   strictPeerDeps: false,
+95 warn ERESOLVE   current: {
+95 warn ERESOLVE     name: 'react',
+95 warn ERESOLVE     version: '18.3.1',
+95 warn ERESOLVE     location: 'node_modules/react',
+95 warn ERESOLVE     isWorkspace: false,
+95 warn ERESOLVE     dependents: [
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object], [Object],
+95 warn ERESOLVE       [Object], [Object], [Object]
+95 warn ERESOLVE     ]
+95 warn ERESOLVE   }
+95 warn ERESOLVE }
+96 warn ERESOLVE overriding peer dependency {
+96 warn ERESOLVE   code: 'ERESOLVE',
+96 warn ERESOLVE   edge: {
+96 warn ERESOLVE     type: 'peer',
+96 warn ERESOLVE     name: 'react',
+96 warn ERESOLVE     spec: '^18.x || ^19.x',
+96 warn ERESOLVE     from: {
+96 warn ERESOLVE       name: '@mantine/hooks',
+96 warn ERESOLVE       version: '7.17.8',
+96 warn ERESOLVE       location: 'node_modules/@mantine/hooks',
+96 warn ERESOLVE       isWorkspace: false,
+96 warn ERESOLVE       dependents: [Array]
+96 warn ERESOLVE     }
+96 warn ERESOLVE   },
+96 warn ERESOLVE   dep: {
+96 warn ERESOLVE     name: 'react',
+96 warn ERESOLVE     version: undefined,
+96 warn ERESOLVE     errors: [ [FetchError] ],
+96 warn ERESOLVE     package: {},
+96 warn ERESOLVE     whileInstalling: {
+96 warn ERESOLVE       name: '@react-three/drei',
+96 warn ERESOLVE       version: '10.7.7',
+96 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+96 warn ERESOLVE     },
+96 warn ERESOLVE     location: 'node_modules/react',
+96 warn ERESOLVE     isWorkspace: false,
+96 warn ERESOLVE     dependents: [ [Object] ]
+96 warn ERESOLVE   },
+96 warn ERESOLVE   force: false,
+96 warn ERESOLVE   isMine: false,
+96 warn ERESOLVE   strictPeerDeps: false,
+96 warn ERESOLVE   current: {
+96 warn ERESOLVE     name: 'react',
+96 warn ERESOLVE     version: '18.3.1',
+96 warn ERESOLVE     location: 'node_modules/react',
+96 warn ERESOLVE     isWorkspace: false,
+96 warn ERESOLVE     dependents: [
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object], [Object],
+96 warn ERESOLVE       [Object], [Object], [Object]
+96 warn ERESOLVE     ]
+96 warn ERESOLVE   }
+96 warn ERESOLVE }
+97 warn ERESOLVE overriding peer dependency {
+97 warn ERESOLVE   code: 'ERESOLVE',
+97 warn ERESOLVE   edge: {
+97 warn ERESOLVE     type: 'peer',
+97 warn ERESOLVE     name: 'react',
+97 warn ERESOLVE     spec: '^18.x || ^19.x',
+97 warn ERESOLVE     from: {
+97 warn ERESOLVE       name: '@mantine/notifications',
+97 warn ERESOLVE       version: '7.17.8',
+97 warn ERESOLVE       location: 'node_modules/@mantine/notifications',
+97 warn ERESOLVE       isWorkspace: false,
+97 warn ERESOLVE       dependents: [Array]
+97 warn ERESOLVE     }
+97 warn ERESOLVE   },
+97 warn ERESOLVE   dep: {
+97 warn ERESOLVE     name: 'react',
+97 warn ERESOLVE     version: undefined,
+97 warn ERESOLVE     errors: [ [FetchError] ],
+97 warn ERESOLVE     package: {},
+97 warn ERESOLVE     whileInstalling: {
+97 warn ERESOLVE       name: '@react-three/drei',
+97 warn ERESOLVE       version: '10.7.7',
+97 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+97 warn ERESOLVE     },
+97 warn ERESOLVE     location: 'node_modules/react',
+97 warn ERESOLVE     isWorkspace: false,
+97 warn ERESOLVE     dependents: [ [Object] ]
+97 warn ERESOLVE   },
+97 warn ERESOLVE   force: false,
+97 warn ERESOLVE   isMine: false,
+97 warn ERESOLVE   strictPeerDeps: false,
+97 warn ERESOLVE   current: {
+97 warn ERESOLVE     name: 'react',
+97 warn ERESOLVE     version: '18.3.1',
+97 warn ERESOLVE     location: 'node_modules/react',
+97 warn ERESOLVE     isWorkspace: false,
+97 warn ERESOLVE     dependents: [
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object], [Object],
+97 warn ERESOLVE       [Object], [Object], [Object]
+97 warn ERESOLVE     ]
+97 warn ERESOLVE   }
+97 warn ERESOLVE }
+98 warn ERESOLVE overriding peer dependency {
+98 warn ERESOLVE   code: 'ERESOLVE',
+98 warn ERESOLVE   edge: {
+98 warn ERESOLVE     type: 'peer',
+98 warn ERESOLVE     name: 'react',
+98 warn ERESOLVE     spec: '>= 16',
+98 warn ERESOLVE     from: {
+98 warn ERESOLVE       name: '@tabler/icons-react',
+98 warn ERESOLVE       version: '3.35.0',
+98 warn ERESOLVE       location: 'node_modules/@tabler/icons-react',
+98 warn ERESOLVE       isWorkspace: false,
+98 warn ERESOLVE       dependents: [Array]
+98 warn ERESOLVE     }
+98 warn ERESOLVE   },
+98 warn ERESOLVE   dep: {
+98 warn ERESOLVE     name: 'react',
+98 warn ERESOLVE     version: undefined,
+98 warn ERESOLVE     errors: [ [FetchError] ],
+98 warn ERESOLVE     package: {},
+98 warn ERESOLVE     whileInstalling: {
+98 warn ERESOLVE       name: '@react-three/drei',
+98 warn ERESOLVE       version: '10.7.7',
+98 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+98 warn ERESOLVE     },
+98 warn ERESOLVE     location: 'node_modules/react',
+98 warn ERESOLVE     isWorkspace: false,
+98 warn ERESOLVE     dependents: [ [Object] ]
+98 warn ERESOLVE   },
+98 warn ERESOLVE   force: false,
+98 warn ERESOLVE   isMine: false,
+98 warn ERESOLVE   strictPeerDeps: false,
+98 warn ERESOLVE   current: {
+98 warn ERESOLVE     name: 'react',
+98 warn ERESOLVE     version: '18.3.1',
+98 warn ERESOLVE     location: 'node_modules/react',
+98 warn ERESOLVE     isWorkspace: false,
+98 warn ERESOLVE     dependents: [
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object], [Object],
+98 warn ERESOLVE       [Object], [Object], [Object]
+98 warn ERESOLVE     ]
+98 warn ERESOLVE   }
+98 warn ERESOLVE }
+99 warn ERESOLVE overriding peer dependency {
+99 warn ERESOLVE   code: 'ERESOLVE',
+99 warn ERESOLVE   edge: {
+99 warn ERESOLVE     type: 'peer',
+99 warn ERESOLVE     name: 'react',
+99 warn ERESOLVE     spec: '^18.3.1',
+99 warn ERESOLVE     from: {
+99 warn ERESOLVE       name: 'react-dom',
+99 warn ERESOLVE       version: '18.3.1',
+99 warn ERESOLVE       location: 'node_modules/react-dom',
+99 warn ERESOLVE       isWorkspace: false,
+99 warn ERESOLVE       dependents: [Array]
+99 warn ERESOLVE     }
+99 warn ERESOLVE   },
+99 warn ERESOLVE   dep: {
+99 warn ERESOLVE     name: 'react',
+99 warn ERESOLVE     version: undefined,
+99 warn ERESOLVE     errors: [ [FetchError] ],
+99 warn ERESOLVE     package: {},
+99 warn ERESOLVE     whileInstalling: {
+99 warn ERESOLVE       name: '@react-three/drei',
+99 warn ERESOLVE       version: '10.7.7',
+99 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+99 warn ERESOLVE     },
+99 warn ERESOLVE     location: 'node_modules/react',
+99 warn ERESOLVE     isWorkspace: false,
+99 warn ERESOLVE     dependents: [ [Object] ]
+99 warn ERESOLVE   },
+99 warn ERESOLVE   force: false,
+99 warn ERESOLVE   isMine: false,
+99 warn ERESOLVE   strictPeerDeps: false,
+99 warn ERESOLVE   current: {
+99 warn ERESOLVE     name: 'react',
+99 warn ERESOLVE     version: '18.3.1',
+99 warn ERESOLVE     location: 'node_modules/react',
+99 warn ERESOLVE     isWorkspace: false,
+99 warn ERESOLVE     dependents: [
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object], [Object],
+99 warn ERESOLVE       [Object], [Object], [Object]
+99 warn ERESOLVE     ]
+99 warn ERESOLVE   }
+99 warn ERESOLVE }
+100 warn ERESOLVE overriding peer dependency {
+100 warn ERESOLVE   code: 'ERESOLVE',
+100 warn ERESOLVE   edge: {
+100 warn ERESOLVE     type: 'peer',
+100 warn ERESOLVE     name: 'react',
+100 warn ERESOLVE     spec: '^18.3.1',
+100 warn ERESOLVE     from: {
+100 warn ERESOLVE       name: 'react-dom',
+100 warn ERESOLVE       version: '18.3.1',
+100 warn ERESOLVE       location: 'node_modules/react-dom',
+100 warn ERESOLVE       isWorkspace: false,
+100 warn ERESOLVE       dependents: [Array]
+100 warn ERESOLVE     }
+100 warn ERESOLVE   },
+100 warn ERESOLVE   dep: {
+100 warn ERESOLVE     name: 'react',
+100 warn ERESOLVE     version: undefined,
+100 warn ERESOLVE     errors: [ [FetchError] ],
+100 warn ERESOLVE     package: {},
+100 warn ERESOLVE     whileInstalling: {
+100 warn ERESOLVE       name: '@react-three/drei',
+100 warn ERESOLVE       version: '10.7.7',
+100 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+100 warn ERESOLVE     },
+100 warn ERESOLVE     location: 'node_modules/react',
+100 warn ERESOLVE     isWorkspace: false,
+100 warn ERESOLVE     dependents: [ [Object] ]
+100 warn ERESOLVE   },
+100 warn ERESOLVE   force: false,
+100 warn ERESOLVE   isMine: false,
+100 warn ERESOLVE   strictPeerDeps: false,
+100 warn ERESOLVE   current: {
+100 warn ERESOLVE     name: 'react',
+100 warn ERESOLVE     version: '18.3.1',
+100 warn ERESOLVE     location: 'node_modules/react',
+100 warn ERESOLVE     isWorkspace: false,
+100 warn ERESOLVE     dependents: [
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object], [Object],
+100 warn ERESOLVE       [Object], [Object], [Object]
+100 warn ERESOLVE     ]
+100 warn ERESOLVE   }
+100 warn ERESOLVE }
+101 warn ERESOLVE overriding peer dependency {
+101 warn ERESOLVE   code: 'ERESOLVE',
+101 warn ERESOLVE   edge: {
+101 warn ERESOLVE     type: 'peer',
+101 warn ERESOLVE     name: 'react',
+101 warn ERESOLVE     spec: '^18.3.1',
+101 warn ERESOLVE     from: {
+101 warn ERESOLVE       name: 'react-dom',
+101 warn ERESOLVE       version: '18.3.1',
+101 warn ERESOLVE       location: 'node_modules/react-dom',
+101 warn ERESOLVE       isWorkspace: false,
+101 warn ERESOLVE       dependents: [Array]
+101 warn ERESOLVE     }
+101 warn ERESOLVE   },
+101 warn ERESOLVE   dep: {
+101 warn ERESOLVE     name: 'react',
+101 warn ERESOLVE     version: undefined,
+101 warn ERESOLVE     errors: [ [FetchError] ],
+101 warn ERESOLVE     package: {},
+101 warn ERESOLVE     whileInstalling: {
+101 warn ERESOLVE       name: '@react-three/drei',
+101 warn ERESOLVE       version: '10.7.7',
+101 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+101 warn ERESOLVE     },
+101 warn ERESOLVE     location: 'node_modules/react',
+101 warn ERESOLVE     isWorkspace: false,
+101 warn ERESOLVE     dependents: [ [Object] ]
+101 warn ERESOLVE   },
+101 warn ERESOLVE   force: false,
+101 warn ERESOLVE   isMine: false,
+101 warn ERESOLVE   strictPeerDeps: false,
+101 warn ERESOLVE   current: {
+101 warn ERESOLVE     name: 'react',
+101 warn ERESOLVE     version: '18.3.1',
+101 warn ERESOLVE     location: 'node_modules/react',
+101 warn ERESOLVE     isWorkspace: false,
+101 warn ERESOLVE     dependents: [
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object], [Object],
+101 warn ERESOLVE       [Object], [Object], [Object]
+101 warn ERESOLVE     ]
+101 warn ERESOLVE   }
+101 warn ERESOLVE }
+102 warn ERESOLVE overriding peer dependency {
+102 warn ERESOLVE   code: 'ERESOLVE',
+102 warn ERESOLVE   edge: {
+102 warn ERESOLVE     type: 'peer',
+102 warn ERESOLVE     name: 'react',
+102 warn ERESOLVE     spec: '^18.3.1',
+102 warn ERESOLVE     from: {
+102 warn ERESOLVE       name: 'react-dom',
+102 warn ERESOLVE       version: '18.3.1',
+102 warn ERESOLVE       location: 'node_modules/react-dom',
+102 warn ERESOLVE       isWorkspace: false,
+102 warn ERESOLVE       dependents: [Array]
+102 warn ERESOLVE     }
+102 warn ERESOLVE   },
+102 warn ERESOLVE   dep: {
+102 warn ERESOLVE     name: 'react',
+102 warn ERESOLVE     version: undefined,
+102 warn ERESOLVE     errors: [ [FetchError] ],
+102 warn ERESOLVE     package: {},
+102 warn ERESOLVE     whileInstalling: {
+102 warn ERESOLVE       name: '@react-three/drei',
+102 warn ERESOLVE       version: '10.7.7',
+102 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+102 warn ERESOLVE     },
+102 warn ERESOLVE     location: 'node_modules/react',
+102 warn ERESOLVE     isWorkspace: false,
+102 warn ERESOLVE     dependents: [ [Object] ]
+102 warn ERESOLVE   },
+102 warn ERESOLVE   force: false,
+102 warn ERESOLVE   isMine: false,
+102 warn ERESOLVE   strictPeerDeps: false,
+102 warn ERESOLVE   current: {
+102 warn ERESOLVE     name: 'react',
+102 warn ERESOLVE     version: '18.3.1',
+102 warn ERESOLVE     location: 'node_modules/react',
+102 warn ERESOLVE     isWorkspace: false,
+102 warn ERESOLVE     dependents: [
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object], [Object],
+102 warn ERESOLVE       [Object], [Object], [Object]
+102 warn ERESOLVE     ]
+102 warn ERESOLVE   }
+102 warn ERESOLVE }
+103 warn ERESOLVE overriding peer dependency {
+103 warn ERESOLVE   code: 'ERESOLVE',
+103 warn ERESOLVE   edge: {
+103 warn ERESOLVE     type: 'peer',
+103 warn ERESOLVE     name: 'react',
+103 warn ERESOLVE     spec: '>= 16.8.0',
+103 warn ERESOLVE     from: {
+103 warn ERESOLVE       name: 'react-i18next',
+103 warn ERESOLVE       version: '15.7.4',
+103 warn ERESOLVE       location: 'node_modules/react-i18next',
+103 warn ERESOLVE       isWorkspace: false,
+103 warn ERESOLVE       dependents: [Array]
+103 warn ERESOLVE     }
+103 warn ERESOLVE   },
+103 warn ERESOLVE   dep: {
+103 warn ERESOLVE     name: 'react',
+103 warn ERESOLVE     version: undefined,
+103 warn ERESOLVE     errors: [ [FetchError] ],
+103 warn ERESOLVE     package: {},
+103 warn ERESOLVE     whileInstalling: {
+103 warn ERESOLVE       name: '@react-three/drei',
+103 warn ERESOLVE       version: '10.7.7',
+103 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+103 warn ERESOLVE     },
+103 warn ERESOLVE     location: 'node_modules/react',
+103 warn ERESOLVE     isWorkspace: false,
+103 warn ERESOLVE     dependents: [ [Object] ]
+103 warn ERESOLVE   },
+103 warn ERESOLVE   force: false,
+103 warn ERESOLVE   isMine: false,
+103 warn ERESOLVE   strictPeerDeps: false,
+103 warn ERESOLVE   current: {
+103 warn ERESOLVE     name: 'react',
+103 warn ERESOLVE     version: '18.3.1',
+103 warn ERESOLVE     location: 'node_modules/react',
+103 warn ERESOLVE     isWorkspace: false,
+103 warn ERESOLVE     dependents: [
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object], [Object],
+103 warn ERESOLVE       [Object], [Object], [Object]
+103 warn ERESOLVE     ]
+103 warn ERESOLVE   }
+103 warn ERESOLVE }
+104 warn ERESOLVE overriding peer dependency {
+104 warn ERESOLVE   code: 'ERESOLVE',
+104 warn ERESOLVE   edge: {
+104 warn ERESOLVE     type: 'peerOptional',
+104 warn ERESOLVE     name: 'react',
+104 warn ERESOLVE     spec: '>=16.8',
+104 warn ERESOLVE     from: {
+104 warn ERESOLVE       name: 'zustand',
+104 warn ERESOLVE       version: '4.5.7',
+104 warn ERESOLVE       location: 'node_modules/zustand',
+104 warn ERESOLVE       isWorkspace: false,
+104 warn ERESOLVE       dependents: [Array]
+104 warn ERESOLVE     }
+104 warn ERESOLVE   },
+104 warn ERESOLVE   dep: {
+104 warn ERESOLVE     name: 'react',
+104 warn ERESOLVE     version: undefined,
+104 warn ERESOLVE     errors: [ [FetchError] ],
+104 warn ERESOLVE     package: {},
+104 warn ERESOLVE     whileInstalling: {
+104 warn ERESOLVE       name: '@react-three/drei',
+104 warn ERESOLVE       version: '10.7.7',
+104 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+104 warn ERESOLVE     },
+104 warn ERESOLVE     location: 'node_modules/react',
+104 warn ERESOLVE     isWorkspace: false,
+104 warn ERESOLVE     dependents: [ [Object] ]
+104 warn ERESOLVE   },
+104 warn ERESOLVE   force: false,
+104 warn ERESOLVE   isMine: false,
+104 warn ERESOLVE   strictPeerDeps: false,
+104 warn ERESOLVE   current: {
+104 warn ERESOLVE     name: 'react',
+104 warn ERESOLVE     version: '18.3.1',
+104 warn ERESOLVE     location: 'node_modules/react',
+104 warn ERESOLVE     isWorkspace: false,
+104 warn ERESOLVE     dependents: [
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object], [Object],
+104 warn ERESOLVE       [Object], [Object], [Object]
+104 warn ERESOLVE     ]
+104 warn ERESOLVE   }
+104 warn ERESOLVE }
+105 warn ERESOLVE overriding peer dependency {
+105 warn ERESOLVE   code: 'ERESOLVE',
+105 warn ERESOLVE   edge: {
+105 warn ERESOLVE     type: 'peer',
+105 warn ERESOLVE     name: 'react',
+105 warn ERESOLVE     spec: '^19',
+105 warn ERESOLVE     error: 'INVALID',
+105 warn ERESOLVE     from: {
+105 warn ERESOLVE       name: '@react-three/drei',
+105 warn ERESOLVE       version: '10.7.7',
+105 warn ERESOLVE       location: 'node_modules/@react-three/drei',
+105 warn ERESOLVE       isWorkspace: false,
+105 warn ERESOLVE       dependents: []
+105 warn ERESOLVE     }
+105 warn ERESOLVE   },
+105 warn ERESOLVE   dep: {
+105 warn ERESOLVE     name: 'react',
+105 warn ERESOLVE     version: undefined,
+105 warn ERESOLVE     errors: [ [FetchError] ],
+105 warn ERESOLVE     package: {},
+105 warn ERESOLVE     whileInstalling: {
+105 warn ERESOLVE       name: '@react-three/drei',
+105 warn ERESOLVE       version: '10.7.7',
+105 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+105 warn ERESOLVE     },
+105 warn ERESOLVE     location: 'node_modules/react',
+105 warn ERESOLVE     isWorkspace: false,
+105 warn ERESOLVE     dependents: [ [Object] ]
+105 warn ERESOLVE   },
+105 warn ERESOLVE   force: false,
+105 warn ERESOLVE   isMine: false,
+105 warn ERESOLVE   strictPeerDeps: false,
+105 warn ERESOLVE   current: {
+105 warn ERESOLVE     name: 'react',
+105 warn ERESOLVE     version: undefined,
+105 warn ERESOLVE     errors: [ [FetchError] ],
+105 warn ERESOLVE     package: {},
+105 warn ERESOLVE     location: 'node_modules/react',
+105 warn ERESOLVE     isWorkspace: false,
+105 warn ERESOLVE     dependents: [ [Object] ]
+105 warn ERESOLVE   }
+105 warn ERESOLVE }
+106 silly placeDep ROOT react-dom@ REPLACE for: @react-three/drei@10.7.7 want: ^19
+107 warn ERESOLVE overriding peer dependency {
+107 warn ERESOLVE   code: 'ERESOLVE',
+107 warn ERESOLVE   edge: {
+107 warn ERESOLVE     type: 'peer',
+107 warn ERESOLVE     name: 'react-dom',
+107 warn ERESOLVE     spec: '^18.x || ^19.x',
+107 warn ERESOLVE     from: {
+107 warn ERESOLVE       name: '@mantine/core',
+107 warn ERESOLVE       version: '7.17.8',
+107 warn ERESOLVE       location: 'node_modules/@mantine/core',
+107 warn ERESOLVE       isWorkspace: false,
+107 warn ERESOLVE       dependents: [Array]
+107 warn ERESOLVE     }
+107 warn ERESOLVE   },
+107 warn ERESOLVE   dep: {
+107 warn ERESOLVE     name: 'react-dom',
+107 warn ERESOLVE     version: undefined,
+107 warn ERESOLVE     errors: [ [FetchError] ],
+107 warn ERESOLVE     package: {},
+107 warn ERESOLVE     whileInstalling: {
+107 warn ERESOLVE       name: '@react-three/drei',
+107 warn ERESOLVE       version: '10.7.7',
+107 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+107 warn ERESOLVE     },
+107 warn ERESOLVE     location: 'node_modules/react-dom',
+107 warn ERESOLVE     isWorkspace: false,
+107 warn ERESOLVE     dependents: [ [Object] ]
+107 warn ERESOLVE   },
+107 warn ERESOLVE   force: false,
+107 warn ERESOLVE   isMine: false,
+107 warn ERESOLVE   strictPeerDeps: false,
+107 warn ERESOLVE   current: {
+107 warn ERESOLVE     name: 'react-dom',
+107 warn ERESOLVE     version: '18.3.1',
+107 warn ERESOLVE     location: 'node_modules/react-dom',
+107 warn ERESOLVE     isWorkspace: false,
+107 warn ERESOLVE     dependents: [
+107 warn ERESOLVE       [Object], [Object],
+107 warn ERESOLVE       [Object], [Object],
+107 warn ERESOLVE       [Object], [Object],
+107 warn ERESOLVE       [Object], [Object],
+107 warn ERESOLVE       [Object]
+107 warn ERESOLVE     ]
+107 warn ERESOLVE   }
+107 warn ERESOLVE }
+108 warn ERESOLVE overriding peer dependency {
+108 warn ERESOLVE   code: 'ERESOLVE',
+108 warn ERESOLVE   edge: {
+108 warn ERESOLVE     type: 'peer',
+108 warn ERESOLVE     name: 'react-dom',
+108 warn ERESOLVE     spec: '^18.x || ^19.x',
+108 warn ERESOLVE     from: {
+108 warn ERESOLVE       name: '@mantine/core',
+108 warn ERESOLVE       version: '7.17.8',
+108 warn ERESOLVE       location: 'node_modules/@mantine/core',
+108 warn ERESOLVE       isWorkspace: false,
+108 warn ERESOLVE       dependents: [Array]
+108 warn ERESOLVE     }
+108 warn ERESOLVE   },
+108 warn ERESOLVE   dep: {
+108 warn ERESOLVE     name: 'react-dom',
+108 warn ERESOLVE     version: undefined,
+108 warn ERESOLVE     errors: [ [FetchError] ],
+108 warn ERESOLVE     package: {},
+108 warn ERESOLVE     whileInstalling: {
+108 warn ERESOLVE       name: '@react-three/drei',
+108 warn ERESOLVE       version: '10.7.7',
+108 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+108 warn ERESOLVE     },
+108 warn ERESOLVE     location: 'node_modules/react-dom',
+108 warn ERESOLVE     isWorkspace: false,
+108 warn ERESOLVE     dependents: [ [Object] ]
+108 warn ERESOLVE   },
+108 warn ERESOLVE   force: false,
+108 warn ERESOLVE   isMine: false,
+108 warn ERESOLVE   strictPeerDeps: false,
+108 warn ERESOLVE   current: {
+108 warn ERESOLVE     name: 'react-dom',
+108 warn ERESOLVE     version: '18.3.1',
+108 warn ERESOLVE     location: 'node_modules/react-dom',
+108 warn ERESOLVE     isWorkspace: false,
+108 warn ERESOLVE     dependents: [
+108 warn ERESOLVE       [Object], [Object],
+108 warn ERESOLVE       [Object], [Object],
+108 warn ERESOLVE       [Object], [Object],
+108 warn ERESOLVE       [Object], [Object],
+108 warn ERESOLVE       [Object]
+108 warn ERESOLVE     ]
+108 warn ERESOLVE   }
+108 warn ERESOLVE }
+109 warn ERESOLVE overriding peer dependency {
+109 warn ERESOLVE   code: 'ERESOLVE',
+109 warn ERESOLVE   edge: {
+109 warn ERESOLVE     type: 'peer',
+109 warn ERESOLVE     name: 'react-dom',
+109 warn ERESOLVE     spec: '^18.x || ^19.x',
+109 warn ERESOLVE     from: {
+109 warn ERESOLVE       name: '@mantine/core',
+109 warn ERESOLVE       version: '7.17.8',
+109 warn ERESOLVE       location: 'node_modules/@mantine/core',
+109 warn ERESOLVE       isWorkspace: false,
+109 warn ERESOLVE       dependents: [Array]
+109 warn ERESOLVE     }
+109 warn ERESOLVE   },
+109 warn ERESOLVE   dep: {
+109 warn ERESOLVE     name: 'react-dom',
+109 warn ERESOLVE     version: undefined,
+109 warn ERESOLVE     errors: [ [FetchError] ],
+109 warn ERESOLVE     package: {},
+109 warn ERESOLVE     whileInstalling: {
+109 warn ERESOLVE       name: '@react-three/drei',
+109 warn ERESOLVE       version: '10.7.7',
+109 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+109 warn ERESOLVE     },
+109 warn ERESOLVE     location: 'node_modules/react-dom',
+109 warn ERESOLVE     isWorkspace: false,
+109 warn ERESOLVE     dependents: [ [Object] ]
+109 warn ERESOLVE   },
+109 warn ERESOLVE   force: false,
+109 warn ERESOLVE   isMine: false,
+109 warn ERESOLVE   strictPeerDeps: false,
+109 warn ERESOLVE   current: {
+109 warn ERESOLVE     name: 'react-dom',
+109 warn ERESOLVE     version: '18.3.1',
+109 warn ERESOLVE     location: 'node_modules/react-dom',
+109 warn ERESOLVE     isWorkspace: false,
+109 warn ERESOLVE     dependents: [
+109 warn ERESOLVE       [Object], [Object],
+109 warn ERESOLVE       [Object], [Object],
+109 warn ERESOLVE       [Object], [Object],
+109 warn ERESOLVE       [Object], [Object],
+109 warn ERESOLVE       [Object]
+109 warn ERESOLVE     ]
+109 warn ERESOLVE   }
+109 warn ERESOLVE }
+110 warn ERESOLVE overriding peer dependency {
+110 warn ERESOLVE   code: 'ERESOLVE',
+110 warn ERESOLVE   edge: {
+110 warn ERESOLVE     type: 'peer',
+110 warn ERESOLVE     name: 'react-dom',
+110 warn ERESOLVE     spec: '^18.x || ^19.x',
+110 warn ERESOLVE     from: {
+110 warn ERESOLVE       name: '@mantine/dates',
+110 warn ERESOLVE       version: '7.17.8',
+110 warn ERESOLVE       location: 'node_modules/@mantine/dates',
+110 warn ERESOLVE       isWorkspace: false,
+110 warn ERESOLVE       dependents: [Array]
+110 warn ERESOLVE     }
+110 warn ERESOLVE   },
+110 warn ERESOLVE   dep: {
+110 warn ERESOLVE     name: 'react-dom',
+110 warn ERESOLVE     version: undefined,
+110 warn ERESOLVE     errors: [ [FetchError] ],
+110 warn ERESOLVE     package: {},
+110 warn ERESOLVE     whileInstalling: {
+110 warn ERESOLVE       name: '@react-three/drei',
+110 warn ERESOLVE       version: '10.7.7',
+110 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+110 warn ERESOLVE     },
+110 warn ERESOLVE     location: 'node_modules/react-dom',
+110 warn ERESOLVE     isWorkspace: false,
+110 warn ERESOLVE     dependents: [ [Object] ]
+110 warn ERESOLVE   },
+110 warn ERESOLVE   force: false,
+110 warn ERESOLVE   isMine: false,
+110 warn ERESOLVE   strictPeerDeps: false,
+110 warn ERESOLVE   current: {
+110 warn ERESOLVE     name: 'react-dom',
+110 warn ERESOLVE     version: '18.3.1',
+110 warn ERESOLVE     location: 'node_modules/react-dom',
+110 warn ERESOLVE     isWorkspace: false,
+110 warn ERESOLVE     dependents: [
+110 warn ERESOLVE       [Object], [Object],
+110 warn ERESOLVE       [Object], [Object],
+110 warn ERESOLVE       [Object], [Object],
+110 warn ERESOLVE       [Object], [Object],
+110 warn ERESOLVE       [Object]
+110 warn ERESOLVE     ]
+110 warn ERESOLVE   }
+110 warn ERESOLVE }
+111 warn ERESOLVE overriding peer dependency {
+111 warn ERESOLVE   code: 'ERESOLVE',
+111 warn ERESOLVE   edge: {
+111 warn ERESOLVE     type: 'peer',
+111 warn ERESOLVE     name: 'react-dom',
+111 warn ERESOLVE     spec: '^18.x || ^19.x',
+111 warn ERESOLVE     from: {
+111 warn ERESOLVE       name: '@mantine/notifications',
+111 warn ERESOLVE       version: '7.17.8',
+111 warn ERESOLVE       location: 'node_modules/@mantine/notifications',
+111 warn ERESOLVE       isWorkspace: false,
+111 warn ERESOLVE       dependents: [Array]
+111 warn ERESOLVE     }
+111 warn ERESOLVE   },
+111 warn ERESOLVE   dep: {
+111 warn ERESOLVE     name: 'react-dom',
+111 warn ERESOLVE     version: undefined,
+111 warn ERESOLVE     errors: [ [FetchError] ],
+111 warn ERESOLVE     package: {},
+111 warn ERESOLVE     whileInstalling: {
+111 warn ERESOLVE       name: '@react-three/drei',
+111 warn ERESOLVE       version: '10.7.7',
+111 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+111 warn ERESOLVE     },
+111 warn ERESOLVE     location: 'node_modules/react-dom',
+111 warn ERESOLVE     isWorkspace: false,
+111 warn ERESOLVE     dependents: [ [Object] ]
+111 warn ERESOLVE   },
+111 warn ERESOLVE   force: false,
+111 warn ERESOLVE   isMine: false,
+111 warn ERESOLVE   strictPeerDeps: false,
+111 warn ERESOLVE   current: {
+111 warn ERESOLVE     name: 'react-dom',
+111 warn ERESOLVE     version: '18.3.1',
+111 warn ERESOLVE     location: 'node_modules/react-dom',
+111 warn ERESOLVE     isWorkspace: false,
+111 warn ERESOLVE     dependents: [
+111 warn ERESOLVE       [Object], [Object],
+111 warn ERESOLVE       [Object], [Object],
+111 warn ERESOLVE       [Object], [Object],
+111 warn ERESOLVE       [Object], [Object],
+111 warn ERESOLVE       [Object]
+111 warn ERESOLVE     ]
+111 warn ERESOLVE   }
+111 warn ERESOLVE }
+112 warn ERESOLVE overriding peer dependency {
+112 warn ERESOLVE   code: 'ERESOLVE',
+112 warn ERESOLVE   edge: {
+112 warn ERESOLVE     type: 'peerOptional',
+112 warn ERESOLVE     name: 'react-dom',
+112 warn ERESOLVE     spec: '^19',
+112 warn ERESOLVE     error: 'INVALID',
+112 warn ERESOLVE     from: {
+112 warn ERESOLVE       name: '@react-three/drei',
+112 warn ERESOLVE       version: '10.7.7',
+112 warn ERESOLVE       location: 'node_modules/@react-three/drei',
+112 warn ERESOLVE       isWorkspace: false,
+112 warn ERESOLVE       dependents: []
+112 warn ERESOLVE     }
+112 warn ERESOLVE   },
+112 warn ERESOLVE   dep: {
+112 warn ERESOLVE     name: 'react-dom',
+112 warn ERESOLVE     version: undefined,
+112 warn ERESOLVE     errors: [ [FetchError] ],
+112 warn ERESOLVE     package: {},
+112 warn ERESOLVE     whileInstalling: {
+112 warn ERESOLVE       name: '@react-three/drei',
+112 warn ERESOLVE       version: '10.7.7',
+112 warn ERESOLVE       path: '/Users/beniam/Documents/CODE/LOMI/MEDIC/medic/assets/node_modules/@react-three/drei'
+112 warn ERESOLVE     },
+112 warn ERESOLVE     location: 'node_modules/react-dom',
+112 warn ERESOLVE     isWorkspace: false,
+112 warn ERESOLVE     dependents: [ [Object] ]
+112 warn ERESOLVE   },
+112 warn ERESOLVE   force: false,
+112 warn ERESOLVE   isMine: false,
+112 warn ERESOLVE   strictPeerDeps: false,
+112 warn ERESOLVE   current: {
+112 warn ERESOLVE     name: 'react-dom',
+112 warn ERESOLVE     version: undefined,
+112 warn ERESOLVE     errors: [ [FetchError] ],
+112 warn ERESOLVE     package: {},
+112 warn ERESOLVE     location: 'node_modules/react-dom',
+112 warn ERESOLVE     isWorkspace: false,
+112 warn ERESOLVE     dependents: [ [Object] ]
+112 warn ERESOLVE   }
+112 warn ERESOLVE }
+113 silly placeDep node_modules/@react-three/drei three-mesh-bvh@ OK for: @react-three/drei@10.7.7 want: ^0.8.3
+114 silly placeDep node_modules/@react-three/drei three-stdlib@ OK for: @react-three/drei@10.7.7 want: ^2.35.6
+115 silly placeDep node_modules/@react-three/drei troika-three-text@ OK for: @react-three/drei@10.7.7 want: ^0.52.4
+116 silly fetch manifest react@^18.3.1
+117 silly packumentCache full:https://registry.npmjs.org/react cache-miss
+118 http fetch GET https://registry.npmjs.org/react attempt 1 failed with ENOTFOUND
+119 http fetch GET https://registry.npmjs.org/react attempt 2 failed with ENOTFOUND
+120 http fetch GET https://registry.npmjs.org/react attempt 3 failed with ENOTFOUND
+121 silly fetch manifest zustand@^4.5.3
+122 silly packumentCache full:https://registry.npmjs.org/zustand cache-miss
+123 http fetch GET https://registry.npmjs.org/zustand attempt 1 failed with ENOTFOUND
+124 http fetch GET https://registry.npmjs.org/zustand attempt 2 failed with ENOTFOUND
+125 http fetch GET https://registry.npmjs.org/zustand attempt 3 failed with ENOTFOUND
+126 silly placeDep ROOT react@ OK for: medic_assets@1.0.0 want: ^18.3.1
+127 silly placeDep ROOT zustand@ OK for: medic_assets@1.0.0 want: ^4.5.3
+128 silly fetch manifest @emotion/use-insertion-effect-with-fallbacks@^1.2.0
+129 silly packumentCache full:https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks cache-miss
+130 http fetch GET https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks attempt 1 failed with ENOTFOUND
+131 http fetch GET https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks attempt 2 failed with ENOTFOUND
+132 http fetch GET https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks attempt 3 failed with ENOTFOUND
+133 silly placeDep node_modules/@emotion/react @emotion/use-insertion-effect-with-fallbacks@ OK for: @emotion/react@11.14.0 want: ^1.2.0
+134 silly fetch manifest @emotion/use-insertion-effect-with-fallbacks@^1.2.0
+135 silly packumentCache full:https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks cache-miss
+136 http fetch GET https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks attempt 1 failed with ENOTFOUND
+137 http fetch GET https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks attempt 2 failed with ENOTFOUND
+138 http fetch GET https://registry.npmjs.org/@emotion%2fuse-insertion-effect-with-fallbacks attempt 3 failed with ENOTFOUND
+139 silly placeDep node_modules/@emotion/styled @emotion/use-insertion-effect-with-fallbacks@ OK for: @emotion/styled@11.14.1 want: ^1.2.0
+140 silly fetch manifest @floating-ui/react@^0.26.28
+141 silly packumentCache full:https://registry.npmjs.org/@floating-ui%2freact cache-miss
+142 http fetch GET https://registry.npmjs.org/@floating-ui%2freact attempt 1 failed with ENOTFOUND
+143 http fetch GET https://registry.npmjs.org/@floating-ui%2freact attempt 2 failed with ENOTFOUND
+144 http fetch GET https://registry.npmjs.org/@floating-ui%2freact attempt 3 failed with ENOTFOUND
+145 silly fetch manifest react-number-format@^5.4.3
+146 silly packumentCache full:https://registry.npmjs.org/react-number-format cache-miss
+147 http fetch GET https://registry.npmjs.org/react-number-format attempt 1 failed with ENOTFOUND
+148 http fetch GET https://registry.npmjs.org/react-number-format attempt 2 failed with ENOTFOUND
+149 http fetch GET https://registry.npmjs.org/react-number-format attempt 3 failed with ENOTFOUND
+150 silly fetch manifest react-remove-scroll@^2.6.2
+151 silly packumentCache full:https://registry.npmjs.org/react-remove-scroll cache-miss
+152 http fetch GET https://registry.npmjs.org/react-remove-scroll attempt 1 failed with ENOTFOUND
+153 http fetch GET https://registry.npmjs.org/react-remove-scroll attempt 2 failed with ENOTFOUND
+154 http fetch GET https://registry.npmjs.org/react-remove-scroll attempt 3 failed with ENOTFOUND
+155 silly fetch manifest react-textarea-autosize@8.5.9
+156 silly packumentCache full:https://registry.npmjs.org/react-textarea-autosize cache-miss
+157 http fetch GET https://registry.npmjs.org/react-textarea-autosize attempt 1 failed with ENOTFOUND
+158 http fetch GET https://registry.npmjs.org/react-textarea-autosize attempt 2 failed with ENOTFOUND
+159 http fetch GET https://registry.npmjs.org/react-textarea-autosize attempt 3 failed with ENOTFOUND
+160 silly placeDep node_modules/@mantine/core @floating-ui/react@ OK for: @mantine/core@7.17.8 want: ^0.26.28
+161 silly placeDep node_modules/@mantine/core react-number-format@ OK for: @mantine/core@7.17.8 want: ^5.4.3
+162 silly placeDep node_modules/@mantine/core react-remove-scroll@ OK for: @mantine/core@7.17.8 want: ^2.6.2
+163 silly placeDep node_modules/@mantine/core react-textarea-autosize@ OK for: @mantine/core@7.17.8 want: 8.5.9
+164 silly fetch manifest @mantine/store@7.17.8
+165 silly packumentCache full:https://registry.npmjs.org/@mantine%2fstore cache-miss
+166 http fetch GET https://registry.npmjs.org/@mantine%2fstore attempt 1 failed with ENOTFOUND
+167 http fetch GET https://registry.npmjs.org/@mantine%2fstore attempt 2 failed with ENOTFOUND
+168 http fetch GET https://registry.npmjs.org/@mantine%2fstore attempt 3 failed with ENOTFOUND
+169 silly fetch manifest react-transition-group@4.4.5
+170 silly packumentCache full:https://registry.npmjs.org/react-transition-group cache-miss
+171 http fetch GET https://registry.npmjs.org/react-transition-group attempt 1 failed with ENOTFOUND
+172 http fetch GET https://registry.npmjs.org/react-transition-group attempt 2 failed with ENOTFOUND
+173 http fetch GET https://registry.npmjs.org/react-transition-group attempt 3 failed with ENOTFOUND
+174 silly placeDep node_modules/@mantine/notifications @mantine/store@ OK for: @mantine/notifications@7.17.8 want: 7.17.8
+175 silly placeDep node_modules/@mantine/notifications react-transition-group@ OK for: @mantine/notifications@7.17.8 want: 4.4.5
+176 silly fetch manifest @use-gesture/react@^10.3.1
+177 silly packumentCache full:https://registry.npmjs.org/@use-gesture%2freact cache-miss
+178 http fetch GET https://registry.npmjs.org/@use-gesture%2freact attempt 1 failed with ENOTFOUND

@@ -81,7 +81,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         {showNavbar && <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />}
                         <Group>
                             <Link href="/">
-                                <Image src="/images/medic-logo.svg" h={30} w="auto" alt="Medic Logo" />
+                                <Image src="/images/logo-medic-sun.svg" h={32} w="auto" alt="Medic" />
                             </Link>
                             <Badge variant="light" color="blue">Beta</Badge>
                         </Group>
