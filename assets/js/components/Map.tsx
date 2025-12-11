@@ -17,16 +17,15 @@ interface MapProps {
     doctors: MapDoctor[]
     height?: number | string
     expanded?: boolean
+    focusedDoctorId?: string | null
 }
 
-export default function DoctorMap({ doctors, height = '100%', expanded = false }: MapProps) {
+export default function DoctorMap({ doctors, height = '100%', expanded = false, focusedDoctorId = null }: MapProps) {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<mapboxgl.Map | null>(null)
-    const markers = useRef<mapboxgl.Marker[]>([])
+    const markers = useRef<{ [key: string]: mapboxgl.Marker }>({})
 
     // Initialize Map
-    // Debug removed for brevity, trust logic now.
-
     useEffect(() => {
         if (map.current || !mapContainer.current) return
 
@@ -38,7 +37,6 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false }
             center: [23.7275, 37.9838], // Default to Athens
             zoom: 10,
             attributionControl: false
-            // Padding set via effect below to avoid TS error
         })
 
         map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
@@ -50,7 +48,7 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false }
 
         map.current.easeTo({
             padding: { bottom: expanded ? 0 : 250 },
-            duration: 300 // Match CSS transition
+            duration: 300
         })
     }, [expanded])
 
@@ -59,8 +57,8 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false }
         if (!map.current) return
 
         // Clear existing markers
-        markers.current.forEach(marker => marker.remove())
-        markers.current = []
+        Object.values(markers.current).forEach(marker => marker.remove())
+        markers.current = {}
 
         if (doctors.length === 0) return
 
@@ -81,37 +79,61 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false }
                 el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
                 el.style.cursor = 'pointer'
 
+                // Create Popup with Button
+                const popupHTML = `
+                    <div style="font-family: Inter, sans-serif; min-width: 180px;">
+                        <strong style="color: #111; font-size: 14px; display: block; margin-bottom: 2px;">${doctor.firstName} ${doctor.lastName}</strong>
+                        <span style="color: #0D9488; font-size: 12px; font-weight: 600;">${doctor.specialtyName || ''}</span>
+                        <div style="color: #666; font-size: 12px; margin-top: 4px; line-height: 1.4;">${doctor.address || ''}</div>
+                        <a href="/doctors/${doctor.id}" 
+                           style="display: block; margin-top: 8px; text-align: center; background: #14B8A6; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 500;">
+                           Book Appointment
+                        </a>
+                    </div>
+                `
+
                 const marker = new mapboxgl.Marker({ element: el })
                     .setLngLat([lng, lat])
-                    .setPopup(
-                        new mapboxgl.Popup({ offset: 25 })
-                            .setHTML(
-                                `<div style="font-family: Inter, sans-serif;">
-                  <strong style="color: #111;">${doctor.firstName} ${doctor.lastName}</strong><br/>
-                  <span style="color: #666; font-size: 13px;">${doctor.specialtyName || ''}</span><br/>
-                  <span style="color: #888; font-size: 12px; margin-top: 4px; display: block;">${doctor.address || ''}</span>
-                 </div>`
-                            )
-                    )
+                    .setPopup(new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(popupHTML))
                     .addTo(map.current!)
 
-                markers.current.push(marker)
+                markers.current[doctor.id] = marker
                 bounds.extend([lng, lat])
             }
         })
 
         // Fit bounds if we have markers
-        if (markers.current.length > 0) {
+        if (Object.keys(markers.current).length > 0) {
             map.current.fitBounds(bounds, {
-                padding: { top: 50, bottom: expanded ? 50 : 300, left: 50, right: 50 }, // Add extra bottom padding if collapsed
-                maxZoom: 15
+                padding: { top: 50, bottom: expanded ? 50 : 300, left: 50, right: 50 },
+                maxZoom: 15,
+                duration: 1000
             })
         }
-    }, [doctors, expanded]) // Re-fit if expansion allows more room? Maybe better to just let easeTo handle view.
-    // Actually, fitBounds respects the CURRENT padding of the map instance automatically.
-    // Converting this effect to just run on [doctors] is safer to avoid re-fitting on hover.
-    // But wait, if padding changes, the center changes automatically via easeTo.
-    // We don't need to call fitBounds again on expansion.
+    }, [doctors]) // Removed 'expanded' from deps to avoid re-fit on hover
+
+    // Handle Focused Doctor (FlyTo)
+    useEffect(() => {
+        if (!map.current || !focusedDoctorId) return
+
+        const doctor = doctors.find(d => d.id === focusedDoctorId)
+        if (doctor && doctor.locationLat && doctor.locationLng) {
+            // Fly to location
+            map.current.flyTo({
+                center: [doctor.locationLng, doctor.locationLat],
+                zoom: 15,
+                essential: true,
+                padding: { bottom: expanded ? 0 : 250 }, // Maintain padding awareness
+            })
+
+            // Open popup if marker exists
+            const marker = markers.current[focusedDoctorId]
+            if (marker) {
+                marker.togglePopup()
+            }
+        }
+    }, [focusedDoctorId, doctors, expanded])
+
 
     // Resize map when container height changes
     useEffect(() => {

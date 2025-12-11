@@ -68,6 +68,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
   const [debouncedQuery] = useDebouncedValue(query, 300)
   const [specialty, setSpecialty] = useState(filters?.specialty ?? '')
   const [mapHeight, setMapHeight] = useState(250)
+  const [focusedDoctorId, setFocusedDoctorId] = useState<string | null>(null)
 
   const isMounted = useRef(false)
 
@@ -106,6 +107,12 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
     })
   }
 
+  const handleDoctorClick = (id: string) => {
+    setFocusedDoctorId(id)
+    setMapHeight(500) // Auto-expand map
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <Box>
       {/* 1. Map Container - Top */}
@@ -123,7 +130,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
         onMouseLeave={() => setMapHeight(250)}
       >
         {/* Render Map at full 500px height always, so it just "reveals" instead of resizing */}
-        <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} />
+        <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} focusedDoctorId={focusedDoctorId} />
       </Paper>
 
       {/* 2. Google-Style Search Bar - Centered */}
@@ -203,7 +210,16 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
               {doctors.map((doctor: SearchDoctor) => {
                 return (
-                  <Card key={doctor.id} shadow="sm" padding="lg" radius="lg" withBorder>
+                  <Card
+                    key={doctor.id}
+                    shadow="sm"
+                    padding="lg"
+                    radius="lg"
+                    withBorder
+                    onClick={() => handleDoctorClick(doctor.id)}
+                    style={{ cursor: 'pointer', transition: 'transform 0.2s', borderColor: focusedDoctorId === doctor.id ? 'var(--mantine-color-teal-5)' : undefined }}
+                    className="hover:shadow-md"
+                  >
                     <Card.Section>
                       <Box h={200} bg="gray.1" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Avatar
@@ -239,7 +255,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                         <Text fw={700} c="teal" size="lg">
                           {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
                         </Text>
-                        <Button component={Link} href={`/doctors/${doctor.id}`} variant="light" size="sm" radius="md">
+                        <Button component={Link} href={`/doctors/${doctor.id}`} variant="light" size="sm" radius="md" onClick={(e) => e.stopPropagation()}>
                           View Profile
                         </Button>
                       </Group>
