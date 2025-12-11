@@ -8,14 +8,15 @@
       <%= assigns[:page_title] || "Medic" %>
     </title>
     <!-- Inertia Head Removed for Debugging -->
-    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <!-- CSS is output to js/app.css by esbuild when bundling app.tsx -->
+    <link phx-track-static rel="stylesheet" href={~p"/assets/js/app.css"} />
     <link
       href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css"
       rel="stylesheet"
     />
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js">
     </script>
-    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    <script defer phx-track-static type="module" src={~p"/assets/js/app.js"}>
     </script>
     <script>
       (() => {

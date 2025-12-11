@@ -1,4 +1,4 @@
-import { ActionIcon, AppShell, Avatar, Burger, Button, Container, Group, Image, Menu, Text, ThemeIcon, UnstyledButton } from '@mantine/core'
+import { ActionIcon, AppShell, Avatar, Badge, Burger, Button, Container, Group, Image, Menu, Text, ThemeIcon, UnstyledButton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { Link, usePage } from '@inertiajs/react'
 import {
@@ -55,12 +55,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <Group h="100%" px="md" justify="space-between">
                     <Group>
                         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-                        <Link href="/" className="flex items-center gap-2 no-underline text-inherit">
-                            {/* Replace with actual logo path or component */}
-                            <Text fw={900} size="xl" variant="gradient" gradient={{ from: 'teal', to: 'blue', deg: 45 }}>
-                                MEDIC
-                            </Text>
-                        </Link>
+                        <Group>
+                            <Link href="/">
+                                <Image src="/images/medic-logo.svg" h={30} w="auto" alt="Medic Logo" />
+                            </Link>
+                            <Badge variant="light" color="blue">Beta</Badge>
+                        </Group>
                     </Group>
 
                     <Group>

@@ -52,10 +52,13 @@ const createParams = (query: string, specialty: string) => {
   return params
 }
 
-export default function SearchPage({ app, auth, doctors, specialties, filters, meta }: SearchProps) {
+export default function SearchPage({ app, auth, doctors = [], specialties = [], filters = { query: '', specialty: '' }, meta }: SearchProps) {
   const { t } = useTranslation('default')
-  const [query, setQuery] = useState(filters.query)
-  const [specialty, setSpecialty] = useState(filters.specialty ?? '')
+  const [query, setQuery] = useState(filters?.query || '')
+  const [specialty, setSpecialty] = useState(filters?.specialty ?? '')
+
+  // Debug Log
+  console.log('Search Render:', { doctors, specialties, filters })
 
   const specialtyOptions = useMemo(
     () =>
@@ -115,16 +118,11 @@ export default function SearchPage({ app, auth, doctors, specialties, filters, m
                     searchable
                   />
 
-                  {/* Placeholder for Price Range - Functionality to be connected */}
-                  <Box>
-                    <Text size="sm" fw={500} mb="xs">Price Range</Text>
-                    <RangeSlider
-                      color="teal"
-                      min={0} max={300}
-                      step={10}
-                      defaultValue={[0, 300]}
-                      label={(val) => `€${val}`}
-                    />
+                  {/* RangeSlider Removed for Debug */}
+                  {/* Map Placeholder Removed for Debug */}
+
+                  <Box p="xs" bg="red.1">
+                    <Text size="xs" c="red">Debug: Filters Loaded. Query: {query}</Text>
                   </Box>
 
                   <Button type="submit" fullWidth mt="md">
@@ -132,14 +130,6 @@ export default function SearchPage({ app, auth, doctors, specialties, filters, m
                   </Button>
                 </Stack>
               </form>
-            </Paper>
-
-            {/* Map Placeholder for now */}
-            <Paper shadow="sm" radius="lg" p="md" withBorder h={200} bg="gray.0">
-              <Stack align="center" justify="center" h="100%">
-                <IconMapPin size={32} color="gray" />
-                <Text size="sm" c="dimmed">Map View Coming Soon</Text>
-              </Stack>
             </Paper>
           </Stack>
         </Grid.Col>
@@ -152,7 +142,10 @@ export default function SearchPage({ app, auth, doctors, specialties, filters, m
           </Group>
 
           <Stack gap="lg">
-            {doctors.map((doctor) => (
+            {/* Debug Header */}
+            <Text c="dimmed" size="xs">Debug: Doctors Count: {doctors?.length}</Text>
+
+            {doctors.map((doctor: SearchDoctor) => (
               <Card key={doctor.id} shadow="sm" padding="lg" radius="lg" withBorder>
                 <Grid>
                   <Grid.Col span={{ base: 12, sm: 3 }} style={{ display: 'flex', justifyContent: 'center' }}>
@@ -161,7 +154,7 @@ export default function SearchPage({ app, auth, doctors, specialties, filters, m
                       size={120}
                       radius="md"
                     >
-                      {doctor.first_name[0]}
+                      {doctor.first_name?.charAt(0) || 'D'}
                     </Avatar>
                   </Grid.Col>
 
