@@ -1,34 +1,32 @@
-import { Button, Card, Group, Modal, NumberInput, Select, Stack, Switch, Table, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Button, Card, Group, Modal, NumberInput, Select, Stack, Switch, Table, Text, TextInput, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { useForm } from '@mantine/form'
 import { router } from '@inertiajs/react'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { PublicLayout } from '@/layouts/PublicLayout'
 import type { AppPageProps } from '@/types/app'
 
 type Rule = {
   id: string
-  day_of_week: number
-  start_time: string
-  end_time: string
-  break_start?: string | null
-  break_end?: string | null
-  slot_duration_minutes: number
-  is_active: boolean
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  breakStart?: string | null
+  breakEnd?: string | null
+  slotDurationMinutes: number
+  isActive: boolean
 }
 
 type Appointment = {
   id: string
-  starts_at: string
+  startsAt: string
   status: string
-  patient: { first_name: string; last_name: string }
+  patient: { firstName: string; lastName: string }
 }
 
 type PageProps = AppPageProps<{
-  availability_rules: Rule[]
-  upcoming_appointments: Appointment[]
+  availabilityRules: Rule[]
+  upcomingAppointments: Appointment[]
 }>
 
 const dayOptions = [
@@ -41,7 +39,7 @@ const dayOptions = [
   { value: '7', label: 'Sunday' }
 ]
 
-const DoctorSchedulePage = ({ app, auth, availability_rules, upcoming_appointments }: PageProps) => {
+const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PageProps) => {
   const { t } = useTranslation('default')
   const [opened, { open, close }] = useDisclosure(false)
 
@@ -61,13 +59,13 @@ const DoctorSchedulePage = ({ app, auth, availability_rules, upcoming_appointmen
   const handleEdit = (rule?: Rule) => {
     form.setValues({
       id: rule?.id || '',
-      day_of_week: String(rule?.day_of_week || 1),
-      start_time: rule?.start_time || '09:00',
-      end_time: rule?.end_time || '17:00',
-      break_start: rule?.break_start || '',
-      break_end: rule?.break_end || '',
-      slot_duration_minutes: rule?.slot_duration_minutes || 30,
-      is_active: rule?.is_active ?? true
+      day_of_week: String(rule?.dayOfWeek || 1),
+      start_time: rule?.startTime || '09:00',
+      end_time: rule?.endTime || '17:00',
+      break_start: rule?.breakStart || '',
+      break_end: rule?.breakEnd || '',
+      slot_duration_minutes: rule?.slotDurationMinutes || 30,
+      is_active: rule?.isActive ?? true
     })
     open()
   }
@@ -82,7 +80,7 @@ const DoctorSchedulePage = ({ app, auth, availability_rules, upcoming_appointmen
   }
 
   return (
-    <PublicLayout app={app} auth={auth}>
+    <Stack gap="xl" p="xl">
       <Stack gap="xl">
         <Group justify="space-between">
           <div>
@@ -103,22 +101,22 @@ const DoctorSchedulePage = ({ app, auth, availability_rules, upcoming_appointmen
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {availability_rules.map((rule) => (
-                <Table.Tr key={rule.id} opacity={rule.is_active ? 1 : 0.5}>
-                  <Table.Td>{dayOptions.find((d) => d.value === String(rule.day_of_week))?.label}</Table.Td>
+              {availabilityRules.map((rule) => (
+                <Table.Tr key={rule.id} opacity={rule.isActive ? 1 : 0.5}>
+                  <Table.Td>{dayOptions.find((d) => d.value === String(rule.dayOfWeek))?.label}</Table.Td>
                   <Table.Td>
                     <Text fw={600}>
-                      {rule.start_time} - {rule.end_time}
+                      {rule.startTime} - {rule.endTime}
                     </Text>
-                    {rule.break_start && rule.break_end && (
+                    {rule.breakStart && rule.breakEnd && (
                       <Text size="xs" c="dimmed">
-                        {t('doctor.schedule.break', 'Break')}: {rule.break_start} - {rule.break_end}
+                        {t('doctor.schedule.break', 'Break')}: {rule.breakStart} - {rule.breakEnd}
                       </Text>
                     )}
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={rule.is_active ? 'green' : 'gray'}>
-                      {rule.is_active ? t('doctor.schedule.active', 'Active') : t('doctor.schedule.off', 'Off')}
+                    <Badge color={rule.isActive ? 'green' : 'gray'}>
+                      {rule.isActive ? t('doctor.schedule.active', 'Active') : t('doctor.schedule.off', 'Off')}
                     </Badge>
                   </Table.Td>
                   <Table.Td>
@@ -142,18 +140,18 @@ const DoctorSchedulePage = ({ app, auth, availability_rules, upcoming_appointmen
         <Card withBorder padding="lg" radius="lg">
           <Title order={4}>{t('doctor.schedule.upcoming', 'Upcoming appointments')}</Title>
           <Stack gap="md" mt="md">
-            {upcoming_appointments.length === 0 ? (
+            {upcomingAppointments.length === 0 ? (
               <Text c="dimmed">{t('doctor.schedule.no_upcoming', 'No upcoming visits')}</Text>
             ) : (
-              upcoming_appointments.map((appt) => (
+              upcomingAppointments.map((appt) => (
                 <Card key={appt.id} withBorder padding="md">
                   <Group justify="space-between">
                     <div>
                       <Text fw={600}>
-                        {appt.patient.first_name} {appt.patient.last_name}
+                        {appt.patient.firstName} {appt.patient.lastName}
                       </Text>
                       <Text size="sm" c="dimmed">
-                        {new Date(appt.starts_at).toLocaleString()}
+                        {new Date(appt.startsAt).toLocaleString()}
                       </Text>
                     </div>
                     <Badge>{appt.status}</Badge>
@@ -183,7 +181,7 @@ const DoctorSchedulePage = ({ app, auth, availability_rules, upcoming_appointmen
           </Button>
         </form>
       </Modal>
-    </PublicLayout>
+    </Stack>
   )
 }
 

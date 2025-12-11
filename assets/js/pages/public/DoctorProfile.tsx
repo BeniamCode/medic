@@ -282,17 +282,23 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
                   <SimpleGrid cols={{ base: 3, sm: 4, md: 5 }} spacing="sm">
                     {currentDay.slots
                       .filter((slot: any) => slot.status === 'free')
-                      .map((slot: any) => (
-                        <Button
-                          key={slot.startsAt}
-                          variant={selectedSlot?.startsAt === slot.startsAt ? 'filled' : 'outline'}
-                          onClick={() => setSelectedSlot(slot)}
-                          color="teal"
-                          radius="md"
-                        >
-                          {new Date(slot.startsAt).toLocaleTimeString(APP_LOCALE, { hour: '2-digit', minute: '2-digit' })}
-                        </Button>
-                      ))
+                      .map((slot: any) => {
+                        const slotDate = new Date(slot.startsAt)
+                        const isPast = slotDate < new Date()
+                        return (
+                          <Button
+                            key={slot.startsAt}
+                            variant={selectedSlot?.startsAt === slot.startsAt ? 'filled' : 'outline'}
+                            onClick={() => !isPast && setSelectedSlot(slot)}
+                            color="teal"
+                            radius="md"
+                            disabled={isPast}
+                            style={isPast ? { opacity: 0.5, textDecoration: 'line-through' } : {}}
+                          >
+                            {slotDate.toLocaleTimeString(APP_LOCALE, { hour: '2-digit', minute: '2-digit' })}
+                          </Button>
+                        )
+                      })
                     }
                   </SimpleGrid>
                 ) : (

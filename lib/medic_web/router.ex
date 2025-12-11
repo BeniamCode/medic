@@ -42,13 +42,14 @@ defmodule MedicWeb.Router do
     get "/register", UserRegistrationController, :new
     post "/register", UserRegistrationController, :create
 
-    # TODO: Implement Doctor Registration in React
-    # get "/register/doctor", UserRegistrationController, :new_doctor
+    # Doctor Registration
+    get "/register/doctor", UserRegistrationController, :new_doctor
+    post "/register/doctor", UserRegistrationController, :create_doctor
   end
 
   # Authenticated routes for all users
   scope "/", MedicWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    pipe_through [:browser, :require_authenticated_user, MedicWeb.Plugs.RequireDoctorOnboarding]
 
     live_session :require_authenticated_user,
       layout: {MedicWeb.Layouts, :app},

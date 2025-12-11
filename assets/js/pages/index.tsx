@@ -12,7 +12,8 @@ const pageRegistry: Record<string, Loader> = {
   'Public/Search': () => import('./public/Search'),
   'Public/DoctorProfile': () => import('./public/DoctorProfile'),
   'Auth/Login': () => import('./auth/Login'),
-  'Auth/Register': () => import('./auth/Register')
+  'Auth/Register': () => import('./auth/Register'),
+  'Auth/RegisterDoctor': () => import('./auth/RegisterDoctor')
 }
 
 const privatePages: Record<string, Loader> = {

@@ -18,6 +18,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { SharedAppProps } from '@/types/app'
 import { useEffect } from 'react'
+import { useThemeMode } from '@/app'
 
 interface AppLayoutProps {
     children: React.ReactNode
@@ -58,6 +59,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     const user = auth.user
     const isDoctor = user?.role === 'doctor'
+    const { colorScheme, toggleColorScheme } = useThemeMode()
 
     // Show Navbar if user is logged in, OR if specifically on dashboard pages (fallback)
     // User requested "logged in users ... need a left side panel", so we enforce it for authenticated users.
@@ -81,13 +83,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         {showNavbar && <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />}
                         <Group>
                             <Link href="/">
-                                <Image src="/images/logo-medic-sun.svg" h={32} w="auto" alt="Medic" />
+                                <Image
+                                    src="/images/logo-medic-sun.svg"
+                                    h={32}
+                                    w="auto"
+                                    alt="Medic"
+                                    style={colorScheme === 'dark' ? { filter: 'brightness(0) invert(1)' } : undefined}
+                                />
                             </Link>
                             <Badge variant="light" color="blue">Beta</Badge>
                         </Group>
                     </Group>
 
                     <Group>
+                        <ActionIcon
+                            variant="light"
+                            size="lg"
+                            radius="xl"
+                            aria-label="Toggle color scheme"
+                            onClick={toggleColorScheme}
+                        >
+                            {colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                        </ActionIcon>
                         {user ? (
                             <Group gap="xs">
                                 <ActionIcon variant="light" size="lg" radius="xl">

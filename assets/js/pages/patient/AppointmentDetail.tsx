@@ -8,28 +8,28 @@ import type { AppPageProps } from '@/types/app'
 type PageProps = AppPageProps<{
   appointment: {
     id: string
-    starts_at: string
-    ends_at: string
+    startsAt: string
+    endsAt: string
     status: string
     notes?: string | null
     doctor: {
       id: string
-      first_name: string
-      last_name: string
+      firstName: string
+      lastName: string
       specialty?: string | null
     }
     patient: {
       id: string
-      first_name: string
-      last_name: string
+      firstName: string
+      lastName: string
     }
   }
 }>
 
 const AppointmentDetailPage = ({ app, auth, appointment }: PageProps) => {
   const { t } = useTranslation('default')
-  const startsAt = new Date(appointment.starts_at)
-  const endsAt = new Date(appointment.ends_at)
+  const startsAt = new Date(appointment.startsAt)
+  const endsAt = new Date(appointment.endsAt)
 
   return (
     <PublicLayout app={app} auth={auth}>
@@ -41,7 +41,7 @@ const AppointmentDetailPage = ({ app, auth, appointment }: PageProps) => {
             <Group justify="space-between">
               <div>
                 <Text fw={600}>
-                  Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+                  Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}
                 </Text>
                 <Text c="dimmed" size="sm">
                   {appointment.doctor.specialty}

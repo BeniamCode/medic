@@ -9,107 +9,105 @@ import type { AppPageProps } from '@/types/app'
 
 type Appointment = {
   id: string
-  starts_at: string
-  duration_minutes: number
+  startsAt: string
+  durationMinutes: number
   notes?: string | null
   status: string
-  appointment_type: string
+  appointmentType: string
   patient: {
-    first_name: string
-    last_name: string
+    firstName: string
+    lastName: string
   }
 }
 
 type PageProps = AppPageProps<{
   doctor: {
     id: string
-    first_name: string
-    last_name: string
+    firstName: string
+    lastName: string
     rating: number | null
-    review_count: number | null
+    reviewCount: number | null
     verified: boolean
   }
-  today_appointments: Appointment[]
-  pending_count: number
-  upcoming_count: number
+  todayAppointments: Appointment[]
+  pendingCount: number
+  upcomingCount: number
 }>
 
-const DoctorDashboardPage = ({ app, auth, doctor, today_appointments, pending_count, upcoming_count }: PageProps) => {
+const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCount, upcomingCount }: PageProps) => {
   const { t } = useTranslation('default')
 
   return (
-    <PublicLayout app={app} auth={auth}>
-      <Stack gap="xl">
-        <Group justify="space-between">
-          <div>
-            <Title order={2}>{t('doctor.dashboard.title', 'Doctor Dashboard')}</Title>
-            <Text c="dimmed">
-              {t('doctor.dashboard.subtitle', 'Good morning, Dr. {{lastName}}', {
-                lastName: doctor.last_name
-              })}
-            </Text>
-          </div>
-          <Button component={Link} href="/dashboard/doctor/profile">
-            {t('doctor.dashboard.edit_profile', 'Edit profile')}
-          </Button>
-        </Group>
+    <Stack gap="xl" p="xl">
+      <Group justify="space-between">
+        <div>
+          <Title order={2}>{t('doctor.dashboard.title', 'Doctor Dashboard')}</Title>
+          <Text c="dimmed">
+            {t('doctor.dashboard.subtitle', 'Good morning, Dr. {{lastName}}', {
+              lastName: doctor.lastName
+            })}
+          </Text>
+        </div>
+        <Button component={Link} href="/dashboard/doctor/profile">
+          {t('doctor.dashboard.edit_profile', 'Edit profile')}
+        </Button>
+      </Group>
 
-        <Group grow>
-          <StatCard
-            icon={<IconCalendar size={20} />}
-            label={t('doctor.dashboard.stats.today', 'Today')}
-            value={today_appointments.length}
-            subtitle={t('doctor.dashboard.stats.today_sub', 'appointments')}
-          />
-          <StatCard
-            icon={<IconCheck size={20} />}
-            label={t('doctor.dashboard.stats.pending', 'Pending requests')}
-            value={pending_count}
-            subtitle={t('doctor.dashboard.stats.pending_sub', 'Action required')}
-          />
-          <StatCard
-            icon={<IconCalendar size={20} />}
-            label={t('doctor.dashboard.stats.week', 'Confirmed (week)')}
-            value={upcoming_count}
-            subtitle={t('doctor.dashboard.stats.week_sub', 'upcoming visits')}
-          />
-          <StatCard
-            icon={<IconStar size={20} />}
-            label={t('doctor.dashboard.stats.rating', 'Rating')}
-            value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
-            subtitle={`${doctor.review_count || 0} ${t('doctor.dashboard.stats.reviews', 'reviews')}`}
-          />
-        </Group>
+      <Group grow>
+        <StatCard
+          icon={<IconCalendar size={20} />}
+          label={t('doctor.dashboard.stats.today', 'Today')}
+          value={todayAppointments.length}
+          subtitle={t('doctor.dashboard.stats.today_sub', 'appointments')}
+        />
+        <StatCard
+          icon={<IconCheck size={20} />}
+          label={t('doctor.dashboard.stats.pending', 'Pending requests')}
+          value={pendingCount}
+          subtitle={t('doctor.dashboard.stats.pending_sub', 'Action required')}
+        />
+        <StatCard
+          icon={<IconCalendar size={20} />}
+          label={t('doctor.dashboard.stats.week', 'Confirmed (week)')}
+          value={upcomingCount}
+          subtitle={t('doctor.dashboard.stats.week_sub', 'upcoming visits')}
+        />
+        <StatCard
+          icon={<IconStar size={20} />}
+          label={t('doctor.dashboard.stats.rating', 'Rating')}
+          value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
+          subtitle={`${doctor.reviewCount || 0} ${t('doctor.dashboard.stats.reviews', 'reviews')}`}
+        />
+      </Group>
 
-        <Group align="flex-start" grow>
-          <Card withBorder padding="lg" radius="lg" style={{ flex: 2 }}>
-            <Stack gap="md">
-              <Title order={4}>{t('doctor.dashboard.today_schedule', "Today's schedule")}</Title>
-              {today_appointments.length === 0 ? (
-                <Text c="dimmed">{t('doctor.dashboard.no_appointments', 'No appointments today')}</Text>
-              ) : (
-                today_appointments.map((appt) => <AppointmentRow key={appt.id} appointment={appt} />)
-              )}
-            </Stack>
-          </Card>
+      <Group align="flex-start" grow>
+        <Card withBorder padding="lg" radius="lg" style={{ flex: 2 }}>
+          <Stack gap="md">
+            <Title order={4}>{t('doctor.dashboard.today_schedule', "Today's schedule")}</Title>
+            {todayAppointments.length === 0 ? (
+              <Text c="dimmed">{t('doctor.dashboard.no_appointments', 'No appointments today')}</Text>
+            ) : (
+              todayAppointments.map((appt) => <AppointmentRow key={appt.id} appointment={appt} />)
+            )}
+          </Stack>
+        </Card>
 
-          <Card withBorder padding="lg" radius="lg" style={{ flex: 1 }}>
-            <Stack gap="sm">
-              <Title order={4}>{t('doctor.dashboard.quick_actions', 'Quick actions')}</Title>
-              <Button component={Link} href="/doctor/schedule" variant="light">
-                {t('doctor.dashboard.manage_schedule', 'Manage availability')}
-              </Button>
-              <Button component={Link} href="/dashboard/doctor/profile" variant="light">
-                {t('doctor.dashboard.edit_profile', 'Edit profile')}
-              </Button>
-              <Button variant="light" disabled>
-                {t('doctor.dashboard.analytics', 'Analytics (coming soon)')}
-              </Button>
-            </Stack>
-          </Card>
-        </Group>
-      </Stack>
-    </PublicLayout>
+        <Card withBorder padding="lg" radius="lg" style={{ flex: 1 }}>
+          <Stack gap="sm">
+            <Title order={4}>{t('doctor.dashboard.quick_actions', 'Quick actions')}</Title>
+            <Button component={Link} href="/doctor/schedule" variant="light">
+              {t('doctor.dashboard.manage_schedule', 'Manage availability')}
+            </Button>
+            <Button component={Link} href="/dashboard/doctor/profile" variant="light">
+              {t('doctor.dashboard.edit_profile', 'Edit profile')}
+            </Button>
+            <Button variant="light" disabled>
+              {t('doctor.dashboard.analytics', 'Analytics (coming soon)')}
+            </Button>
+          </Stack>
+        </Card>
+      </Group>
+    </Stack>
   )
 }
 
@@ -134,7 +132,7 @@ const StatCard = ({ icon, label, value, subtitle }: { icon: React.ReactNode; lab
 
 const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
   const { t } = useTranslation('default')
-  const startsAt = new Date(appointment.starts_at)
+  const startsAt = new Date(appointment.startsAt)
   const startText = format(startsAt, 'p')
 
   return (
@@ -142,10 +140,10 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
       <Group justify="space-between" align="flex-start">
         <Stack gap={4}>
           <Text fw={600}>
-            {appointment.patient.first_name} {appointment.patient.last_name}
+            {appointment.patient.firstName} {appointment.patient.lastName}
           </Text>
           <Text size="sm" c="dimmed">
-            {appointment.appointment_type === 'telemedicine'
+            {appointment.appointmentType === 'telemedicine'
               ? t('doctor.dashboard.telemed', 'Telemedicine')
               : t('doctor.dashboard.in_person', 'In-person')}
           </Text>
