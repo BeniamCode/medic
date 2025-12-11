@@ -64,14 +64,14 @@ export function LoopAnimation() {
       segments.map((segment) => segment.rotation),
       {
         y: `+=${Math.PI * 2}`,
-        duration: 6,
+        duration: 12,
         ease: 'none',
         repeat: -1
       }
     )
     const ringTween = gsap.to(ring.rotation, {
       z: Math.PI * 2,
-      duration: 24,
+      duration: 48,
       ease: 'none',
       repeat: -1
     })
