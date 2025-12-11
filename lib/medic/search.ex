@@ -192,7 +192,7 @@ defmodule Medic.Search do
 
     params = %{
       "q" => query,
-      "query_by" => "full_name,specialty_name,city,bio",
+      "query_by" => "first_name,last_name,full_name,specialty_name,city,bio",
       "per_page" => per_page,
       "page" => page,
       "sort_by" => sort_by,
@@ -232,6 +232,7 @@ defmodule Medic.Search do
       specialty_name: doc["specialty_name"],
       specialty_slug: doc["specialty_slug"],
       city: doc["city"],
+      address: doc["address"],
       rating: doc["rating"],
       review_count: doc["review_count"],
       consultation_fee: doc["consultation_fee"],

@@ -1,10 +1,12 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link, router } from '@inertiajs/react'
+import { useDebouncedValue } from '@mantine/hooks'
 import {
   Badge,
   Box,
   Button,
   Card,
+  Container,
   Grid,
   Group,
   Image,
@@ -19,7 +21,8 @@ import {
   ThemeIcon,
   rem,
   Avatar,
-  Rating
+  Rating,
+  SimpleGrid
 } from '@mantine/core'
 import { IconFilter, IconMapPin, IconSearch, IconStar, IconStethoscope } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
@@ -27,15 +30,18 @@ import type { AppPageProps } from '@/types/app'
 
 export type SearchDoctor = {
   id: string
-  first_name: string
-  last_name: string
-  specialty_name: string | null
+  firstName: string
+  lastName: string
+  specialtyName: string | null
   city: string | null
+  address: string | null
   rating: number | null
-  review_count: number | null
-  consultation_fee: number | null
+  reviewCount: number | null
+  consultationFee: number | null
   verified: boolean
-  profile_image_url: string | null
+  profileImageUrl: string | null
+  locationLat: number | null
+  locationLng: number | null
 }
 
 type SearchProps = AppPageProps<{
@@ -52,13 +58,35 @@ const createParams = (query: string, specialty: string) => {
   return params
 }
 
+import DoctorMap from '@/components/Map'
+
 export default function SearchPage({ app, auth, doctors = [], specialties = [], filters = { query: '', specialty: '' }, meta }: SearchProps) {
   const { t } = useTranslation('default')
-  const [query, setQuery] = useState(filters?.query || '')
-  const [specialty, setSpecialty] = useState(filters?.specialty ?? '')
 
-  // Debug Log
-  console.log('Search Render:', { doctors, specialties, filters })
+  // Initialize state
+  const [query, setQuery] = useState(filters?.query || '')
+  const [debouncedQuery] = useDebouncedValue(query, 300)
+  const [specialty, setSpecialty] = useState(filters?.specialty ?? '')
+  const [mapHeight, setMapHeight] = useState(250)
+
+  const isMounted = useRef(false)
+
+  // Live Search Effect
+  useEffect(() => {
+    // Skip the first render to avoid double fetching (since initial state matches props)
+    if (!isMounted.current) {
+      isMounted.current = true
+      return
+    }
+
+    // Only fire if the debounced query is different from what's currently filtered (prevents loops if backend cleans string)
+    // Actually, simple router.get is safer, Inertia handles duplicate visits efficiently.
+    router.get(`/search?${createParams(debouncedQuery, specialty).toString()}`, undefined, {
+      preserveScroll: true,
+      preserveState: true,
+      replace: true // Replace history state for typing updates to avoid massive back-button history
+    })
+  }, [debouncedQuery, specialty])
 
   const specialtyOptions = useMemo(
     () =>
@@ -71,6 +99,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    // Instant trigger (ignores debounce)
     router.get(`/search?${createParams(query, specialty).toString()}`, undefined, {
       preserveScroll: true,
       preserveState: true
@@ -79,35 +108,61 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
 
   return (
     <Box>
-      <Box bg="teal.0" py={40} mb={40} style={{ borderBottom: `1px solid var(--mantine-color-teal-1)` }}>
-        <Grid gutter="xl" align="flex-end">
-          <Grid.Col span={{ base: 12, md: 8 }}>
-            <Title order={1} mb="xs">{t('search.title', 'Find your specialist')}</Title>
-            <Text c="dimmed" size="lg">{t('search.subtitle', 'Browse verified doctors and clinics nearby')}</Text>
-          </Grid.Col>
-        </Grid>
-      </Box>
+      {/* 1. Map Container - Top */}
+      <Paper
+        h={mapHeight}
+        w="100%"
+        bg="gray.1"
+        style={{
+          transition: 'height 0.3s ease',
+          zIndex: 10,
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+        onMouseEnter={() => setMapHeight(500)}
+        onMouseLeave={() => setMapHeight(250)}
+      >
+        {/* Render Map at full 500px height always, so it just "reveals" instead of resizing */}
+        <DoctorMap doctors={doctors} height={500} />
+      </Paper>
 
-      <Grid gutter={40}>
-        {/* Sidebar Filters */}
-        <Grid.Col span={{ base: 12, md: 3 }}>
-          <Stack gap="lg" style={{ position: 'sticky', top: 20 }}>
-            <Paper shadow="sm" radius="lg" p="lg" withBorder>
-              <Group mb="md">
-                <ThemeIcon color="teal" variant="light"><IconFilter size={18} /></ThemeIcon>
-                <Text fw={700}>Filters</Text>
-              </Group>
+      {/* 2. Google-Style Search Bar - Centered */}
+      <Container size="md" mt={-30} style={{ position: 'relative', zIndex: 20 }}>
+        <Paper shadow="xl" radius="xl" p="xs" withBorder>
+          <form onSubmit={submit}>
+            <TextInput
+              placeholder={t('search.placeholder', 'Search doctors, clinics, specialties, etc.')}
+              size="lg"
+              variant="unstyled"
+              radius="xl"
+              pl="md"
+              value={query}
+              onChange={(event) => setQuery(event.currentTarget.value)}
+              leftSection={<IconSearch size={22} color="var(--mantine-color-dimmed)" />}
+              rightSection={
+                <Button type="submit" radius="xl" size="sm" color="teal">
+                  Search
+                </Button>
+              }
+              rightSectionWidth={100}
+            />
+          </form>
+        </Paper>
+      </Container>
 
-              <form onSubmit={submit}>
+
+      <Container size="xl" mt={50} pb={50}>
+        <Grid gutter={40}>
+          {/* Sidebar Filters */}
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Stack gap="lg" style={{ position: 'sticky', top: 20 }}>
+              <Paper shadow="sm" radius="lg" p="lg" withBorder>
+                <Group mb="md">
+                  <ThemeIcon color="teal" variant="light"><IconFilter size={18} /></ThemeIcon>
+                  <Text fw={700}>Filters</Text>
+                </Group>
+
                 <Stack gap="md">
-                  <TextInput
-                    label={t('search.form.query', 'Keyword')}
-                    placeholder="Name, symptom..."
-                    leftSection={<IconSearch size={16} />}
-                    value={query}
-                    onChange={(event) => setQuery(event.currentTarget.value)}
-                  />
-
                   <Select
                     label={t('search.form.specialty', 'Specialty')}
                     placeholder="Any specialty"
@@ -118,87 +173,81 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                     searchable
                   />
 
-                  {/* RangeSlider Removed for Debug */}
-                  {/* Map Placeholder Removed for Debug */}
-
-                  <Box p="xs" bg="red.1">
-                    <Text size="xs" c="red">Debug: Filters Loaded. Query: {query}</Text>
+                  {/* RangeSlider */}
+                  <Box>
+                    <Text size="sm" fw={500} mb="xs">Price Range</Text>
+                    <RangeSlider
+                      color="teal"
+                      min={0} max={300}
+                      step={10}
+                      defaultValue={[0, 300]}
+                      label={(val) => `€${val}`}
+                    />
                   </Box>
 
-                  <Button type="submit" fullWidth mt="md">
-                    {t('search.form.apply', 'Apply Filters')}
+                  <Button onClick={() => submit({ preventDefault: () => { } } as any)} fullWidth mt="md" variant="light">
+                    {t('search.form.apply', 'Update Results')}
                   </Button>
                 </Stack>
-              </form>
-            </Paper>
-          </Stack>
-        </Grid.Col>
+              </Paper>
+            </Stack>
+          </Grid.Col>
 
-        {/* Results */}
-        <Grid.Col span={{ base: 12, md: 9 }}>
-          <Group justify="space-between" mb="lg">
-            <Text fw={600} size="lg"> {meta.total} specialists found</Text>
-            <Badge color="gray" variant="light">Sort by: Best Match</Badge>
-          </Group>
+          {/* Results */}
+          <Grid.Col span={{ base: 12, md: 9 }}>
+            <Group justify="space-between" mb="lg">
+              <Text fw={600} size="lg"> {meta.total} specialists found</Text>
+              <Badge color="gray" variant="light">Sort by: Best Match</Badge>
+            </Group>
 
-          <Stack gap="lg">
-            {/* Debug Header */}
-            <Text c="dimmed" size="xs">Debug: Doctors Count: {doctors?.length}</Text>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+              {doctors.map((doctor: SearchDoctor) => {
+                return (
+                  <Card key={doctor.id} shadow="sm" padding="lg" radius="lg" withBorder>
+                    <Card.Section>
+                      <Box h={200} bg="gray.1" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Avatar
+                          src={doctor.profileImageUrl}
+                          size={120}
+                          radius="xl"
+                        >
+                          {doctor.firstName?.charAt(0) || 'D'}
+                        </Avatar>
+                      </Box>
+                    </Card.Section>
 
-            {doctors.map((doctor: SearchDoctor) => (
-              <Card key={doctor.id} shadow="sm" padding="lg" radius="lg" withBorder>
-                <Grid>
-                  <Grid.Col span={{ base: 12, sm: 3 }} style={{ display: 'flex', justifyContent: 'center' }}>
-                    <Avatar
-                      src={doctor.profile_image_url}
-                      size={120}
-                      radius="md"
-                    >
-                      {doctor.first_name?.charAt(0) || 'D'}
-                    </Avatar>
-                  </Grid.Col>
+                    <Stack mt="md" gap="xs">
+                      <Group justify="space-between" align="start">
+                        <Box>
+                          <Title order={3} size="h4" lh={1.2}>
+                            {doctor.firstName} {doctor.lastName}
+                          </Title>
+                          {doctor.verified && <Badge variant="dot" color="teal" size="xs" mt={4}>Verified</Badge>}
+                        </Box>
 
-                  <Grid.Col span={{ base: 12, sm: 6 }}>
-                    <Stack gap={4}>
-                      <Group gap="xs">
-                        <Title order={3} size="h4">{doctor.first_name} {doctor.last_name}</Title>
-                        {doctor.verified && <Badge variant="dot" color="teal">Verified</Badge>}
+                        <Rating value={doctor.rating || 0} readOnly size="xs" />
                       </Group>
 
-                      <Group gap={6} c="dimmed">
-                        <IconStethoscope size={16} />
-                        <Text size="sm">{doctor.specialty_name}</Text>
-                      </Group>
+                      <Text size="sm" c="dimmed" fw={500}>{doctor.specialtyName || 'General Practitioner'}</Text>
 
                       <Group gap={6} c="dimmed">
                         <IconMapPin size={16} />
-                        <Text size="sm">{doctor.city}</Text>
+                        <Text size="sm">{doctor.city || 'Online'}</Text>
                       </Group>
 
-                      <Group mt="sm">
-                        <Rating value={doctor.rating || 0} readOnly size="sm" />
-                        <Text size="sm" c="dimmed">({doctor.review_count} reviews)</Text>
+                      <Group justify="space-between" mt="md" align="center">
+                        <Text fw={700} c="teal" size="lg">
+                          {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
+                        </Text>
+                        <Button component={Link} href={`/doctors/${doctor.id}`} variant="light" size="sm" radius="md">
+                          View Profile
+                        </Button>
                       </Group>
                     </Stack>
-                  </Grid.Col>
-
-                  <Grid.Col span={{ base: 12, sm: 3 }}>
-                    <Stack h="100%" justify="center" gap="xs">
-                      <Text ta="center" size="sm" c="dimmed">Consultation Fee</Text>
-                      <Text ta="center" size="xl" fw={700} c="teal">
-                        {doctor.consultation_fee ? `€${doctor.consultation_fee}` : 'Ask'}
-                      </Text>
-                      <Button component={Link} href={`/doctors/${doctor.id}`} variant="light" fullWidth mt="sm">
-                        View Profile
-                      </Button>
-                      <Button component={Link} href={`/doctors/${doctor.id}?book=true`} fullWidth>
-                        Book Now
-                      </Button>
-                    </Stack>
-                  </Grid.Col>
-                </Grid>
-              </Card>
-            ))}
+                  </Card>
+                )
+              })}
+            </SimpleGrid>
 
             {doctors.length === 0 && (
               <Stack align="center" py={50}>
@@ -209,9 +258,9 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                 <Text c="dimmed">Try adjusting your filters</Text>
               </Stack>
             )}
-          </Stack>
-        </Grid.Col>
-      </Grid>
-    </Box>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </Box >
   )
 }

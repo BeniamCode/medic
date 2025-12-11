@@ -3,7 +3,6 @@ defmodule MedicWeb.SearchController do
 
   alias Medic.Doctors
   alias Medic.Search
-  alias Medic.Doctors.Specialty
   alias Decimal
 
   def index(conn, params) do
@@ -27,28 +26,26 @@ defmodule MedicWeb.SearchController do
   defp normalize_blank(value) when value in [nil, ""], do: nil
   defp normalize_blank(value), do: value
 
-  defp fetch_doctors("", specialty_slug) do
-    specialty_id = specialty_slug |> specialty_from_slug() |> maybe_specialty_id()
-
-    Doctors.list_doctors(
-      verified: true,
-      specialty_id: specialty_id,
-      preload: [:specialty]
-    )
-    |> Enum.take(24)
-    |> then(fn docs ->
-      {Enum.map(docs, &doctor_to_props/1), %{total: length(docs), source: "catalog"}}
-    end)
-  end
+  defp fetch_doctors("", specialty_slug), do: fetch_doctors("*", specialty_slug)
+  
+  defp fetch_doctors(nil, specialty_slug), do: fetch_doctors("*", specialty_slug)
 
   defp fetch_doctors(query, specialty_slug) do
     opts = [query: query, specialty: specialty_slug, per_page: 24]
 
+    IO.puts("\n=== SEARCH DEBUG START ===")
+    IO.inspect(opts, label: "Search Opts")
+
     case Search.search_doctors(opts) do
       {:ok, %{results: results, total: total}} ->
+        IO.inspect(total, label: "Total Found")
+        IO.inspect(List.first(results), label: "First Result")
+        IO.puts("=== SEARCH DEBUG END ===\n")
+        
         {Enum.map(results, &search_result_to_props/1), %{total: total, source: "search"}}
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        IO.inspect(reason, label: "Search Error")
         {[], %{total: 0, source: "search"}}
     end
   end
@@ -64,21 +61,6 @@ defmodule MedicWeb.SearchController do
     end)
   end
 
-  defp doctor_to_props(doctor) do
-    %{
-      id: doctor.id,
-      first_name: doctor.first_name,
-      last_name: doctor.last_name,
-      specialty_name: (doctor.specialty && doctor.specialty.name_en) || nil,
-      city: doctor.city,
-      rating: doctor.rating,
-      review_count: doctor.review_count,
-      consultation_fee: doctor.consultation_fee && Decimal.to_float(doctor.consultation_fee),
-      verified: not is_nil(doctor.verified_at),
-      profile_image_url: doctor.profile_image_url
-    }
-  end
-
   defp search_result_to_props(result) do
     %{
       id: result.id,
@@ -90,13 +72,10 @@ defmodule MedicWeb.SearchController do
       review_count: result.review_count,
       consultation_fee: result.consultation_fee,
       verified: result.verified,
-      profile_image_url: result.profile_image_url
+      profile_image_url: result.profile_image_url,
+      location_lat: result.location_lat,
+      location_lng: result.location_lng,
+      address: result.address
     }
   end
-
-  defp specialty_from_slug(nil), do: nil
-  defp specialty_from_slug(slug), do: Doctors.get_specialty_by_slug(slug)
-
-  defp maybe_specialty_id(%Specialty{id: id}), do: id
-  defp maybe_specialty_id(_), do: nil
 end

@@ -31,8 +31,7 @@ config :medic, MedicWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "sqyjAhhWA2k/0nUSSkqdJdqiTGfCYomVQIigpUBzbLXpd4xbujXJMkzPkigW2Hly",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:medic, ~w(--sourcemap=inline --watch)]},
-    npm: ["run", "watch", cd: Path.expand("../assets", __DIR__)]
+    esbuild: {Esbuild, :install_and_run, [:medic, ~w(--sourcemap=inline --watch)]}
   ]
 
 # ## SSL Support

@@ -2,7 +2,6 @@ defmodule MedicWeb.DoctorProfileController do
   use MedicWeb, :controller
 
   alias Medic.Doctors
-  alias Medic.Doctors.Doctor
   alias Medic.Doctors.Specialty
 
   def show(conn, _params) do
