@@ -4,10 +4,10 @@ export type SharedAuthUser = {
   id: string
   email: string
   role: string
-  confirmed_at: string | null
-  first_name?: string
-  last_name?: string
-  profile_image_url?: string | null
+  confirmedAt: string | null
+  firstName?: string
+  lastName?: string
+  profileImageUrl?: string | null
 }
 
 export type SharedAppProps = {

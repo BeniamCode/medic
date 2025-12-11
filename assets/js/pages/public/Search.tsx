@@ -123,7 +123,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
         onMouseLeave={() => setMapHeight(250)}
       >
         {/* Render Map at full 500px height always, so it just "reveals" instead of resizing */}
-        <DoctorMap doctors={doctors} height={500} />
+        <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} />
       </Paper>
 
       {/* 2. Google-Style Search Bar - Centered */}

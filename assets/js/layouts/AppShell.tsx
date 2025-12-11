@@ -1,6 +1,7 @@
 import { ActionIcon, AppShell, Avatar, Badge, Burger, Button, Container, Group, Image, Menu, Text, ThemeIcon, UnstyledButton } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { Link, usePage } from '@inertiajs/react'
+import { notifications } from '@mantine/notifications'
 import {
     IconBell,
     IconCalendar,
@@ -16,6 +17,7 @@ import {
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { SharedAppProps } from '@/types/app'
+import { useEffect } from 'react'
 
 interface AppLayoutProps {
     children: React.ReactNode
@@ -23,23 +25,45 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const [opened, { toggle }] = useDisclosure()
-    const { auth, app } = usePage<SharedAppProps>().props
+    const { auth, app, flash } = usePage<SharedAppProps>().props
     const { url } = usePage()
     const path = url.split('?')[0]
 
-    const isPublic = [
-        '/',
-        '/login',
-        '/register',
-        '/forgot-password'
-    ].includes(path) || path.startsWith('/search') || path.startsWith('/doctors')
+    // Flash Message Handling
+    useEffect(() => {
+        if (flash.success) {
+            notifications.show({
+                title: 'Success',
+                message: flash.success,
+                color: 'teal',
+                icon: <IconHome size={16} />, // Generic success icon or Check
+            })
+        }
+        if (flash.error) {
+            notifications.show({
+                title: 'Error',
+                message: flash.error,
+                color: 'red',
+            })
+        }
+        if (flash.info) {
+            notifications.show({
+                title: 'Info',
+                message: flash.info,
+                color: 'blue',
+            })
+        }
+    }, [flash])
 
-    const showNavbar = !isPublic
-
-    const { t } = useTranslation()
 
     const user = auth.user
     const isDoctor = user?.role === 'doctor'
+
+    // Show Navbar if user is logged in, OR if specifically on dashboard pages (fallback)
+    // User requested "logged in users ... need a left side panel", so we enforce it for authenticated users.
+    const showNavbar = !!user
+
+    const { t } = useTranslation()
 
     return (
         <AppShell
@@ -54,7 +78,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <AppShell.Header>
                 <Group h="100%" px="md" justify="space-between">
                     <Group>
-                        <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+                        {showNavbar && <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />}
                         <Group>
                             <Link href="/">
                                 <Image src="/images/medic-logo.svg" h={30} w="auto" alt="Medic Logo" />
@@ -74,11 +98,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                     <Menu.Target>
                                         <UnstyledButton>
                                             <Group gap={8}>
-                                                <Avatar src={user.profile_image_url} radius="xl" color="teal">
-                                                    {user.first_name?.[0]}
+                                                <Avatar src={user.profileImageUrl} radius="xl" color="teal">
+                                                    {user.firstName?.[0]}
                                                 </Avatar>
                                                 <div style={{ flex: 1 }} className="hidden sm:block">
-                                                    <Text size="sm" fw={500}>{user.first_name} {user.last_name}</Text>
+                                                    <Text size="sm" fw={500}>{user.firstName} {user.lastName}</Text>
                                                     <Text c="dimmed" size="xs">{user.email}</Text>
                                                 </div>
                                             </Group>
@@ -117,57 +141,85 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {showNavbar && (
                 <AppShell.Navbar p="md">
                     <Group mb="xl">
-                        {/* Sidebar branding if needed */}
+                        {/* Optional Branding here if not in header */}
                     </Group>
 
                     <div className="flex flex-col gap-2">
+                        {/* Common Links */}
                         <Button
-                            variant="subtle"
+                            variant={path === '/' ? 'light' : 'subtle'}
                             justify="start"
                             size="md"
                             leftSection={<IconHome size={20} />}
                             component={Link}
                             href="/"
+                            color="gray"
                         >
                             Home
                         </Button>
 
+                        {isDoctor ? (
+                            <>
+                                <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" tt="uppercase">Practice</Text>
+                                <Button
+                                    variant={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'light' : 'subtle'}
+                                    justify="start"
+                                    leftSection={<IconHome size={20} />}
+                                    component={Link}
+                                    href="/dashboard/doctor"
+                                    color="teal"
+                                >
+                                    Dashboard
+                                </Button>
+                                <Button
+                                    variant={path.startsWith('/doctor/schedule') ? 'light' : 'subtle'}
+                                    justify="start"
+                                    leftSection={<IconCalendarEvent size={20} />}
+                                    component={Link}
+                                    href="/doctor/schedule"
+                                    color="teal"
+                                >
+                                    My Schedule
+                                </Button>
+                                <Button
+                                    variant={path.includes('/doctor/profile') ? 'light' : 'subtle'}
+                                    justify="start"
+                                    leftSection={<IconUserCircle size={20} />}
+                                    component={Link}
+                                    href="/dashboard/doctor/profile"
+                                    color="teal"
+                                >
+                                    My Profile
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" tt="uppercase">Patient</Text>
+                                <Button
+                                    variant={path === '/dashboard' ? 'light' : 'subtle'}
+                                    justify="start"
+                                    leftSection={<IconCalendar size={20} />}
+                                    component={Link}
+                                    href="/dashboard"
+                                    color="teal"
+                                >
+                                    Appointments
+                                </Button>
+                            </>
+                        )}
+
+                        <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" tt="uppercase">Discover</Text>
                         <Button
-                            variant="subtle"
+                            variant={path === '/search' ? 'light' : 'subtle'}
                             justify="start"
                             size="md"
                             leftSection={<IconSearch size={20} />}
                             component={Link}
                             href="/search"
+                            color="gray"
                         >
                             Find Doctors
                         </Button>
-
-                        {user && (
-                            <>
-                                <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" style={{ textTransform: 'uppercase' }}>
-                                    {isDoctor ? 'Doctor' : 'Patient'}
-                                </Text>
-
-                                {isDoctor ? (
-                                    <>
-                                        <Button variant="subtle" justify="start" leftSection={<IconCalendar size={20} />} component={Link} href="/dashboard/doctor">
-                                            Dashboard
-                                        </Button>
-                                        <Button variant="subtle" justify="start" leftSection={<IconCalendarEvent size={20} />} component={Link} href="/doctor/schedule">
-                                            Schedule
-                                        </Button>
-                                        <Button variant="subtle" justify="start" leftSection={<IconUserCircle size={20} />} component={Link} href="/dashboard/doctor/profile">
-                                            Profile
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <Button variant="subtle" justify="start" leftSection={<IconCalendar size={20} />} component={Link} href="/dashboard">
-                                        Appointments
-                                    </Button>
-                                )}
-                            </>
-                        )}
                     </div>
                 </AppShell.Navbar>
             )}

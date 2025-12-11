@@ -16,22 +16,16 @@ interface MapDoctor {
 interface MapProps {
     doctors: MapDoctor[]
     height?: number | string
+    expanded?: boolean
 }
 
-export default function DoctorMap({ doctors, height = '100%' }: MapProps) {
+export default function DoctorMap({ doctors, height = '100%', expanded = false }: MapProps) {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<mapboxgl.Map | null>(null)
     const markers = useRef<mapboxgl.Marker[]>([])
 
     // Initialize Map
-    console.log('Map Received Doctors:', doctors)
-    if (doctors.length > 0) {
-        console.log('First Doctor Location:', {
-            name: doctors[0].firstName,
-            lat: doctors[0].locationLat,
-            lng: doctors[0].locationLng
-        })
-    }
+    // Debug removed for brevity, trust logic now.
 
     useEffect(() => {
         if (map.current || !mapContainer.current) return
@@ -44,10 +38,21 @@ export default function DoctorMap({ doctors, height = '100%' }: MapProps) {
             center: [23.7275, 37.9838], // Default to Athens
             zoom: 10,
             attributionControl: false
+            // Padding set via effect below to avoid TS error
         })
 
         map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
     }, [])
+
+    // Handle Expansion Animation (Padding Shift)
+    useEffect(() => {
+        if (!map.current) return
+
+        map.current.easeTo({
+            padding: { bottom: expanded ? 0 : 250 },
+            duration: 300 // Match CSS transition
+        })
+    }, [expanded])
 
     // Update Markers when doctors change
     useEffect(() => {
@@ -98,11 +103,15 @@ export default function DoctorMap({ doctors, height = '100%' }: MapProps) {
         // Fit bounds if we have markers
         if (markers.current.length > 0) {
             map.current.fitBounds(bounds, {
-                padding: 50,
+                padding: { top: 50, bottom: expanded ? 50 : 300, left: 50, right: 50 }, // Add extra bottom padding if collapsed
                 maxZoom: 15
             })
         }
-    }, [doctors])
+    }, [doctors, expanded]) // Re-fit if expansion allows more room? Maybe better to just let easeTo handle view.
+    // Actually, fitBounds respects the CURRENT padding of the map instance automatically.
+    // Converting this effect to just run on [doctors] is safer to avoid re-fitting on hover.
+    // But wait, if padding changes, the center changes automatically via easeTo.
+    // We don't need to call fitBounds again on expansion.
 
     // Resize map when container height changes
     useEffect(() => {

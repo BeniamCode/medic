@@ -4,7 +4,6 @@ defmodule MedicWeb.DoctorController do
   alias Ash
   alias Decimal
   alias Medic.Appointments
-  alias Medic.Doctors
   alias Medic.Doctors.Specialty
   alias Medic.Doctors.Doctor
   alias Medic.Patients
@@ -13,19 +12,26 @@ defmodule MedicWeb.DoctorController do
   alias MedicWeb.I18n
   alias MedicWeb.ErrorHTML
 
-  def show(conn, %{"id" => id}) do
+  def show(conn, %{"id" => id} = params) do
     locale = conn.assigns[:locale] || I18n.default_locale()
+    start_date =
+      case Map.get(params, "date") do
+        nil -> Date.utc_today()
+        d -> Date.from_iso8601!(d)
+      end
 
     case fetch_doctor(id) do
       {:ok, doctor} ->
         formatted = format_doctor(doctor, locale)
         page_title = formatted.full_name
-        availability = Scheduling.get_slots_for_range(doctor, Date.utc_today(), Date.add(Date.utc_today(), 7))
+        availability = Scheduling.get_slots_for_range(doctor, start_date, Date.add(start_date, 6))
 
         conn
         |> assign(:page_title, page_title)
         |> assign_prop(:doctor, formatted)
         |> assign_prop(:availability, Enum.map(availability, &availability_props/1))
+        # Pass current start date to frontend for pagination logic
+        |> assign_prop(:startDate, Date.to_iso8601(start_date))
         |> render_inertia("Public/DoctorProfile")
 
       :error ->
@@ -47,7 +53,7 @@ defmodule MedicWeb.DoctorController do
     _ -> :error
   end
 
-  def book(conn, %{"doctor_id" => doctor_id, "booking" => booking_params}) do
+  def book(conn, %{"id" => doctor_id, "booking" => booking_params}) do
     with {:ok, doctor} <- fetch_doctor(doctor_id),
          {:ok, patient} <- fetch_patient(conn.assigns.current_user),
          {:ok, slot} <- parse_slot_params(booking_params),
@@ -63,17 +69,66 @@ defmodule MedicWeb.DoctorController do
     end
   end
 
-  defp fetch_patient(%{id: user_id}) do
+  defp fetch_patient(nil), do: {:error, :not_patient}
+
+  defp fetch_patient(%{id: user_id} = user) do
     case Patients.get_patient_by_user_id(user_id) do
-      nil -> {:error, :not_patient}
+      nil -> maybe_create_patient_profile(user)
       patient -> {:ok, patient}
     end
   end
 
+  defp maybe_create_patient_profile(%{role: role} = user)
+       when role in ["patient", "doctor", "admin"] do
+    attrs = inferred_patient_attrs(user)
+
+    case Patients.create_patient(user, attrs) do
+      {:ok, patient} -> {:ok, patient}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  defp maybe_create_patient_profile(_user), do: {:error, :not_patient}
+
+  defp inferred_patient_attrs(user) do
+    {first_name, last_name} =
+      case {Map.get(user, :first_name), Map.get(user, :last_name)} do
+        {first, last} when is_binary(first) and is_binary(last) -> {first, last}
+        _ -> derive_names_from_email(user.email)
+      end
+
+    %{
+      first_name: first_name || "Guest",
+      last_name: last_name || "Patient"
+    }
+  end
+
+  defp derive_names_from_email(nil), do: {"Guest", "Patient"}
+
+  defp derive_names_from_email(email) do
+    email
+    |> String.split("@")
+    |> List.first()
+    |> to_string()
+    |> String.replace(~r/[^a-zA-Z]/, " ")
+    |> String.split(" ", trim: true)
+    |> case do
+      [first, last | _] -> {format_name_segment(first), format_name_segment(last)}
+      [single] -> {format_name_segment(single), "Patient"}
+      _ -> {"Guest", "Patient"}
+    end
+  end
+
+  defp format_name_segment(name) do
+    name
+    |> String.downcase()
+    |> String.capitalize()
+  end
+
   defp parse_slot_params(%{"starts_at" => start_iso, "ends_at" => end_iso}) do
-    with {:ok, starts_at, 0} <- DateTime.from_iso8601(start_iso),
-         {:ok, ends_at, 0} <- DateTime.from_iso8601(end_iso) do
-      {:ok, %{starts_at: starts_at, ends_at: ends_at}}
+    with {:ok, starts_at, _offset} <- DateTime.from_iso8601(start_iso),
+         {:ok, ends_at, _offset} <- DateTime.from_iso8601(end_iso) do
+      {:ok, %{starts_at: DateTime.truncate(starts_at, :second), ends_at: DateTime.truncate(ends_at, :second)}}
     else
       _ -> {:error, :invalid_slot}
     end
@@ -92,7 +147,25 @@ defmodule MedicWeb.DoctorController do
 
   defp booking_error_message(:not_patient), do: dgettext("default", "Please complete patient onboarding")
   defp booking_error_message(:invalid_slot), do: dgettext("default", "Invalid time slot")
-  defp booking_error_message(_), do: dgettext("default", "Unable to book appointment")
+  defp booking_error_message(:slot_already_booked), do: dgettext("default", "This slot is no longer available")
+  
+  defp booking_error_message(%Ecto.Changeset{} = changeset) do
+    errors =
+      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+        end)
+      end)
+      
+    errors
+    |> Enum.map(fn {k, v} -> "#{Phoenix.Naming.humanize(k)} #{Enum.join(v, ", ")}" end)
+    |> Enum.join(". ")
+  end
+  
+  defp booking_error_message(reason) do 
+    IO.inspect(reason, label: "Booking Error")
+    dgettext("default", "Unable to book appointment")
+  end
 
   defp format_doctor(%Doctor{} = doctor, locale) do
     specialty = doctor.specialty

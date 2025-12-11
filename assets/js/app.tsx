@@ -13,6 +13,23 @@ import { createRoot } from 'react-dom/client'
 import { ensureI18n } from '@/lib/i18n'
 import type { AppPageProps, SharedAppProps } from '@/types/app'
 import { resolvePage } from '@/pages'
+import axios from 'axios'
+
+const csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute('content')
+
+if (csrfToken) {
+  // Ensure traditional axios requests include the CSRF token
+  axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken
+
+  // Inertia uses fetch under the hood, so we manually push the CSRF header
+  document.addEventListener('inertia:before', (event) => {
+    event.detail.visit.headers = {
+      ...event.detail.visit.headers,
+      'x-csrf-token': csrfToken
+    }
+  })
+}
+
 
 const theme = createTheme({
   primaryColor: 'teal',

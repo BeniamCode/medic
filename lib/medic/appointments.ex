@@ -95,7 +95,7 @@ defmodule Medic.Appointments do
     result =
       %Appointment{}
       |> Appointment.changeset(attrs)
-      |> Repo.insert()
+      |> Repo.insert(returning: true)
       |> handle_constraint_error()
 
     case result do
@@ -149,7 +149,7 @@ defmodule Medic.Appointments do
   def update_appointment(%Appointment{} = appointment, attrs) do
     appointment
     |> Appointment.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(returning: true)
     |> handle_constraint_error()
   end
 
@@ -159,7 +159,7 @@ defmodule Medic.Appointments do
   def confirm_appointment(%Appointment{} = appointment) do
     appointment
     |> Appointment.confirm_changeset()
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """
@@ -168,7 +168,7 @@ defmodule Medic.Appointments do
   def complete_appointment(%Appointment{} = appointment) do
     appointment
     |> Appointment.complete_changeset()
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """
@@ -181,7 +181,7 @@ defmodule Medic.Appointments do
     result =
       appointment
       |> Appointment.cancel_changeset(reason)
-      |> Repo.update()
+      |> Repo.update(returning: true)
 
     case result do
       {:ok, updated_appointment} ->
@@ -257,7 +257,7 @@ defmodule Medic.Appointments do
   def mark_no_show(%Appointment{} = appointment) do
     appointment
     |> Appointment.no_show_changeset()
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """

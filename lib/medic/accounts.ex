@@ -80,7 +80,7 @@ defmodule Medic.Accounts do
     role = Map.get(attrs, "role") || Map.get(attrs, :role) || "patient"
 
     Ecto.Multi.new()
-    |> Ecto.Multi.insert(:user, User.registration_changeset(%User{}, attrs))
+    |> Ecto.Multi.insert(:user, User.registration_changeset(%User{}, attrs), returning: true)
     |> Ecto.Multi.run(:profile, fn _repo, %{user: user} ->
       create_role_profile(user, role)
     end)

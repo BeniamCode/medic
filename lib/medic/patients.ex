@@ -47,8 +47,8 @@ defmodule Medic.Patients do
   def create_patient(user, attrs \\ %{}) do
     %Patient{}
     |> Patient.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> Repo.insert()
+    |> Ecto.Changeset.put_change(:user_id, user.id)
+    |> Repo.insert(returning: true)
   end
 
   @doc """
@@ -57,7 +57,7 @@ defmodule Medic.Patients do
   def update_patient(%Patient{} = patient, attrs) do
     patient
     |> Patient.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """

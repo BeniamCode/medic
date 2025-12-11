@@ -59,7 +59,7 @@ defmodule Medic.Hospitals do
   def create_hospital(attrs \\ %{}) do
     %Hospital{}
     |> Hospital.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(returning: true)
   end
 
   @doc """
@@ -77,7 +77,7 @@ defmodule Medic.Hospitals do
   def update_hospital(%Hospital{} = hospital, attrs) do
     hospital
     |> Hospital.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """
@@ -172,7 +172,7 @@ defmodule Medic.Hospitals do
   def create_hospital_schedule(attrs \\ %{}) do
     %HospitalSchedule{}
     |> HospitalSchedule.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(returning: true)
   end
 
   @doc """
@@ -190,7 +190,7 @@ defmodule Medic.Hospitals do
   def update_hospital_schedule(%HospitalSchedule{} = hospital_schedule, attrs) do
     hospital_schedule
     |> HospitalSchedule.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """

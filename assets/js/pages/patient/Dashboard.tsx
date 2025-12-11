@@ -7,14 +7,14 @@ import type { AppPageProps } from '@/types/app'
 
 type Appointment = {
   id: string
-  starts_at: string
+  startsAt: string
   status: string
   doctor: {
     id: string
-    first_name: string
-    last_name: string
-    specialty_name?: string | null
-    profile_image_url?: string | null
+    firstName: string
+    lastName: string
+    specialtyName?: string | null
+    profileImageUrl?: string | null
   }
 }
 
@@ -25,9 +25,9 @@ type Stats = {
 }
 
 type PageProps = AppPageProps<{
-  patient: { id: string; first_name: string; last_name: string }
-  upcoming_appointments: Appointment[]
-  past_appointments: Appointment[]
+  patient: { id: string; firstName: string; lastName: string }
+  upcomingAppointments: Appointment[]
+  pastAppointments: Appointment[]
   stats: Stats
 }>
 
@@ -39,14 +39,14 @@ const statusColor: Record<string, string> = {
   no_show: 'gray'
 }
 
-export default function DashboardPage({ app, auth, patient, upcoming_appointments, past_appointments, stats }: PageProps) {
+export default function DashboardPage({ app, auth, patient, upcomingAppointments, pastAppointments, stats }: PageProps) {
   const { t } = useTranslation('default')
 
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <Stack gap={0}>
-          <Title order={2}>Good morning, {patient.first_name}</Title>
+          <Title order={2}>Good morning, {patient.firstName}</Title>
           <Text c="dimmed">Here is your health overview for today.</Text>
         </Stack>
         <Button leftSection={<IconStethoscope size={20} />} component={Link} href="/search" variant="filled" color="teal">
@@ -86,9 +86,9 @@ export default function DashboardPage({ app, auth, patient, upcoming_appointment
               <ActionIcon variant="subtle" color="gray"><IconDotsVertical size={18} /></ActionIcon>
             </Group>
 
-            {upcoming_appointments.length > 0 ? (
+            {upcomingAppointments.length > 0 ? (
               <Stack gap="md">
-                {upcoming_appointments.map(appt => (
+                {upcomingAppointments.map(appt => (
                   <AppointmentCard key={appt.id} appointment={appt} />
                 ))}
               </Stack>
@@ -109,22 +109,22 @@ export default function DashboardPage({ app, auth, patient, upcoming_appointment
           <Card withBorder radius="lg" padding="xl">
             <Title order={4} mb="lg">Recent History</Title>
             <Timeline active={0} bulletSize={24} lineWidth={2}>
-              {past_appointments.slice(0, 5).map(appt => (
+              {pastAppointments.slice(0, 5).map(appt => (
                 <Timeline.Item
                   key={appt.id}
                   bullet={<IconCheck size={12} />}
-                  title={`Dr. ${appt.doctor.last_name}`}
+                  title={`Dr. ${appt.doctor.lastName}`}
                   color={statusColor[appt.status]}
                 >
                   <Text c="dimmed" size="xs" mt={4}>
-                    {format(parseISO(appt.starts_at), 'MMM d, yyyy')}
+                    {format(parseISO(appt.startsAt), 'MMM d, yyyy')}
                   </Text>
                   <Text size="xs" mt={4}>
                     {appt.status}
                   </Text>
                 </Timeline.Item>
               ))}
-              {past_appointments.length === 0 && (
+              {pastAppointments.length === 0 && (
                 <Text c="dimmed" size="sm">No past history.</Text>
               )}
             </Timeline>
@@ -153,7 +153,7 @@ function StatCard({ icon: Icon, label, value, color, desc }: any) {
 }
 
 function AppointmentCard({ appointment }: { appointment: Appointment }) {
-  const date = parseISO(appointment.starts_at)
+  const date = parseISO(appointment.startsAt)
 
   return (
     <Card withBorder radius="md" padding="md">
@@ -165,8 +165,8 @@ function AppointmentCard({ appointment }: { appointment: Appointment }) {
 
         <Group justify="space-between" w="100%" align="flex-start">
           <div>
-            <Text fw={600}>Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}</Text>
-            <Text size="sm" c="dimmed">{appointment.doctor.specialty_name || 'General Practice'}</Text>
+            <Text fw={600}>Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}</Text>
+            <Text size="sm" c="dimmed">{appointment.doctor.specialtyName || 'General Practice'}</Text>
             <Group gap={6} mt={4}>
               <IconClock size={14} className="text-gray-500" />
               <Text size="xs" c="dimmed">{format(date, 'h:mm a')} ({formatDistanceToNowStrict(date, { addSuffix: true })})</Text>

@@ -18,7 +18,8 @@ import {
   Avatar,
   Rating,
   rem,
-  SimpleGrid
+  SimpleGrid,
+  ActionIcon
 } from '@mantine/core'
 import {
   IconCalendar,
@@ -30,46 +31,49 @@ import {
   IconInfoCircle,
   IconStethoscope,
   IconUser,
-  IconMessageCircle
+  IconMessageCircle,
+  IconChevronLeft,
+  IconChevronRight
 } from '@tabler/icons-react'
 import { useState } from 'react'
 import { router } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
 import type { AppPageProps } from '@/types/app'
+import { format } from 'date-fns'
 
 export type DoctorProfile = {
   id: string
-  full_name: string
-  first_name: string
-  last_name: string
+  fullName: string
+  firstName: string
+  lastName: string
   title: string | null
   pronouns: string | null
   rating: number | null
-  review_count: number
+  reviewCount: number
   verified: boolean
-  profile_image_url: string | null
+  profileImageUrl: string | null
   specialty: { name: string; slug: string } | null
   city: string | null
   address: string | null
-  hospital_affiliation: string | null
-  years_of_experience: number | null
+  hospitalAffiliation: string | null
+  yearsOfExperience: number | null
   bio: string | null
-  sub_specialties: string[]
-  clinical_procedures: string[]
-  conditions_treated: string[]
+  subSpecialties: string[]
+  clinicalProcedures: string[]
+  conditionsTreated: string[]
   languages: string[]
   awards: string[]
-  telemedicine_available: boolean
-  consultation_fee: number | null
-  next_available_slot: string | null
+  telemedicineAvailable: boolean
+  consultationFee: number | null
+  nextAvailableSlot: string | null
 }
 
 type AvailabilityDay = {
   date: string
-  slots: { starts_at: string; ends_at: string; status: string }[]
+  slots: { startsAt: string; endsAt: string; status: string }[]
 }
 
-type PageProps = AppPageProps<{ doctor: DoctorProfile; availability: AvailabilityDay[] }>
+type PageProps = AppPageProps<{ doctor: DoctorProfile; availability: AvailabilityDay[]; startDate: string }>
 
 const SectionTitle = ({ children, icon: Icon }: { children: React.ReactNode, icon?: any }) => (
   <Group mb="md">
@@ -78,20 +82,55 @@ const SectionTitle = ({ children, icon: Icon }: { children: React.ReactNode, ico
   </Group>
 )
 
-export default function DoctorProfilePage({ doctor, app, auth, availability }: PageProps) {
+const APP_LOCALE = 'en-US'
+
+export default function DoctorProfilePage({ doctor, app, auth, availability, startDate }: PageProps) {
   const { t } = useTranslation('default')
   const [selectedDateIndex, setSelectedDateIndex] = useState(0)
-  const [selectedSlot, setSelectedSlot] = useState<{ starts_at: string; ends_at: string } | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<{ startsAt: string; endsAt: string } | null>(null)
   const [notes, setNotes] = useState('')
   const [appointmentType, setAppointmentType] = useState<'in_person' | 'telemedicine'>(
-    doctor.telemedicine_available ? 'in_person' : 'in_person'
+    doctor.telemedicineAvailable ? 'telemedicine' : 'in_person'
   )
+  const [isBooking, setIsBooking] = useState(false)
 
   const days = availability || []
   const currentDay = days[selectedDateIndex]
 
+  // Pagination Logic
+  const currentStart = startDate ? new Date(startDate) : new Date()
+
+  const handleNextWeek = () => {
+    const nextDate = new Date(currentStart)
+    nextDate.setDate(nextDate.getDate() + 7)
+    router.visit(`/doctors/${doctor.id}?date=${format(nextDate, 'yyyy-MM-dd')}`, {
+      preserveScroll: true,
+      only: ['availability', 'startDate']
+    })
+    setSelectedDateIndex(0)
+    setSelectedSlot(null)
+  }
+
+  const handlePrevWeek = () => {
+    const prevDate = new Date(currentStart)
+    prevDate.setDate(prevDate.getDate() - 7)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (prevDate < today) prevDate.setTime(today.getTime())
+
+    router.visit(`/doctors/${doctor.id}?date=${format(prevDate, 'yyyy-MM-dd')}`, {
+      preserveScroll: true,
+      only: ['availability', 'startDate']
+    })
+    setSelectedDateIndex(0)
+    setSelectedSlot(null)
+  }
+
+  const canGoBack = currentStart > new Date(new Date().setHours(0, 0, 0, 0))
+
+
   const handleBook = () => {
-    if (!selectedSlot) return
+    if (!selectedSlot || isBooking) return
     if (!auth.authenticated) {
       router.visit('/login')
       return
@@ -99,243 +138,291 @@ export default function DoctorProfilePage({ doctor, app, auth, availability }: P
 
     router.post(`/doctors/${doctor.id}/book`, {
       booking: {
-        starts_at: selectedSlot.starts_at,
-        ends_at: selectedSlot.ends_at,
+        starts_at: selectedSlot.startsAt,
+        ends_at: selectedSlot.endsAt,
         appointment_type: appointmentType,
         notes
       }
+    }, {
+      onStart: () => setIsBooking(true),
+      onFinish: () => setIsBooking(false)
     })
   }
 
   return (
-    <Container size="xl" py="xl">
+    <Container size="lg" py="xl">
       {/* Profile Header */}
-      <Card withBorder padding="xl" radius="lg" mb={40} shadow="sm">
-        <Grid align="center" gutter="xl">
-          <Grid.Col span={{ base: 12, sm: 'content' }}>
-            <Avatar
-              src={doctor.profile_image_url}
-              size={160}
-              radius="md"
-              color="teal"
-            >
-              {doctor.first_name[0]}
-            </Avatar>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, sm: 'auto' }}>
-            <Stack gap="xs">
-              <Group>
-                <Title order={1}>{doctor.title || 'Dr.'} {doctor.full_name}</Title>
-                {doctor.verified && (
-                  <Badge size="lg" color="teal" variant="light" leftSection={<IconShieldCheck size={14} />}>Verified</Badge>
-                )}
+      <Paper radius="md" p={30} mb={40} withBorder bg="white">
+        <Group align="flex-start" wrap="nowrap">
+          <Avatar
+            src={doctor.profileImageUrl}
+            size={120}
+            radius="md"
+            color="teal"
+            name={doctor.fullName}
+          >
+            {doctor.firstName?.[0]}
+          </Avatar>
+
+          <Stack gap={4} style={{ flex: 1 }}>
+            <Group justify="space-between" align="flex-start">
+              <div>
+                <Group gap="xs" align="center" mb={4}>
+                  <Title order={2}>{doctor.title || 'Dr.'} {doctor.fullName}</Title>
+                  {doctor.verified && (
+                    <Badge variant="light" color="teal" leftSection={<IconShieldCheck size={12} />}>Verified</Badge>
+                  )}
+                </Group>
+                <Text size="lg" c="dimmed" fw={500}>{doctor.specialty?.name || 'Medical Specialist'}</Text>
+              </div>
+
+              <Stack gap={0} align="flex-end">
+                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Consultation</Text>
+                <Text size="xl" fw={700} c="teal">
+                  {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
+                </Text>
+              </Stack>
+            </Group>
+
+            <Group mt="md" gap="xl">
+              <Group gap={6}>
+                <IconMapPin size={18} style={{ opacity: 0.5 }} />
+                <Text>{doctor.city}</Text>
               </Group>
-
-              <Text size="lg" fw={500} c="dimmed">
-                {doctor.specialty?.name || 'General Practitioner'}
-                {doctor.hospital_affiliation && ` • ${doctor.hospital_affiliation}`}
-              </Text>
-
-              <Group gap="lg" mt="sm">
+              <Group gap={6}>
+                <Rating value={doctor.rating || 0} readOnly size="sm" />
+                <Text fw={600} size="sm">{doctor.rating?.toFixed(1)}</Text>
+                <Text c="dimmed" size="sm">({doctor.reviewCount} reviews)</Text>
+              </Group>
+              {doctor.yearsOfExperience && (
                 <Group gap={6}>
-                  <IconMapPin size={18} className="text-gray-500" />
-                  <Text>{doctor.city}</Text>
+                  <IconStethoscope size={18} style={{ opacity: 0.5 }} />
+                  <Text size="sm">{doctor.yearsOfExperience}+ Years Exp.</Text>
                 </Group>
-                <Group gap={6}>
-                  <Rating value={doctor.rating || 0} readOnly />
-                  <Text fw={600}>{doctor.rating?.toFixed(1)}</Text>
-                  <Text c="dimmed">({doctor.review_count} reviews)</Text>
-                </Group>
-                {doctor.years_of_experience && (
-                  <Group gap={6}>
-                    <IconStethoscope size={18} className="text-gray-500" />
-                    <Text>{doctor.years_of_experience}+ Years Exp.</Text>
+              )}
+            </Group>
+          </Stack>
+        </Group>
+      </Paper>
+
+      <Grid gutter={40}>
+        <Grid.Col span={12}>
+
+          {/* Centralized Booking Section */}
+          <Paper withBorder p="xl" radius="md" mb={50} id="book-appointment" shadow="sm">
+            <Stack gap="lg">
+              <Group justify="space-between">
+                <Title order={3}>Book Appointment</Title>
+                {doctor.telemedicineAvailable && (
+                  <Group>
+                    <Button
+                      size="xs"
+                      variant={appointmentType === 'in_person' ? 'filled' : 'default'}
+                      onClick={() => setAppointmentType('in_person')}
+                      leftSection={<IconMapPin size={14} />}
+                    >
+                      Clinic Visit
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant={appointmentType === 'telemedicine' ? 'filled' : 'default'}
+                      onClick={() => setAppointmentType('telemedicine')}
+                      leftSection={<IconVideo size={14} />}
+                    >
+                      Video Call
+                    </Button>
                   </Group>
                 )}
               </Group>
-            </Stack>
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 3 }} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Card bg="teal.0" radius="md" p="lg" w="100%">
-              <Stack gap="xs" align="center">
-                <Text c="dimmed" size="xs" tt="uppercase" fw={700}>Consultation Fee</Text>
-                <Text size={rem(32)} fw={700} c="teal" lh={1}>
-                  {doctor.consultation_fee ? `€${doctor.consultation_fee}` : 'Ask'}
-                </Text>
-                {doctor.telemedicine_available && (
-                  <Badge color="blue" variant="dot">Video Available</Badge>
-                )}
-              </Stack>
-            </Card>
-          </Grid.Col>
-        </Grid>
-      </Card>
 
-      <Grid gutter={40}>
-        <Grid.Col span={{ base: 12, md: 8 }}>
-          <Tabs defaultValue="about" radius="md" color="teal">
+              <Divider />
+
+              <Box>
+                <Group justify="space-between" mb="sm">
+                  <Text fw={600}>Select Date</Text>
+                  <Group gap={6}>
+                    <ActionIcon variant="default" size="lg" disabled={!canGoBack} onClick={handlePrevWeek}>
+                      <IconChevronLeft size={16} />
+                    </ActionIcon>
+                    <Text size="sm" fw={500}>{format(currentStart, 'MMMM yyyy')}</Text>
+                    <ActionIcon variant="default" size="lg" onClick={handleNextWeek}>
+                      <IconChevronRight size={16} />
+                    </ActionIcon>
+                  </Group>
+                </Group>
+
+                <Group gap="xs" wrap="nowrap" style={{ overflowX: 'auto', paddingBottom: 4 }}>
+                  {days.map((day: AvailabilityDay, index: number) => {
+                    const isSelected = selectedDateIndex === index
+                    const d = new Date(day.date)
+                    return (
+                      <Paper
+                        key={day.date}
+                        withBorder={!isSelected}
+                        bg={isSelected ? 'teal.0' : 'white'}
+                        style={{ borderColor: isSelected ? 'var(--mantine-color-teal-5)' : undefined, cursor: 'pointer', minWidth: 80 }}
+                        p="xs"
+                        radius="md"
+                        onClick={() => { setSelectedDateIndex(index); setSelectedSlot(null); }}
+                        className="transition-all hover:shadow-sm"
+                      >
+                        <Stack gap={0} align="center">
+                          <Text size="xs" c={isSelected ? 'teal' : 'dimmed'} tt="uppercase" fw={700}>{d.toLocaleDateString(APP_LOCALE, { weekday: 'short' })}</Text>
+                          <Text fw={700} size="lg" c={isSelected ? 'teal' : 'dark'}>{d.getDate()}</Text>
+                        </Stack>
+                      </Paper>
+                    )
+                  })}
+                </Group>
+              </Box>
+
+              <Box>
+                <Text fw={600} mb="sm">Available Slots</Text>
+                {currentDay?.slots?.filter((s: any) => s.status === 'free').length > 0 ? (
+                  <SimpleGrid cols={{ base: 3, sm: 4, md: 5 }} spacing="sm">
+                    {currentDay.slots
+                      .filter((slot: any) => slot.status === 'free')
+                      .map((slot: any) => (
+                        <Button
+                          key={slot.startsAt}
+                          variant={selectedSlot?.startsAt === slot.startsAt ? 'filled' : 'outline'}
+                          onClick={() => setSelectedSlot(slot)}
+                          color="teal"
+                          radius="md"
+                        >
+                          {new Date(slot.startsAt).toLocaleTimeString(APP_LOCALE, { hour: '2-digit', minute: '2-digit' })}
+                        </Button>
+                      ))
+                    }
+                  </SimpleGrid>
+                ) : (
+                  <Paper bg="gray.0" p="md" radius="md">
+                    <Text c="dimmed" size="sm" ta="center">No available slots for this date.</Text>
+                  </Paper>
+                )}
+              </Box>
+
+              {selectedSlot && (
+                <>
+                  <Textarea
+                    placeholder="Reason for visit (optional)..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    minRows={2}
+                    variant="filled"
+                    disabled={isBooking}
+                  />
+
+                  <Button
+                    size="lg"
+                    fullWidth
+                    onClick={handleBook}
+                    color="teal"
+                    disabled={!selectedSlot || isBooking}
+                    loading={isBooking}
+                  >
+                    Confirm Booking
+                  </Button>
+                  <Text size="xs" c="dimmed" ta="center">No payment required to book.</Text>
+                </>
+              )}
+            </Stack>
+          </Paper>
+
+          {/* Details Tabs */}
+          <Tabs defaultValue="about" color="teal" radius="md">
             <Tabs.List mb="xl">
-              <Tabs.Tab value="about" leftSection={<IconUser size={16} />}>About</Tabs.Tab>
+              <Tabs.Tab value="about" leftSection={<IconUser size={16} />}>About & Expertise</Tabs.Tab>
               <Tabs.Tab value="location" leftSection={<IconMapPin size={16} />}>Location</Tabs.Tab>
-              <Tabs.Tab value="reviews" leftSection={<IconMessageCircle size={16} />}>Reviews</Tabs.Tab>
+              <Tabs.Tab value="reviews" leftSection={<IconMessageCircle size={16} />}>Reviews ({doctor.reviewCount})</Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="about">
-              <Stack gap="xl">
-                <Box>
-                  <SectionTitle icon={IconInfoCircle}>Biography</SectionTitle>
-                  <Text lh={1.6}>{doctor.bio || "No biography available."}</Text>
-                </Box>
-
-                <Divider />
-
-                {doctor.sub_specialties.length > 0 && (
-                  <Box>
-                    <SectionTitle icon={IconStethoscope}>Special Interests</SectionTitle>
-                    <Group gap="xs">
-                      {doctor.sub_specialties.map(s => <Badge key={s} size="lg" variant="outline" color="gray">{s}</Badge>)}
-                    </Group>
+              <Grid gutter={40}>
+                <Grid.Col span={{ base: 12, md: 8 }}>
+                  <Box mb={40}>
+                    <Title order={4} mb="md">Biography</Title>
+                    <Text lh={1.7} c="gray.7">{doctor.bio || "No biography available."}</Text>
                   </Box>
-                )}
 
-                {(doctor.clinical_procedures.length > 0 || doctor.conditions_treated.length > 0) && (
-                  <Grid>
-                    <Grid.Col span={6}>
-                      <SectionTitle>Procedures</SectionTitle>
-                      <List spacing="xs" size="sm" center icon={<ThemeIcon color="teal" size={6} radius="xl"><IconStethoscope size={0} /></ThemeIcon>}>
-                        {doctor.clinical_procedures.map(p => <List.Item key={p}>{p}</List.Item>)}
-                      </List>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <SectionTitle>Conditions</SectionTitle>
-                      <List spacing="xs" size="sm" center icon={<ThemeIcon color="teal" size={6} radius="xl"><IconStethoscope size={0} /></ThemeIcon>}>
-                        {doctor.conditions_treated.map(c => <List.Item key={c}>{c}</List.Item>)}
-                      </List>
-                    </Grid.Col>
-                  </Grid>
-                )}
-              </Stack>
+                  {(doctor.clinicalProcedures.length > 0 || doctor.conditionsTreated.length > 0) && (
+                    <Box>
+                      <Title order={4} mb="md">Medical Expertise</Title>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xl">
+                        <Box>
+                          <Text fw={600} mb="sm" size="sm" c="dimmed" tt="uppercase">Procedures</Text>
+                          <List spacing="xs" size="sm" center icon={<ThemeIcon color="teal.1" c="teal.6" size={16} radius="xl"><IconStethoscope size={10} /></ThemeIcon>}>
+                            {doctor.clinicalProcedures.slice(0, 5).map(p => <List.Item key={p}>{p}</List.Item>)}
+                          </List>
+                        </Box>
+                        <Box>
+                          <Text fw={600} mb="sm" size="sm" c="dimmed" tt="uppercase">Conditions Treated</Text>
+                          <List spacing="xs" size="sm" center icon={<ThemeIcon color="teal.1" c="teal.6" size={16} radius="xl"><IconStethoscope size={10} /></ThemeIcon>}>
+                            {doctor.conditionsTreated.slice(0, 5).map(c => <List.Item key={c}>{c}</List.Item>)}
+                          </List>
+                        </Box>
+                      </SimpleGrid>
+                    </Box>
+                  )}
+                </Grid.Col>
+                {/* Side Info in About Tab */}
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  {doctor.subSpecialties.length > 0 && (
+                    <Paper withBorder p="lg" radius="md">
+                      <Text fw={600} mb="md">Special Interests</Text>
+                      <Group gap="xs">
+                        {doctor.subSpecialties.map(s => <Badge key={s} variant="light" color="gray">{s}</Badge>)}
+                      </Group>
+                    </Paper>
+                  )}
+                </Grid.Col>
+              </Grid>
             </Tabs.Panel>
 
             <Tabs.Panel value="location">
-              <Stack>
-                <SectionTitle icon={IconMapPin}>Practice Location</SectionTitle>
-                <Text size="lg">{doctor.address}, {doctor.city}</Text>
-                <Paper h={400} bg="gray.1" withBorder radius="md">
-                  {/* Map Implementation Placeholder */}
-                  <Stack align="center" justify="center" h="100%" c="dimmed">
-                    <IconMapPin size={40} />
-                    <Text>Map View</Text>
-                  </Stack>
-                </Paper>
-              </Stack>
+              <Grid gutter={40}>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <Box mb={20}>
+                    <Title order={4} mb="sm">Practice Address</Title>
+                    <Text size="lg" fw={500}>{doctor.address}</Text>
+                    <Text c="dimmed">{doctor.city}</Text>
+                  </Box>
+
+                  {doctor.hospitalAffiliation && (
+                    <Box>
+                      <Text fw={600} size="sm" c="dimmed" tt="uppercase">Affiliation</Text>
+                      <Text>{doctor.hospitalAffiliation}</Text>
+                    </Box>
+                  )}
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 8 }}>
+                  <Paper h={400} bg="gray.1" radius="md" style={{ overflow: 'hidden' }}>
+                    {/* Future Map Component */}
+                    <Stack align="center" justify="center" h="100%" c="dimmed" gap={4}>
+                      <IconMapPin size={32} />
+                      <Text>Interactive Map</Text>
+                      <Button variant="subtle" size="xs">Get Directions</Button>
+                    </Stack>
+                  </Paper>
+                </Grid.Col>
+              </Grid>
             </Tabs.Panel>
 
             <Tabs.Panel value="reviews">
-              <Stack align="center" py="xl">
-                <Text c="dimmed">Reviews coming soon...</Text>
-              </Stack>
+              <Container size="sm" p={0}>
+                <Stack gap="xl">
+                  <Paper p="xl" withBorder radius="md" bg="gray.0">
+                    <Stack align="center">
+                      <Text fw={700} size="xl">Patient Reviews</Text>
+                      <Text c="dimmed">Verified patient feedback for Dr. {doctor.lastName} will appear here.</Text>
+                    </Stack>
+                  </Paper>
+                </Stack>
+              </Container>
             </Tabs.Panel>
           </Tabs>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Stack style={{ position: 'sticky', top: 20 }}>
-            <Card shadow="sm" radius="lg" padding="xl" withBorder>
-              <Stack gap="lg">
-                <Title order={3} size="h4">{t('doctor.booking.title', 'Book Appointment')}</Title>
-
-                {doctor.telemedicine_available && (
-                  <Grid gutter="xs">
-                    <Grid.Col span={6}>
-                      <Button
-                        variant={appointmentType === 'in_person' ? 'filled' : 'light'}
-                        fullWidth
-                        onClick={() => setAppointmentType('in_person')}
-                        leftSection={<IconMapPin size={16} />}
-                      >
-                        Clinic
-                      </Button>
-                    </Grid.Col>
-                    <Grid.Col span={6}>
-                      <Button
-                        variant={appointmentType === 'telemedicine' ? 'filled' : 'light'}
-                        fullWidth
-                        onClick={() => setAppointmentType('telemedicine')}
-                        leftSection={<IconVideo size={16} />}
-                      >
-                        Video
-                      </Button>
-                    </Grid.Col>
-                  </Grid>
-                )}
-
-                {/* Date Selection */}
-                <Box>
-                  <Text fw={600} mb="xs">Select Date</Text>
-                  <Group gap="xs">
-                    {days.map((day, index) => (
-                      <Button
-                        key={day.date}
-                        variant={selectedDateIndex === index ? 'light' : 'default'}
-                        onClick={() => { setSelectedDateIndex(index); setSelectedSlot(null); }}
-                        size="compact-sm"
-                      >
-                        {new Date(day.date).toLocaleDateString(APP_LOCALE, { weekday: 'short', day: 'numeric' })}
-                      </Button>
-                    ))}
-                  </Group>
-                </Box>
-
-                <Divider />
-
-                {/* Slot Selection */}
-                <Box>
-                  <Text fw={600} mb="xs">Available Slots</Text>
-                  {currentDay?.slots?.length > 0 ? (
-                    <SimpleGrid cols={3} spacing="xs">
-                      {currentDay.slots
-                        .filter(slot => slot.status === 'free')
-                        .map(slot => (
-                          <Button
-                            key={slot.starts_at}
-                            variant={selectedSlot?.starts_at === slot.starts_at ? 'filled' : 'outline'}
-                            size="xs"
-                            onClick={() => setSelectedSlot(slot)}
-                            color="teal"
-                          >
-                            {new Date(slot.starts_at).toLocaleTimeString(APP_LOCALE, { hour: '2-digit', minute: '2-digit' })}
-                          </Button>
-                        ))
-                      }
-                    </SimpleGrid>
-                  ) : (
-                    <Text c="dimmed" size="sm">No slots available for this day.</Text>
-                  )}
-                </Box>
-
-                <Textarea
-                  placeholder="Reason for visit..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  minRows={3}
-                />
-
-                <Button size="lg" fullWidth onClick={handleBook} disabled={!selectedSlot}>
-                  Confirm Booking
-                </Button>
-
-                <Text size="xs" c="dimmed" ta="center">
-                  No payment required to book.
-                </Text>
-              </Stack>
-            </Card>
-          </Stack>
         </Grid.Col>
       </Grid>
     </Container>
   )
 }
-
-// Temporary constant until we pull from app props
-const APP_LOCALE = 'en-US'

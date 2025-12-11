@@ -43,7 +43,7 @@ defmodule Medic.Doctors do
   def create_specialty(attrs \\ %{}) do
     %Specialty{}
     |> Specialty.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(returning: true)
   end
 
   @doc """
@@ -52,7 +52,7 @@ defmodule Medic.Doctors do
   def update_specialty(%Specialty{} = specialty, attrs) do
     specialty
     |> Specialty.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """
@@ -149,7 +149,7 @@ defmodule Medic.Doctors do
       %Doctor{}
       |> Doctor.changeset(attrs)
       |> Ecto.Changeset.put_change(:user_id, user.id)
-      |> Repo.insert()
+      |> Repo.insert(returning: true)
 
     case result do
       {:ok, doctor} ->
@@ -168,7 +168,7 @@ defmodule Medic.Doctors do
     result =
       doctor
       |> Doctor.changeset(attrs)
-      |> Repo.update()
+      |> Repo.update(returning: true)
 
     case result do
       {:ok, updated_doctor} ->
@@ -186,7 +186,7 @@ defmodule Medic.Doctors do
   def update_next_available_slot(%Doctor{} = doctor, slot) do
     doctor
     |> Doctor.availability_changeset(%{next_available_slot: slot})
-    |> Repo.update()
+    |> Repo.update(returning: true)
   end
 
   @doc """
@@ -196,7 +196,7 @@ defmodule Medic.Doctors do
     result =
       doctor
       |> Doctor.verify_changeset()
-      |> Repo.update()
+      |> Repo.update(returning: true)
 
     case result do
       {:ok, verified_doctor} ->
