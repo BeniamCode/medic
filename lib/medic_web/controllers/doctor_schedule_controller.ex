@@ -284,9 +284,8 @@ defmodule MedicWeb.DoctorScheduleController do
   defp exception_props(ex) do
     %{
       id: ex.id,
-      # Explicit naming to avoid snake_case/camelCase confusion in JS
-      start_date: DateTime.to_iso8601(ex.starts_at),
-      end_date: DateTime.to_iso8601(ex.ends_at),
+      starts_at: DateTime.to_iso8601(ex.starts_at),
+      ends_at: DateTime.to_iso8601(ex.ends_at),
       reason: ex.reason
     }
   end

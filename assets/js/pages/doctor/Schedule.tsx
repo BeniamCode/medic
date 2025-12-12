@@ -143,6 +143,13 @@ const INITIAL_FORM_VALUES: AddSlotFormValues = {
   replaceMode: 'replace_selected_days'
 }
 
+/* Accessor to handle potential camelCase/snake_case mismatches safely */
+const getExceptionDates = (ex: any) => {
+  const start = ex.startsAt || ex.starts_at || ex.startDate || ex.start_date
+  const end = ex.endsAt || ex.ends_at || ex.endDate || ex.end_date
+  return { start, end }
+}
+
 const DoctorSchedule = ({
   availabilityRules = [],
   upcomingAppointments = [],
@@ -353,37 +360,36 @@ const DoctorSchedule = ({
             }
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {/* DEBUG: Remove after verifying */}
-              <div style={{ fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-                {JSON.stringify(exceptions, null, 2)}
-              </div>
               {exceptions.length > 0 ? (
-                exceptions.map((ex: ScheduleException) => (
-                  <Card key={ex.id} size="small" type="inner" bodyStyle={{ padding: '8px 12px' }}>
-                    <Flex justify="space-between" align="center">
-                      <Space direction="vertical" size={2}>
-                        <Space>
-                          <IconCalendarEvent size={14} style={{ color: '#64748b' }} />
-                          <Text strong>
-                            {dayjs(ex.start_date).isSame(dayjs(ex.end_date), 'day')
-                              ? dayjs(ex.start_date).format('MMM D, YYYY')
-                              : `${dayjs(ex.start_date).format('MMM D')} - ${dayjs(ex.end_date).format('MMM D, YYYY')}`
-                            }
+                exceptions.map((ex: any) => {
+                  const { start, end } = getExceptionDates(ex)
+                  return (
+                    <Card key={ex.id} size="small" type="inner" bodyStyle={{ padding: '8px 12px' }}>
+                      <Flex justify="space-between" align="center">
+                        <Space direction="vertical" size={2}>
+                          <Space>
+                            <IconCalendarEvent size={14} style={{ color: '#64748b' }} />
+                            <Text strong>
+                              {dayjs(start).isSame(dayjs(end), 'day')
+                                ? dayjs(start).format('MMM D, YYYY')
+                                : `${dayjs(start).format('MMM D')} - ${dayjs(end).format('MMM D, YYYY')}`
+                              }
+                            </Text>
+                          </Space>
+                          <Text type="secondary" style={{ fontSize: 12, paddingLeft: 20 }}>
+                            {ex.reason || 'Day Off'}
                           </Text>
                         </Space>
-                        <Text type="secondary" style={{ fontSize: 12, paddingLeft: 20 }}>
-                          {ex.reason || 'Day Off'}
-                        </Text>
-                      </Space>
-                      <Popconfirm
-                        title={t('common.are_you_sure')}
-                        onConfirm={() => handleDeleteException(ex.id)}
-                      >
-                        <Button type="text" danger icon={<IconTrash size={14} />} size="small" />
-                      </Popconfirm>
-                    </Flex>
-                  </Card>
-                ))
+                        <Popconfirm
+                          title={t('common.are_you_sure')}
+                          onConfirm={() => handleDeleteException(ex.id)}
+                        >
+                          <Button type="text" danger icon={<IconTrash size={14} />} size="small" />
+                        </Popconfirm>
+                      </Flex>
+                    </Card>
+                  )
+                })
               ) : (
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('schedule.no_time_off', 'No time off scheduled')} />
               )}
