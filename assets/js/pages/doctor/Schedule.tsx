@@ -1,10 +1,51 @@
-import { Badge, Button, Card, Group, Modal, NumberInput, Select, Stack, Switch, Table, Text, TextInput, Title } from '@mantine/core'
+import {
+  Badge,
+  Button,
+  Card,
+  Divider,
+  Group,
+  Modal,
+  NumberInput,
+  Paper,
+  Select,
+  Stack,
+  Switch,
+  Table,
+  Text,
+  TextInput,
+  Title
+} from '@mantine/core'
+import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
 import { useForm } from '@mantine/form'
 import { router } from '@inertiajs/react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { AppPageProps } from '@/types/app'
+
+const dayOptions = [
+  { value: '1', label: 'Monday' },
+  { value: '2', label: 'Tuesday' },
+  { value: '3', label: 'Wednesday' },
+  { value: '4', label: 'Thursday' },
+  { value: '5', label: 'Friday' },
+  { value: '6', label: 'Saturday' },
+  { value: '7', label: 'Sunday' }
+]
+
+const dayLabel = (value?: string) => dayOptions.find((d) => d.value === value)?.label || '—'
+
+const DEFAULT_VALUES = {
+  id: '',
+  day_of_week: '1',
+  start_time: '09:00',
+  end_time: '17:00',
+  break_start: '',
+  break_end: '',
+  slot_duration_minutes: 30,
+  is_active: true
+}
 
 type Rule = {
   id: string
@@ -29,54 +70,106 @@ type PageProps = AppPageProps<{
   upcomingAppointments: Appointment[]
 }>
 
-const dayOptions = [
-  { value: '1', label: 'Monday' },
-  { value: '2', label: 'Tuesday' },
-  { value: '3', label: 'Wednesday' },
-  { value: '4', label: 'Thursday' },
-  { value: '5', label: 'Friday' },
-  { value: '6', label: 'Saturday' },
-  { value: '7', label: 'Sunday' }
-]
-
 const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PageProps) => {
   const { t } = useTranslation('default')
   const [opened, { open, close }] = useDisclosure(false)
+  const [selectedDay, setSelectedDay] = useState('1')
+  const [modalDay, setModalDay] = useState('1')
+  const [copySource, setCopySource] = useState<string | null>(null)
+  const [dayOffDate, setDayOffDate] = useState<Date | null>(null)
+
+  const groupedRules = useMemo(() => {
+    const map: Record<string, Rule> = {}
+    availabilityRules.forEach((rule) => {
+      map[String(rule.dayOfWeek)] = rule
+    })
+    return map
+  }, [availabilityRules])
+
+  const initialDrafts = useMemo(() => {
+    const result: Record<string, typeof DEFAULT_VALUES> = {}
+    dayOptions.forEach((option) => {
+      const rule = groupedRules[option.value]
+      if (rule) {
+        result[option.value] = {
+          id: rule.id,
+          day_of_week: option.value,
+          start_time: rule.startTime,
+          end_time: rule.endTime,
+          break_start: rule.breakStart || '',
+          break_end: rule.breakEnd || '',
+          slot_duration_minutes: rule.slotDurationMinutes,
+          is_active: rule.isActive
+        }
+      } else {
+        result[option.value] = { ...DEFAULT_VALUES, day_of_week: option.value }
+      }
+    })
+    return result
+  }, [groupedRules])
+
+  const [draftRules, setDraftRules] = useState(initialDrafts)
+
+  useEffect(() => {
+    setDraftRules(initialDrafts)
+  }, [initialDrafts])
 
   const form = useForm({
-    initialValues: {
-      id: '',
-      day_of_week: '1',
-      start_time: '09:00',
-      end_time: '17:00',
-      break_start: '',
-      break_end: '',
-      slot_duration_minutes: 30,
-      is_active: true
-    }
+    initialValues: draftRules[modalDay] || DEFAULT_VALUES
   })
 
-  const handleEdit = (rule?: Rule) => {
-    form.setValues({
-      id: rule?.id || '',
-      day_of_week: String(rule?.dayOfWeek || 1),
-      start_time: rule?.startTime || '09:00',
-      end_time: rule?.endTime || '17:00',
-      break_start: rule?.breakStart || '',
-      break_end: rule?.breakEnd || '',
-      slot_duration_minutes: rule?.slotDurationMinutes || 30,
-      is_active: rule?.isActive ?? true
-    })
+  const syncDraft = (day: string, values: typeof form.values) => {
+    setDraftRules((prev) => ({
+      ...prev,
+      [day]: { ...values, day_of_week: day }
+    }))
+  }
+
+  const openModalForDay = (day: string) => {
+    setModalDay(day)
+    setCopySource(null)
+    form.setValues(draftRules[day] || { ...DEFAULT_VALUES, day_of_week: day })
     open()
   }
 
-  const handleDelete = (rule: Rule) => {
-    router.delete(`/doctor/schedule/${rule.id}`, { preserveScroll: true })
+  const handleCopyFrom = (sourceDay: string) => {
+    const source = draftRules[sourceDay]
+    if (!source) {
+      form.setValues({ ...DEFAULT_VALUES, day_of_week: modalDay })
+      syncDraft(modalDay, { ...DEFAULT_VALUES, day_of_week: modalDay })
+      return
+    }
+
+    const copied = {
+      ...source,
+      id: '',
+      day_of_week: modalDay
+    }
+    form.setValues(copied)
+    syncDraft(modalDay, copied)
   }
 
   const submit = (values: typeof form.values) => {
     router.post('/doctor/schedule', { rule: values }, { preserveScroll: true })
     close()
+  }
+
+  useEffect(() => {
+    if (opened) {
+      syncDraft(modalDay, form.values)
+    }
+  }, [form.values, modalDay, opened])
+
+  const dayOffPreview = dayOffDate ? dayOffDate.toLocaleDateString() : '—'
+  const previewSlots = useMemo(
+    () => buildPreviewSlots(form.values.start_time, form.values.end_time, form.values.slot_duration_minutes),
+    [form.values.start_time, form.values.end_time, form.values.slot_duration_minutes]
+  )
+
+  const handleBlockDay = () => {
+    if (!dayOffDate) return
+    router.post('/doctor/schedule/day_off', { exception: { date: dayOffDate.toISOString().slice(0, 10) } })
+    setDayOffDate(null)
   }
 
   return (
@@ -87,10 +180,49 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
             <Title order={2}>{t('doctor.schedule.title', 'Manage schedule')}</Title>
             <Text c="dimmed">{t('doctor.schedule.subtitle', 'Set your weekly availability')}</Text>
           </div>
-          <Button onClick={() => handleEdit()}>{t('doctor.schedule.new_rule', 'Add rule')}</Button>
+          <Group>
+            <Button onClick={() => openModalForDay(selectedDay)}>{t('doctor.schedule.new_rule', 'Add rule')}</Button>
+          </Group>
         </Group>
 
         <Card withBorder padding="lg" radius="lg">
+          <Stack gap="sm">
+            <Group justify="space-between" align="flex-start">
+              <div>
+                <Text fw={600}>{t('doctor.schedule.day_off.title', 'Need a day off?')}</Text>
+                <Text size="sm" c="dimmed">
+                  {t('doctor.schedule.day_off.helper', 'Pick a date to block the entire day. Patients will see it as unavailable.')}
+                </Text>
+              </div>
+              <Badge color="gray" variant="light">
+                {t('doctor.schedule.day_off.preview', 'Selected date:')} {dayOffPreview}
+              </Badge>
+            </Group>
+            <Group grow>
+              <DateInput value={dayOffDate} onChange={setDayOffDate} label={t('doctor.schedule.day_off.date', 'Select date')} placeholder="2025-04-12" />
+              <Button variant="light" onClick={handleBlockDay} disabled={!dayOffDate} radius="md">
+                {t('doctor.schedule.day_off.block', 'Block day')}
+              </Button>
+            </Group>
+          </Stack>
+        </Card>
+
+        <Card withBorder padding="lg" radius="lg">
+          <Group gap="xs" wrap="wrap" mb="md">
+            {dayOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant={selectedDay === option.value ? 'filled' : 'light'}
+                color="teal"
+                size="sm"
+                radius="xl"
+                onClick={() => setSelectedDay(option.value)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </Group>
+
           <Table>
             <Table.Thead>
               <Table.Tr>
@@ -101,38 +233,53 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {availabilityRules.map((rule) => (
-                <Table.Tr key={rule.id} opacity={rule.isActive ? 1 : 0.5}>
-                  <Table.Td>{dayOptions.find((d) => d.value === String(rule.dayOfWeek))?.label}</Table.Td>
-                  <Table.Td>
-                    <Text fw={600}>
-                      {rule.startTime} - {rule.endTime}
-                    </Text>
-                    {rule.breakStart && rule.breakEnd && (
-                      <Text size="xs" c="dimmed">
-                        {t('doctor.schedule.break', 'Break')}: {rule.breakStart} - {rule.breakEnd}
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge color={rule.isActive ? 'green' : 'gray'}>
-                      {rule.isActive ? t('doctor.schedule.active', 'Active') : t('doctor.schedule.off', 'Off')}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Button variant="light" size="xs" onClick={() => handleEdit(rule)}>
-                        {t('doctor.schedule.edit', 'Edit')}
-                      </Button>
-                      {rule.id && (
-                        <Button variant="subtle" color="red" size="xs" onClick={() => handleDelete(rule)}>
-                          {t('doctor.schedule.delete', 'Delete')}
-                        </Button>
+              {dayOptions.map((option) => {
+                const rule = groupedRules[option.value]
+                return (
+                  <Table.Tr key={option.value} opacity={rule?.isActive === false ? 0.5 : 1}>
+                    <Table.Td>{option.label}</Table.Td>
+                    <Table.Td>
+                      {rule ? (
+                        <Stack gap={4}>
+                          <Text fw={600}>
+                            {rule.startTime} - {rule.endTime}
+                          </Text>
+                          {rule.breakStart && rule.breakEnd && (
+                            <Text size="xs" c="dimmed">
+                              {t('doctor.schedule.break', 'Break')}: {rule.breakStart} - {rule.breakEnd}
+                            </Text>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Text c="dimmed">{t('doctor.schedule.no_rule', 'No rule yet')}</Text>
                       )}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
+                    </Table.Td>
+                    <Table.Td>
+                      {rule ? (
+                        <Badge color={rule.isActive ? 'green' : 'gray'}>
+                          {rule.isActive ? t('doctor.schedule.active', 'Active') : t('doctor.schedule.off', 'Off')}
+                        </Badge>
+                      ) : (
+                        <Badge color="gray" variant="light">
+                          {t('doctor.schedule.off', 'Off')}
+                        </Badge>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Button variant="light" size="xs" onClick={() => openModalForDay(option.value)}>
+                          {rule ? t('doctor.schedule.edit', 'Edit') : t('doctor.schedule.add', 'Add')}
+                        </Button>
+                        {rule?.id && (
+                          <Button variant="subtle" color="red" size="xs" onClick={() => router.delete(`/doctor/schedule/${rule.id}`)}>
+                            {t('doctor.schedule.delete', 'Delete')}
+                          </Button>
+                        )}
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                )
+              })}
             </Table.Tbody>
           </Table>
         </Card>
@@ -163,22 +310,166 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
         </Card>
       </Stack>
 
-      <Modal opened={opened} onClose={close} title={t('doctor.schedule.edit_rule', 'Edit rule')}>
-        <form onSubmit={form.onSubmit(submit)} className="space-y-4">
-          <Select label={t('doctor.schedule.day', 'Day')} data={dayOptions} {...form.getInputProps('day_of_week')} />
-          <Group grow>
-            <TextInput label={t('doctor.schedule.start', 'Start')} {...form.getInputProps('start_time')} />
-            <TextInput label={t('doctor.schedule.end', 'End')} {...form.getInputProps('end_time')} />
-          </Group>
-          <Group grow>
-            <TextInput label={t('doctor.schedule.break_start', 'Break start')} {...form.getInputProps('break_start')} />
-            <TextInput label={t('doctor.schedule.break_end', 'Break end')} {...form.getInputProps('break_end')} />
-          </Group>
-          <NumberInput label={t('doctor.schedule.duration', 'Slot duration (min)')} {...form.getInputProps('slot_duration_minutes')} min={10} step={5} />
-          <Switch label={t('doctor.schedule.active', 'Active')} {...form.getInputProps('is_active', { type: 'checkbox' })} />
-          <Button type="submit" fullWidth>
-            {t('doctor.schedule.save', 'Save')}
-          </Button>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={`${dayLabel(modalDay)} · ${t('doctor.schedule.edit_rule', 'Availability rule')}`}
+        radius="lg"
+        size="70%"
+        overlayProps={{ blur: 3, opacity: 0.55 }}
+      >
+        <form onSubmit={form.onSubmit(submit)}>
+          <Stack gap="lg">
+            <div>
+              <Title order={4}>{t('doctor.schedule.modal_heading', 'Define your working window')}</Title>
+              <Text size="sm" c="dimmed">
+                {t('doctor.schedule.modal_subheading', 'Patients will only see slots inside this window with the buffer and break you configure below.')}
+              </Text>
+            </div>
+
+            <Stack gap="xs">
+              <Text size="sm" fw={600}>
+                {t('doctor.schedule.day', 'Day tabs')}
+              </Text>
+              <Group gap="xs" wrap="wrap">
+                {dayOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    size="xs"
+                    radius="xl"
+                    variant={modalDay === option.value ? 'filled' : 'light'}
+                    color="teal"
+                    onClick={() => {
+                      syncDraft(modalDay, form.values)
+                      setModalDay(option.value)
+                      form.setValues(draftRules[option.value] || { ...DEFAULT_VALUES, day_of_week: option.value })
+                    }}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </Group>
+            </Stack>
+
+            <Group gap="sm" align="center">
+              <Select
+                data={dayOptions.filter((option) => option.value !== modalDay)}
+                placeholder={t('doctor.schedule.copy_placeholder', 'Copy settings from…')}
+                value={copySource}
+                onChange={(val) => {
+                  setCopySource(val)
+                  if (val) handleCopyFrom(val)
+                }}
+                withinPortal
+                className="max-w-xs"
+              />
+              <Text size="sm" c="dimmed">
+                {t('doctor.schedule.copy_helper', 'Use this to reuse another day’s configuration.')}
+              </Text>
+            </Group>
+
+            <Group grow align="flex-start">
+              <Paper
+                withBorder
+                radius="md"
+                p="md"
+                className="flex-1"
+                style={{ backgroundColor: 'var(--mantine-color-teal-0)', borderColor: 'var(--mantine-color-teal-2)' }}
+              >
+                <Group justify="space-between" align="center">
+                  <div>
+                    <Text fw={600}>{t('doctor.schedule.active', 'Available this day')}</Text>
+                    <Text size="sm" c="dimmed">
+                      {t('doctor.schedule.active_helper', 'Toggle off if you take this weekday off every week.')}
+                    </Text>
+                  </div>
+                  <Switch color="teal" size="md" {...form.getInputProps('is_active', { type: 'checkbox' })} />
+                </Group>
+              </Paper>
+              <NumberInput
+                label={t('doctor.schedule.duration', 'Slot duration (minutes)')}
+                min={10}
+                step={5}
+                {...form.getInputProps('slot_duration_minutes')}
+              />
+            </Group>
+
+            <Group grow>
+              <TextInput
+                label={t('doctor.schedule.start', 'Clinic opens at')}
+                type="time"
+                placeholder="09:00"
+                {...form.getInputProps('start_time')}
+              />
+              <TextInput
+                label={t('doctor.schedule.end', 'Clinic closes at')}
+                type="time"
+                placeholder="17:00"
+                {...form.getInputProps('end_time')}
+              />
+            </Group>
+
+            <Paper withBorder radius="md" p="md">
+              <Group justify="space-between" align="flex-start">
+                <div>
+                  <Text fw={600}>{t('doctor.schedule.break', 'Midday break')}</Text>
+                  <Text size="sm" c="dimmed">
+                    {t('doctor.schedule.break_helper', 'Optional buffer to block lunch or rounds. Leave blank if not needed.')}
+                  </Text>
+                </div>
+                <Switch
+                  checked={Boolean(form.values.break_start || form.values.break_end)}
+                  onChange={(event) => {
+                    if (!event.currentTarget.checked) {
+                      form.setFieldValue('break_start', '')
+                      form.setFieldValue('break_end', '')
+                    }
+                  }}
+                />
+              </Group>
+              <Divider my="sm" />
+              <Group grow>
+                <TextInput
+                  label={t('doctor.schedule.break_start', 'Starts')}
+                  type="time"
+                  placeholder="13:00"
+                  {...form.getInputProps('break_start')}
+                />
+                <TextInput
+                  label={t('doctor.schedule.break_end', 'Ends')}
+                  type="time"
+                  placeholder="14:00"
+                  {...form.getInputProps('break_end')}
+                />
+              </Group>
+            </Paper>
+
+            <Paper withBorder radius="md" p="md">
+              <Stack gap="xs">
+                <Text fw={600}>{t('doctor.schedule.preview', 'Slot preview')}</Text>
+                <Text size="sm" c="dimmed">
+                  {t('doctor.schedule.preview_helper', 'Patients will see these exact start times when booking this day.')}
+                </Text>
+                <Group gap="xs" wrap="wrap">
+                  {previewSlots.length === 0 ? (
+                    <Text size="sm" c="dimmed">
+                      {t('doctor.schedule.preview_empty', 'Adjust start/end time to see slots.')}
+                    </Text>
+                  ) : (
+                    previewSlots.map((slot) => (
+                      <Button key={slot} size="xs" variant="light" color="gray">
+                        {slot}
+                      </Button>
+                    ))
+                  )}
+                </Group>
+              </Stack>
+            </Paper>
+
+            <Button type="submit" size="md" radius="md">
+              {t('doctor.schedule.save', 'Save rule')}
+            </Button>
+          </Stack>
         </form>
       </Modal>
     </Stack>
@@ -186,3 +477,40 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
 }
 
 export default DoctorSchedulePage
+
+const buildPreviewSlots = (start?: string, finish?: string, duration?: number) => {
+  if (!start || !finish || !duration) {
+    return []
+  }
+
+  const startMinutes = timeToMinutes(start)
+  const endMinutes = timeToMinutes(finish)
+
+  if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+    return []
+  }
+
+  const slots: string[] = []
+  let pointer = startMinutes
+
+  while (pointer + duration <= endMinutes) {
+    slots.push(minutesToTime(pointer))
+    pointer += duration
+  }
+
+  return slots
+}
+
+const timeToMinutes = (value: string) => {
+  const [h, m] = value.split(':').map((val) => Number(val))
+  if (Number.isNaN(h) || Number.isNaN(m)) {
+    return null
+  }
+  return h * 60 + m
+}
+
+const minutesToTime = (mins: number) => {
+  const hours = Math.floor(mins / 60)
+  const minutes = mins % 60
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}

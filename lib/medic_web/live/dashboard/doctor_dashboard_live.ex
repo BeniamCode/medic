@@ -101,7 +101,7 @@ defmodule MedicWeb.DoctorDashboardLive do
                                    "#{appointment.patient.first_name} #{appointment.patient.last_name}") ||
                               "Patient" %>
                           </div>
-                        <div class="text-sm opacity-50">
+                          <div class="text-sm opacity-50">
                             <%= if appointment.appointment_type == "telemedicine",
                               do: "Telemedicine",
                               else: "In-person" %>

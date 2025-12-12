@@ -25,10 +25,12 @@ defmodule MedicWeb.UserAuth do
   def log_in_user(conn, user, params \\ %{}) do
     token = Accounts.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
-    
+
     # For admins, always redirect to admin dashboard to avoid stuck redirect loops
-    redirect_path = 
-       if user.role == "admin", do: signed_in_path(user), else: user_return_to || signed_in_path(user)
+    redirect_path =
+      if user.role == "admin",
+        do: signed_in_path(user),
+        else: user_return_to || signed_in_path(user)
 
     conn
     |> renew_session()

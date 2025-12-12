@@ -9,14 +9,27 @@ defmodule Medic.Scheduling do
 
   resources do
     resource Medic.Scheduling.AvailabilityRule
+    resource Medic.Scheduling.ScheduleTemplate
+    resource Medic.Scheduling.ScheduleTemplateBreak
+    resource Medic.Scheduling.AvailabilityException
+    resource Medic.Scheduling.TimeOffRequest
   end
 
   import Ecto.Query
   alias Medic.Repo
-  alias Medic.Scheduling.AvailabilityRule
+
+  alias Medic.Scheduling.{
+    AvailabilityRule,
+    AvailabilityException,
+    ScheduleTemplate,
+    ScheduleTemplateBreak,
+    TimeOffRequest
+  }
+
   alias Medic.Appointments.Appointment
   alias Medic.Doctors.Doctor
   alias Medic.Notifications
+  require Ash.Query
 
   use Timex
 
@@ -78,6 +91,89 @@ defmodule Medic.Scheduling do
   """
   def change_availability_rule(%AvailabilityRule{} = rule, attrs \\ %{}) do
     AvailabilityRule.changeset(rule, attrs)
+  end
+
+  # --- Schedule Templates ---
+
+  def list_schedule_templates(doctor_id) do
+    ScheduleTemplate
+    |> Ash.Query.filter(doctor_id == ^doctor_id)
+    |> Ash.Query.load(:breaks)
+    |> Ash.read!()
+  end
+
+  def create_schedule_template(attrs) do
+    ScheduleTemplate
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def update_schedule_template(%ScheduleTemplate{} = template, attrs) do
+    template
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
+  end
+
+  def delete_schedule_template(%ScheduleTemplate{} = template), do: Ash.destroy(template)
+
+  def add_template_break(attrs) do
+    ScheduleTemplateBreak
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def delete_template_break(%ScheduleTemplateBreak{} = break_struct),
+    do: Ash.destroy(break_struct)
+
+  # --- Exceptions & Time Off ---
+
+  def list_availability_exceptions(doctor_id, opts \\ []) do
+    query = Ash.Query.filter(AvailabilityException, doctor_id == ^doctor_id)
+
+    query =
+      case Keyword.get(opts, :upcoming_only, false) do
+        true ->
+          now = DateTime.utc_now()
+          Ash.Query.filter(query, ends_at >= ^now)
+
+        _ ->
+          query
+      end
+
+    Ash.read!(query)
+  end
+
+  def create_availability_exception(attrs) do
+    AvailabilityException
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def update_availability_exception(%AvailabilityException{} = exception, attrs) do
+    exception
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
+  end
+
+  def delete_availability_exception(%AvailabilityException{} = exception),
+    do: Ash.destroy(exception)
+
+  def list_time_off_requests(doctor_id) do
+    TimeOffRequest
+    |> Ash.Query.filter(doctor_id == ^doctor_id)
+    |> Ash.read!()
+  end
+
+  def request_time_off(attrs) do
+    TimeOffRequest
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def update_time_off_request(%TimeOffRequest{} = request, attrs) do
+    request
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
   end
 
   # --- Slot Generation ---
@@ -170,7 +266,7 @@ defmodule Medic.Scheduling do
         # AshPostgres usually wraps constraint errors.
         # For now, we'll log it and return a generic error or try to detect it.
         # A robust way is to check if the error contains the constraint name.
-        
+
         if is_constraint_error?(error, "no_double_bookings") do
           {:error, :slot_already_booked}
         else

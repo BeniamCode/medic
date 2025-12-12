@@ -79,6 +79,8 @@ defmodule MedicWeb.Router do
 
     get "/doctor", DoctorDashboardController, :show
     get "/doctor/profile", DoctorProfileController, :show
+    post "/doctor/profile", DoctorProfileController, :update
+    post "/doctor/schedule/day_off", DoctorScheduleController, :block_day
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

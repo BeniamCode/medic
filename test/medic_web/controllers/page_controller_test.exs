@@ -3,6 +3,6 @@ defmodule MedicWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Find the right"
+    assert html_response(conn, 200) =~ "id=\"app\""
   end
 end

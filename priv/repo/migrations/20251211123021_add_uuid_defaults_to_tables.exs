@@ -61,17 +61,15 @@ defmodule Medic.Repo.Migrations.AddUuidDefaultsToTables do
   end
 
   defp create_updated_at_function do
-    execute(
-      """
-      CREATE OR REPLACE FUNCTION set_updated_at_timestamp()
-      RETURNS TRIGGER AS $$
-      BEGIN
-        NEW.updated_at = timezone('utc', now());
-        RETURN NEW;
-      END;
-      $$ LANGUAGE plpgsql;
-      """
-    )
+    execute("""
+    CREATE OR REPLACE FUNCTION set_updated_at_timestamp()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      NEW.updated_at = timezone('utc', now());
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    """)
   end
 
   defp create_trigger_sql(table) do

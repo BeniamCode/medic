@@ -21,9 +21,9 @@ defmodule MedicWeb.Admin.DoctorLive.FormComponent do
         <.input field={@form[:first_name]} type="text" label="First Name" />
         <.input field={@form[:last_name]} type="text" label="Last Name" />
         <.input field={@form[:verified_at]} type="datetime-local" label="Verified At (Set to verify)" />
-        
+
         <div class="flex justify-end gap-2">
-           <.button type="submit" phx-disable-with="Saving...">Save</.button>
+          <.button type="submit" phx-disable-with="Saving...">Save</.button>
         </div>
       </.form>
     </div>

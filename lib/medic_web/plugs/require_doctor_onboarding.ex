@@ -42,9 +42,9 @@ defmodule MedicWeb.Plugs.RequireDoctorOnboarding do
   defp onboarding_route?(path) do
     # Allowing onboarding routes, logout, and static assets/api if needed.
     # Assuming standard paths.
-    
-    String.starts_with?(path, "/onboarding/doctor") || 
-      path == "/logout" || 
+
+    String.starts_with?(path, "/onboarding/doctor") ||
+      path == "/logout" ||
       String.starts_with?(path, "/assets")
   end
 end

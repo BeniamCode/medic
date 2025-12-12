@@ -7,6 +7,7 @@ defmodule Medic.Doctors.Doctor do
     data_layer: AshPostgres.DataLayer
 
   import Ecto.Changeset
+  require Logger
 
   postgres do
     table "doctors"
@@ -18,38 +19,100 @@ defmodule Medic.Doctors.Doctor do
 
     create :create do
       primary? true
+
       accept [
-        :first_name, :last_name, :bio, :bio_el, :profile_image_url,
-        :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id, :user_id,
-        :title, :pronouns, :registration_number, :years_of_experience, :hospital_affiliation, :academic_title, :telemedicine_available,
-        :board_certifications, :sub_specialties, :clinical_procedures, :conditions_treated, :languages, :insurance_networks,
-        :accessibility_items, :awards, :publications
+        :first_name,
+        :last_name,
+        :bio,
+        :bio_el,
+        :profile_image_url,
+        :location_lat,
+        :location_lng,
+        :address,
+        :city,
+        :consultation_fee,
+        :specialty_id,
+        :user_id,
+        :title,
+        :pronouns,
+        :registration_number,
+        :years_of_experience,
+        :hospital_affiliation,
+        :academic_title,
+        :telemedicine_available,
+        :board_certifications,
+        :sub_specialties,
+        :clinical_procedures,
+        :conditions_treated,
+        :languages,
+        :insurance_networks,
+        :accessibility_items,
+        :awards,
+        :publications
       ]
+
+      after_action(&__MODULE__.enqueue_typesense_job/3)
     end
 
     update :update do
       accept [
-        :first_name, :last_name, :bio, :bio_el, :profile_image_url,
-        :location_lat, :location_lng, :address, :city, :consultation_fee, :specialty_id,
-        :title, :pronouns, :registration_number, :years_of_experience, :hospital_affiliation, :academic_title, :telemedicine_available,
-        :board_certifications, :sub_specialties, :clinical_procedures, :conditions_treated, :languages, :insurance_networks,
-        :accessibility_items, :awards, :publications
+        :first_name,
+        :last_name,
+        :bio,
+        :bio_el,
+        :profile_image_url,
+        :location_lat,
+        :location_lng,
+        :address,
+        :city,
+        :consultation_fee,
+        :specialty_id,
+        :title,
+        :pronouns,
+        :registration_number,
+        :years_of_experience,
+        :hospital_affiliation,
+        :academic_title,
+        :telemedicine_available,
+        :board_certifications,
+        :sub_specialties,
+        :clinical_procedures,
+        :conditions_treated,
+        :languages,
+        :insurance_networks,
+        :accessibility_items,
+        :awards,
+        :publications
       ]
+
+      after_action(&__MODULE__.enqueue_typesense_job/3)
     end
 
     update :update_rating do
       accept [:rating, :review_count]
+
+      after_action(&__MODULE__.enqueue_typesense_job/3)
     end
 
     update :update_availability do
       accept [:next_available_slot]
+
+      after_action(&__MODULE__.enqueue_typesense_job/3)
     end
 
     update :verify do
+      require_atomic? false
       accept []
+
       change fn changeset, _ ->
-        Ash.Changeset.force_change_attribute(changeset, :verified_at, DateTime.utc_now() |> DateTime.truncate(:second))
+        Ash.Changeset.force_change_attribute(
+          changeset,
+          :verified_at,
+          DateTime.utc_now() |> DateTime.truncate(:second)
+        )
       end
+
+      after_action(&__MODULE__.after_typesense_sync/3)
     end
   end
 
@@ -97,18 +160,25 @@ defmodule Medic.Doctors.Doctor do
     belongs_to :specialty, Medic.Doctors.Specialty
     has_many :appointments, Medic.Appointments.Appointment
     has_many :reviews, Medic.Doctors.Review
+    has_many :locations, Medic.Doctors.Location
+    has_many :appointment_types, Medic.Appointments.AppointmentType
+    has_many :schedule_templates, Medic.Scheduling.ScheduleTemplate
+    has_many :availability_exceptions, Medic.Scheduling.AvailabilityException
+    has_many :time_off_requests, Medic.Scheduling.TimeOffRequest
   end
 
   calculations do
     calculate :full_name, :string, expr(first_name <> " " <> last_name)
-    
-    calculate :localized_bio, :string, expr(
-      if ^arg(:locale) == "el" or ^arg(:locale) == :el do
-        bio_el
-      else
-        bio
-      end
-    ) do
+
+    calculate :localized_bio,
+              :string,
+              expr(
+                if ^arg(:locale) == "el" or ^arg(:locale) == :el do
+                  bio_el
+                else
+                  bio
+                end
+              ) do
       argument :locale, :term, default: :en
     end
   end
@@ -197,4 +267,11 @@ defmodule Medic.Doctors.Doctor do
   end
 
   def localized_bio(%{bio: bio}, _locale), do: bio
+
+  def enqueue_typesense_job(_changeset, {:ok, doctor}, _context) do
+    Medic.Doctors.enqueue_index_job(doctor)
+    {:ok, doctor}
+  end
+
+  def enqueue_typesense_job(_changeset, other, _context), do: other
 end

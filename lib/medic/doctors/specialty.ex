@@ -48,13 +48,15 @@ defmodule Medic.Doctors.Specialty do
   end
 
   calculations do
-    calculate :localized_name, :string, expr(
-      if ^arg(:locale) == "el" or ^arg(:locale) == :el do
-        name_el
-      else
-        name_en
-      end
-    ) do
+    calculate :localized_name,
+              :string,
+              expr(
+                if ^arg(:locale) == "el" or ^arg(:locale) == :el do
+                  name_el
+                else
+                  name_en
+                end
+              ) do
       argument :locale, :term, default: :en
     end
   end

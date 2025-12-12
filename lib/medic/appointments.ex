@@ -7,13 +7,24 @@ defmodule Medic.Appointments do
 
   resources do
     resource Medic.Appointments.Appointment
+    resource Medic.Appointments.AppointmentType
+    resource Medic.Appointments.AppointmentTypeLocation
+    resource Medic.Appointments.AppointmentEvent
   end
 
   import Ecto.Query
   alias Medic.Repo
-  alias Medic.Appointments.Appointment
+
+  alias Medic.Appointments.{
+    Appointment,
+    AppointmentType,
+    AppointmentTypeLocation,
+    AppointmentEvent
+  }
+
   alias Medic.Notifications
   alias Phoenix.PubSub
+  require Ash.Query
 
   @doc """
   Returns the list of appointments.
@@ -69,8 +80,6 @@ defmodule Medic.Appointments do
 
   defp maybe_filter_upcoming(query, _), do: query
 
-
-
   @doc """
   Gets a single appointment.
 
@@ -85,6 +94,64 @@ defmodule Medic.Appointments do
     Appointment
     |> Repo.get!(id)
     |> Ash.load!([:patient, doctor: [:specialty]])
+  end
+
+  # --- Appointment Types ---
+
+  def list_appointment_types(doctor_id, opts \\ []) do
+    include_inactive = Keyword.get(opts, :include_inactive, false)
+
+    AppointmentType
+    |> Ash.Query.filter(doctor_id == ^doctor_id)
+    |> maybe_filter_inactive(include_inactive)
+    |> Ash.Query.sort(asc: :name)
+    |> Ash.read!()
+  end
+
+  defp maybe_filter_inactive(query, true), do: query
+
+  defp maybe_filter_inactive(query, _false) do
+    Ash.Query.filter(query, is_active == true)
+  end
+
+  def get_appointment_type!(id), do: Ash.get!(AppointmentType, id)
+
+  def create_appointment_type(attrs) do
+    AppointmentType
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def update_appointment_type(%AppointmentType{} = type, attrs) do
+    type
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
+  end
+
+  def delete_appointment_type(%AppointmentType{} = type), do: Ash.destroy(type)
+
+  def upsert_type_location(attrs) do
+    AppointmentTypeLocation
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  # --- Appointment Events ---
+
+  def log_event(appointment_id, action, metadata \\ %{}, actor \\ %{}) do
+    attrs =
+      actor
+      |> Map.take([:actor_type, :actor_id])
+      |> Map.merge(%{
+        appointment_id: appointment_id,
+        occurred_at: DateTime.utc_now() |> DateTime.truncate(:second),
+        action: action,
+        metadata: metadata
+      })
+
+    AppointmentEvent
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
   end
 
   @doc """

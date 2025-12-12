@@ -34,6 +34,7 @@ defmodule MedicWeb.UserSessionController do
   defp create(conn, user_params, info) do
     %{"email" => email, "password" => password} = user_params
     remember_me = Map.get(user_params, "remember_me", false)
+
     # The UserAuth.log_in_user expects params to maybe have remember_me? No typically it takes separate arg or options.
     # checking UserAuth.log_in_user signature isn't possible directly here but standard phx auth usually just takes user.
     # Wait, the original code passed `user_params` as second arg.
@@ -47,15 +48,15 @@ defmodule MedicWeb.UserSessionController do
       |> put_flash(:error, "Invalid email or password")
       |> put_flash(:email, String.slice(email, 0, 160))
       |> put_status(401)
-      |> render_inertia("Auth/Login") 
-       # Re-render on failure is important for Inertia to show errors, but Inertia handles validation errors via session usually?
-       # No, for login failure (401), we typically return to the page with errors.
-       # Standard Inertia pattern in Phoenix is to put errors in flash or session?
-       # Or simpler: redirect back to /login with flash error.
+      |> render_inertia("Auth/Login")
+
+      # Re-render on failure is important for Inertia to show errors, but Inertia handles validation errors via session usually?
+      # No, for login failure (401), we typically return to the page with errors.
+      # Standard Inertia pattern in Phoenix is to put errors in flash or session?
+      # Or simpler: redirect back to /login with flash error.
       # Actually the original code redirected to ~p"/login". That works fine for Inertia too, it follows redirects.
     end
   end
-
 
   # Handle registration - redirect based on user role
   defp create(conn, %{"user" => user_params}, info, :registered) do

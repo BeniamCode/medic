@@ -6,13 +6,7 @@ defmodule MedicWeb.DoctorProfileController do
 
   def show(conn, _params) do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
-      specialties = Doctors.list_specialties()
-
-      conn
-      |> assign(:page_title, dgettext("default", "Doctor Profile"))
-      |> assign_prop(:doctor, doctor_props(doctor))
-      |> assign_prop(:specialties, Enum.map(specialties, &specialty_option/1))
-      |> render_inertia("Doctor/Profile")
+      render_profile(conn, doctor, %{})
     else
       _ -> redirect(conn, to: ~p"/dashboard/doctor")
     end
@@ -22,16 +16,15 @@ defmodule MedicWeb.DoctorProfileController do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
          result <- Doctors.update_doctor(doctor, map_input_arrays(doctor_params)) do
       case result do
-        {:ok, _updated} ->
+        {:ok, updated} ->
           conn
           |> put_flash(:success, dgettext("default", "Profile updated"))
-          |> redirect(to: ~p"/dashboard/doctor/profile")
+          |> render_profile(updated, %{})
 
         {:error, changeset} ->
           conn
           |> put_status(:unprocessable_entity)
-          |> assign_prop(:errors, errors_from_changeset(changeset))
-          |> show(%{})
+          |> render_profile(doctor, errors_from_changeset(changeset))
       end
     else
       _ -> redirect(conn, to: ~p"/dashboard/doctor/profile")
@@ -43,6 +36,17 @@ defmodule MedicWeb.DoctorProfileController do
       nil -> {:error, :not_found}
       doctor -> {:ok, Ash.load!(doctor, [:specialty])}
     end
+  end
+
+  defp render_profile(conn, doctor, errors) do
+    specialties = Doctors.list_specialties()
+
+    conn
+    |> assign(:page_title, dgettext("default", "Doctor Profile"))
+    |> assign_prop(:doctor, doctor_props(doctor))
+    |> assign_prop(:specialties, Enum.map(specialties, &specialty_option/1))
+    |> assign_prop(:errors, errors)
+    |> render_inertia("Doctor/Profile")
   end
 
   defp doctor_props(doctor) do

@@ -18,11 +18,29 @@ defmodule Medic.Scheduling.AvailabilityRule do
 
     create :create do
       primary? true
-      accept [:day_of_week, :start_time, :end_time, :break_start, :break_end, :slot_duration_minutes, :is_active, :doctor_id]
+
+      accept [
+        :day_of_week,
+        :start_time,
+        :end_time,
+        :break_start,
+        :break_end,
+        :slot_duration_minutes,
+        :is_active,
+        :doctor_id
+      ]
     end
 
     update :update do
-      accept [:day_of_week, :start_time, :end_time, :break_start, :break_end, :slot_duration_minutes, :is_active]
+      accept [
+        :day_of_week,
+        :start_time,
+        :end_time,
+        :break_start,
+        :break_end,
+        :slot_duration_minutes,
+        :is_active
+      ]
     end
   end
 

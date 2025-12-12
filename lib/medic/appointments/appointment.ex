@@ -18,11 +18,48 @@ defmodule Medic.Appointments.Appointment do
 
     create :create do
       primary? true
-      accept [:starts_at, :ends_at, :duration_minutes, :appointment_type, :status, :notes, :doctor_id, :patient_id]
+
+      accept [
+        :starts_at,
+        :ends_at,
+        :duration_minutes,
+        :appointment_type,
+        :status,
+        :notes,
+        :doctor_id,
+        :patient_id,
+        :doctor_location_id,
+        :location_room_id,
+        :appointment_type_id,
+        :price_cents,
+        :currency,
+        :source,
+        :reschedule_count,
+        :cancelled_by,
+        :patient_timezone,
+        :doctor_timezone
+      ]
     end
 
     update :update do
-      accept [:starts_at, :ends_at, :duration_minutes, :appointment_type, :status, :notes]
+      accept [
+        :starts_at,
+        :ends_at,
+        :duration_minutes,
+        :appointment_type,
+        :status,
+        :notes,
+        :doctor_location_id,
+        :location_room_id,
+        :appointment_type_id,
+        :price_cents,
+        :currency,
+        :source,
+        :reschedule_count,
+        :cancelled_by,
+        :patient_timezone,
+        :doctor_timezone
+      ]
     end
   end
 
@@ -38,6 +75,13 @@ defmodule Medic.Appointments.Appointment do
     attribute :notes, :string
     attribute :cancellation_reason, :string
     attribute :cancelled_at, :utc_datetime
+    attribute :price_cents, :integer
+    attribute :currency, :string, default: "EUR"
+    attribute :source, :string, default: "patient_portal"
+    attribute :reschedule_count, :integer, default: 0
+    attribute :cancelled_by, :string
+    attribute :patient_timezone, :string
+    attribute :doctor_timezone, :string
 
     timestamps()
   end
@@ -45,6 +89,14 @@ defmodule Medic.Appointments.Appointment do
   relationships do
     belongs_to :patient, Medic.Patients.Patient
     belongs_to :doctor, Medic.Doctors.Doctor
+    belongs_to :doctor_location, Medic.Doctors.Location
+    belongs_to :location_room, Medic.Doctors.LocationRoom
+
+    belongs_to :appointment_type_record, Medic.Appointments.AppointmentType,
+      source_attribute: :appointment_type_id,
+      destination_attribute: :id
+
+    has_many :events, Medic.Appointments.AppointmentEvent
   end
 
   # --- Legacy Logic ---
@@ -63,16 +115,30 @@ defmodule Medic.Appointments.Appointment do
       :status,
       :notes,
       :doctor_id,
-      :patient_id
+      :patient_id,
+      :doctor_location_id,
+      :location_room_id,
+      :appointment_type_id,
+      :price_cents,
+      :currency,
+      :source,
+      :reschedule_count,
+      :cancelled_by,
+      :patient_timezone,
+      :doctor_timezone
     ])
     |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_inclusion(:appointment_type, @appointment_types)
     |> validate_number(:duration_minutes, greater_than: 0, less_than_or_equal_to: 240)
+    |> validate_number(:reschedule_count, greater_than_or_equal_to: 0)
     |> validate_time_order()
     |> validate_future_date()
     |> foreign_key_constraint(:patient_id)
     |> foreign_key_constraint(:doctor_id)
+    |> foreign_key_constraint(:doctor_location_id)
+    |> foreign_key_constraint(:location_room_id)
+    |> foreign_key_constraint(:appointment_type_id)
     |> exclusion_constraint(:no_double_bookings,
       message: "This time slot is already booked"
     )

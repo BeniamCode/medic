@@ -46,5 +46,18 @@ defmodule Medic.Hospitals.Hospital do
     hospital
     |> cast(attrs, [:name, :city, :phone, :address, :location_lat, :location_lng])
     |> validate_required([:name, :city])
+    |> ensure_timestamps()
+  end
+
+  defp ensure_timestamps(changeset) do
+    now = DateTime.utc_now() |> DateTime.truncate(:microsecond)
+
+    changeset =
+      case get_field(changeset, :inserted_at) || changeset.data.inserted_at do
+        nil -> put_change(changeset, :inserted_at, now)
+        _ -> changeset
+      end
+
+    put_change(changeset, :updated_at, now)
   end
 end

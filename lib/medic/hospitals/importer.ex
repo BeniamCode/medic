@@ -94,22 +94,28 @@ defmodule Medic.Hospitals.Importer do
         end
     end
   end
+
   def import_from_json(json_content) do
     json_content
     |> Jason.decode!()
     |> Enum.each(&process_json_entry/1)
   end
 
-  defp process_json_entry(%{"date" => date_str, "hospital_name" => hospital_name, "specialties" => specialties}) do
+  defp process_json_entry(%{
+         "date" => date_str,
+         "hospital_name" => hospital_name,
+         "specialties" => specialties
+       }) do
     hospital = find_or_create_hospital(hospital_name)
-    
+
     if hospital do
       case Date.from_iso8601(date_str) do
         {:ok, date} ->
           Enum.each(specialties, fn specialty ->
-             create_schedule(hospital, date, specialty)
+            create_schedule(hospital, date, specialty)
           end)
-        _ -> 
+
+        _ ->
           IO.warn("Invalid date format in JSON: #{date_str}")
       end
     end

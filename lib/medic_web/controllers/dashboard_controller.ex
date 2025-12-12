@@ -26,7 +26,11 @@ defmodule MedicWeb.DashboardController do
 
       conn
       |> assign(:page_title, dgettext("default", "Dashboard"))
-      |> assign_prop(:patient, %{id: patient.id, first_name: patient.first_name, last_name: patient.last_name})
+      |> assign_prop(:patient, %{
+        id: patient.id,
+        first_name: patient.first_name,
+        last_name: patient.last_name
+      })
       |> assign_prop(:upcoming_appointments, Enum.map(upcoming, &appointment_props/1))
       |> assign_prop(:past_appointments, Enum.map(past, &appointment_props/1))
       |> assign_prop(:stats, stats)

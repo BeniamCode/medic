@@ -14,6 +14,7 @@ defmodule MedicWeb.DoctorController do
 
   def show(conn, %{"id" => id} = params) do
     locale = conn.assigns[:locale] || I18n.default_locale()
+
     start_date =
       case Map.get(params, "date") do
         nil -> Date.utc_today()
@@ -128,7 +129,11 @@ defmodule MedicWeb.DoctorController do
   defp parse_slot_params(%{"starts_at" => start_iso, "ends_at" => end_iso}) do
     with {:ok, starts_at, _offset} <- DateTime.from_iso8601(start_iso),
          {:ok, ends_at, _offset} <- DateTime.from_iso8601(end_iso) do
-      {:ok, %{starts_at: DateTime.truncate(starts_at, :second), ends_at: DateTime.truncate(ends_at, :second)}}
+      {:ok,
+       %{
+         starts_at: DateTime.truncate(starts_at, :second),
+         ends_at: DateTime.truncate(ends_at, :second)
+       }}
     else
       _ -> {:error, :invalid_slot}
     end
@@ -145,10 +150,14 @@ defmodule MedicWeb.DoctorController do
     })
   end
 
-  defp booking_error_message(:not_patient), do: dgettext("default", "Please complete patient onboarding")
+  defp booking_error_message(:not_patient),
+    do: dgettext("default", "Please complete patient onboarding")
+
   defp booking_error_message(:invalid_slot), do: dgettext("default", "Invalid time slot")
-  defp booking_error_message(:slot_already_booked), do: dgettext("default", "This slot is no longer available")
-  
+
+  defp booking_error_message(:slot_already_booked),
+    do: dgettext("default", "This slot is no longer available")
+
   defp booking_error_message(%Ecto.Changeset{} = changeset) do
     errors =
       Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
@@ -156,13 +165,13 @@ defmodule MedicWeb.DoctorController do
           opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
         end)
       end)
-      
+
     errors
     |> Enum.map(fn {k, v} -> "#{Phoenix.Naming.humanize(k)} #{Enum.join(v, ", ")}" end)
     |> Enum.join(". ")
   end
-  
-  defp booking_error_message(reason) do 
+
+  defp booking_error_message(reason) do
     IO.inspect(reason, label: "Booking Error")
     dgettext("default", "Unable to book appointment")
   end
@@ -199,7 +208,10 @@ defmodule MedicWeb.DoctorController do
       telemedicine_available: doctor.telemedicine_available,
       consultation_fee: doctor.consultation_fee && Decimal.to_float(doctor.consultation_fee),
       next_available_slot:
-        if(doctor.next_available_slot, do: DateTime.to_iso8601(doctor.next_available_slot), else: nil)
+        if(doctor.next_available_slot,
+          do: DateTime.to_iso8601(doctor.next_available_slot),
+          else: nil
+        )
     }
   end
 

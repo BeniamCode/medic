@@ -11,7 +11,6 @@ defmodule Medic.Search do
   Uses Req HTTP client for Typesense API calls.
   """
 
-
   alias Medic.Doctors
   alias Medic.Doctors.Doctor
 
@@ -269,7 +268,10 @@ defmodule Medic.Search do
       "title" => doctor.title || "",
       "pronouns" => doctor.pronouns || "",
       "next_available_slot" =>
-        if(doctor.next_available_slot, do: DateTime.to_unix(doctor.next_available_slot), else: nil),
+        if(doctor.next_available_slot,
+          do: DateTime.to_unix(doctor.next_available_slot),
+          else: nil
+        ),
       "has_cal_com" => false
     }
 

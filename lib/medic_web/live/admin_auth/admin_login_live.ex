@@ -8,7 +8,7 @@ defmodule MedicWeb.AdminLoginLive do
         <div class="card-body">
           <div class="flex justify-center mb-4">
             <div class="bg-primary/10 p-3 rounded-full">
-               <.icon name="hero-shield-check" class="size-8 text-primary" />
+              <.icon name="hero-shield-check" class="size-8 text-primary" />
             </div>
           </div>
           <h2 class="text-2xl font-bold text-center mb-1">Admin Access</h2>
@@ -22,22 +22,34 @@ defmodule MedicWeb.AdminLoginLive do
             phx-trigger-action={@trigger_submit}
             class="space-y-4"
           >
-             <%= if @error_message do %>
+            <%= if @error_message do %>
               <div class="alert alert-error text-sm">
                 <span><%= @error_message %></span>
               </div>
             <% end %>
 
-            <.input field={@form[:email]} type="email" placeholder="admin@medic.com" required label="Email" />
-            <.input field={@form[:password]} type="password" placeholder="••••••••" required label="Password" />
-            
+            <.input
+              field={@form[:email]}
+              type="email"
+              placeholder="admin@medic.com"
+              required
+              label="Email"
+            />
+            <.input
+              field={@form[:password]}
+              type="password"
+              placeholder="••••••••"
+              required
+              label="Password"
+            />
+
             <div>
-               <.button type="submit" class="btn btn-primary w-full">
-                 Sign In <.icon name="hero-arrow-right" class="size-4 ml-1" />
-               </.button>
+              <.button type="submit" class="btn btn-primary w-full">
+                Sign In <.icon name="hero-arrow-right" class="size-4 ml-1" />
+              </.button>
             </div>
           </.form>
-          
+
           <div class="mt-4 text-center">
             <.link navigate={~p"/"} class="link link-hover text-xs">Back to Main Site</.link>
           </div>
@@ -52,21 +64,27 @@ defmodule MedicWeb.AdminLoginLive do
     {:ok, assign(socket, form: form, trigger_submit: false, error_message: nil), layout: false}
   end
 
-  def handle_event("login", %{"user" => %{"email" => email, "password" => password} = _params}, socket) do
+  def handle_event(
+        "login",
+        %{"user" => %{"email" => email, "password" => password} = _params},
+        socket
+      ) do
     # Here we should technically verify if user IS admin before even submitting form,
     # but the Controller handles the session creation.
     # Ideally, we check credentials here or let the controller handle it.
     # We will check if the user exists and has role admin.
-    
+
     user = Medic.Accounts.get_user_by_email_and_password(email, password)
 
     case user do
       %{role: "admin"} ->
-         {:noreply, assign(socket, trigger_submit: true)}
-      %{role: _} -> 
-         {:noreply, assign(socket, error_message: "Access Denied: Not an admin.")}
+        {:noreply, assign(socket, trigger_submit: true)}
+
+      %{role: _} ->
+        {:noreply, assign(socket, error_message: "Access Denied: Not an admin.")}
+
       nil ->
-         {:noreply, assign(socket, error_message: "Invalid credentials.")}
+        {:noreply, assign(socket, error_message: "Invalid credentials.")}
     end
   end
 end

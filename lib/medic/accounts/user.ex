@@ -37,7 +37,8 @@ defmodule Medic.Accounts.User do
 
     attribute :hashed_password, :string do
       sensitive? true
-      public? true # Needed for auth checks
+      # Needed for auth checks
+      public? true
     end
 
     attribute :role, :string do
@@ -100,9 +101,24 @@ defmodule Medic.Accounts.User do
   defp validate_password_complexity(changeset, password) do
     changeset
     |> validate_length_manually(:password, password, min: 8, max: 72)
-    |> validate_format_manually(:password, password, ~r/[a-z]/, "must contain at least one lowercase letter")
-    |> validate_format_manually(:password, password, ~r/[A-Z]/, "must contain at least one uppercase letter")
-    |> validate_format_manually(:password, password, ~r/[0-9]/, "must contain at least one number")
+    |> validate_format_manually(
+      :password,
+      password,
+      ~r/[a-z]/,
+      "must contain at least one lowercase letter"
+    )
+    |> validate_format_manually(
+      :password,
+      password,
+      ~r/[A-Z]/,
+      "must contain at least one uppercase letter"
+    )
+    |> validate_format_manually(
+      :password,
+      password,
+      ~r/[0-9]/,
+      "must contain at least one number"
+    )
   end
 
   defp validate_length_manually(changeset, field, value, opts) do

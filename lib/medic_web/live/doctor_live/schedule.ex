@@ -4,7 +4,6 @@ defmodule MedicWeb.DoctorLive.Schedule do
   """
   use MedicWeb, :live_view
 
-
   alias Medic.Scheduling
   alias Medic.Scheduling.AvailabilityRule
   alias Medic.Appointments

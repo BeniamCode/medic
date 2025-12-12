@@ -9,12 +9,16 @@ defmodule Medic.Doctors do
     resource Medic.Doctors.Doctor
     resource Medic.Doctors.Specialty
     resource Medic.Doctors.Review
+    resource Medic.Doctors.Location
+    resource Medic.Doctors.LocationRoom
   end
 
   import Ecto.Query
+  alias Ecto.Changeset
   alias Medic.Repo
-  alias Medic.Doctors.{Doctor, Specialty}
-  alias Medic.Search
+  alias Medic.Doctors.{Doctor, Specialty, Location, LocationRoom}
+  alias Medic.Workers.IndexDoctor
+  require Ash.Query
 
   # --- Specialties ---
 
@@ -24,6 +28,56 @@ defmodule Medic.Doctors do
   def list_specialties do
     Repo.all(from s in Specialty, order_by: s.name_en)
   end
+
+  # --- Locations ---
+
+  @doc """
+  Lists a doctor's locations ordered by primary flag.
+  """
+  def list_locations(doctor_id) do
+    Location
+    |> Ash.Query.filter(doctor_id == ^doctor_id)
+    |> Ash.Query.sort(desc: :is_primary, asc: :inserted_at)
+    |> Ash.read!()
+  end
+
+  def get_location!(id), do: Ash.get!(Location, id)
+
+  def create_location(attrs) do
+    Location
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def update_location(%Location{} = location, attrs) do
+    location
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
+  end
+
+  def delete_location(%Location{} = location), do: Ash.destroy(location)
+
+  # --- Rooms ---
+
+  def list_rooms(location_id) do
+    LocationRoom
+    |> Ash.Query.filter(doctor_location_id == ^location_id)
+    |> Ash.read!()
+  end
+
+  def create_room(attrs) do
+    LocationRoom
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  def update_room(%LocationRoom{} = room, attrs) do
+    room
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
+  end
+
+  def delete_room(%LocationRoom{} = room), do: Ash.destroy(room)
 
   @doc """
   Gets a single specialty by ID.
@@ -116,8 +170,6 @@ defmodule Medic.Doctors do
 
   defp maybe_filter_verified(query, _), do: query
 
-
-
   @doc """
   Gets a single doctor.
 
@@ -145,39 +197,27 @@ defmodule Medic.Doctors do
   Creates a doctor profile for a user.
   """
   def create_doctor(user, attrs \\ %{}) do
-    result =
-      %Doctor{}
-      |> Doctor.changeset(attrs)
-      |> Ecto.Changeset.put_change(:user_id, user.id)
-      |> Repo.insert(returning: true)
-
-    case result do
-      {:ok, doctor} ->
-        Search.index_doctor(doctor)
-        {:ok, doctor}
-
-      error ->
-        error
-    end
+    %Doctor{}
+    |> Doctor.changeset(attrs)
+    |> Changeset.put_change(:user_id, user.id)
+    |> Repo.insert(returning: true)
+    |> tap(fn
+      {:ok, doctor} -> enqueue_index_job(doctor)
+      _ -> :ok
+    end)
   end
 
   @doc """
   Updates a doctor.
   """
   def update_doctor(%Doctor{} = doctor, attrs) do
-    result =
-      doctor
-      |> Doctor.changeset(attrs)
-      |> Repo.update(returning: true)
-
-    case result do
-      {:ok, updated_doctor} ->
-        Search.index_doctor(updated_doctor)
-        {:ok, updated_doctor}
-
-      error ->
-        error
-    end
+    doctor
+    |> Doctor.changeset(attrs)
+    |> Repo.update(returning: true)
+    |> tap(fn
+      {:ok, updated} -> enqueue_index_job(updated)
+      _ -> :ok
+    end)
   end
 
   @doc """
@@ -193,19 +233,13 @@ defmodule Medic.Doctors do
   Verifies a doctor.
   """
   def verify_doctor(%Doctor{} = doctor) do
-    result =
-      doctor
-      |> Doctor.verify_changeset()
-      |> Repo.update(returning: true)
-
-    case result do
-      {:ok, verified_doctor} ->
-        Search.index_doctor(verified_doctor)
-        {:ok, verified_doctor}
-
-      error ->
-        error
-    end
+    doctor
+    |> Doctor.verify_changeset()
+    |> Repo.update(returning: true)
+    |> tap(fn
+      {:ok, verified} -> enqueue_index_job(verified)
+      _ -> :ok
+    end)
   end
 
   @doc """
@@ -213,6 +247,12 @@ defmodule Medic.Doctors do
   """
   def change_doctor(%Doctor{} = doctor, attrs \\ %{}) do
     Doctor.changeset(doctor, attrs)
+  end
+
+  def enqueue_index_job(%Doctor{id: id}) do
+    %{doctor_id: id}
+    |> IndexDoctor.new()
+    |> Oban.insert()
   end
 
   @doc """

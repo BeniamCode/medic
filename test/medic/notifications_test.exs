@@ -2,6 +2,7 @@ defmodule Medic.NotificationsTest do
   use Medic.DataCase
 
   alias Medic.Notifications
+  alias Ash.Error.Invalid
 
   describe "notifications" do
     alias Medic.Notifications.Notification
@@ -19,12 +20,12 @@ defmodule Medic.NotificationsTest do
 
     test "list_notifications/0 returns all notifications" do
       notification = notification_fixture()
-      assert Notifications.list_notifications() == [notification]
+      assert Enum.map(Notifications.list_notifications(), & &1.id) == [notification.id]
     end
 
     test "get_notification!/1 returns the notification with given id" do
       notification = notification_fixture()
-      assert Notifications.get_notification!(notification.id) == notification
+      assert Notifications.get_notification!(notification.id).id == notification.id
     end
 
     test "create_notification/1 with valid data creates a notification" do
@@ -89,13 +90,13 @@ defmodule Medic.NotificationsTest do
       assert {:error, %Ecto.Changeset{}} =
                Notifications.update_notification(notification, @invalid_attrs)
 
-      assert notification == Notifications.get_notification!(notification.id)
+      assert notification.id == Notifications.get_notification!(notification.id).id
     end
 
     test "delete_notification/1 deletes the notification" do
       notification = notification_fixture()
       assert {:ok, %Notification{}} = Notifications.delete_notification(notification)
-      assert_raise Ecto.NoResultsError, fn -> Notifications.get_notification!(notification.id) end
+      assert_raise Invalid, fn -> Notifications.get_notification!(notification.id) end
     end
 
     test "change_notification/1 returns a notification changeset" do

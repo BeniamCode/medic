@@ -18,11 +18,33 @@ defmodule Medic.Patients.Patient do
 
     create :create do
       primary? true
-      accept [:first_name, :last_name, :date_of_birth, :phone, :emergency_contact, :profile_image_url, :user_id]
+
+      accept [
+        :first_name,
+        :last_name,
+        :date_of_birth,
+        :phone,
+        :emergency_contact,
+        :profile_image_url,
+        :preferred_language,
+        :preferred_timezone,
+        :communication_preferences,
+        :user_id
+      ]
     end
 
     update :update do
-      accept [:first_name, :last_name, :date_of_birth, :phone, :emergency_contact, :profile_image_url]
+      accept [
+        :first_name,
+        :last_name,
+        :date_of_birth,
+        :phone,
+        :emergency_contact,
+        :profile_image_url,
+        :preferred_language,
+        :preferred_timezone,
+        :communication_preferences
+      ]
     end
   end
 
@@ -35,6 +57,9 @@ defmodule Medic.Patients.Patient do
     attribute :phone, :string
     attribute :emergency_contact, :string
     attribute :profile_image_url, :string
+    attribute :preferred_language, :string, default: "en"
+    attribute :preferred_timezone, :string
+    attribute :communication_preferences, :map, default: %{}
 
     timestamps()
   end
@@ -55,9 +80,13 @@ defmodule Medic.Patients.Patient do
       :date_of_birth,
       :phone,
       :emergency_contact,
-      :profile_image_url
+      :profile_image_url,
+      :preferred_language,
+      :preferred_timezone,
+      :communication_preferences
     ])
     |> validate_required([:first_name, :last_name])
+    |> validate_inclusion(:preferred_language, ~w(en el))
     |> validate_phone()
     |> foreign_key_constraint(:user_id)
   end

@@ -14,7 +14,10 @@ defmodule MedicWeb.SearchLive do
     ~H"""
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <%!-- Map Container (Full Width) --%>
-      <div tabindex="0" class="map-shell w-full mb-8 rounded-2xl overflow-hidden shadow-xl border border-base-200 relative z-0">
+      <div
+        tabindex="0"
+        class="map-shell w-full mb-8 rounded-2xl overflow-hidden shadow-xl border border-base-200 relative z-0"
+      >
         <div
           id="map-container"
           phx-hook="MapboxMap"

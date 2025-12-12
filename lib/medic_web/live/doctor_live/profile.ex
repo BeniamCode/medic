@@ -48,8 +48,16 @@ defmodule MedicWeb.DoctorLive.Profile do
                 placeholder="π.χ. Παπαδόπουλος"
                 required
               />
-              <.input field={@form[:title]} label="Τίτλος" placeholder="π.χ. Dr., Καθηγητής" />
-              <.input field={@form[:academic_title]} label="Ακαδημαϊκός Τίτλος" placeholder="π.χ. PhD, MD" />
+              <.input
+                field={@form[:title]}
+                label="Τίτλος"
+                placeholder="π.χ. Dr., Καθηγητής"
+              />
+              <.input
+                field={@form[:academic_title]}
+                label="Ακαδημαϊκός Τίτλος"
+                placeholder="π.χ. PhD, MD"
+              />
               <.input
                 field={@form[:registration_number]}
                 label="Αριθμός Μητρώου"
@@ -151,13 +159,18 @@ defmodule MedicWeb.DoctorLive.Profile do
         <%!-- Services Card --%>
         <div class="card bg-base-100 shadow-xl">
           <div class="card-body">
-             <div class="flex items-center gap-2 mb-4">
+            <div class="flex items-center gap-2 mb-4">
               <.icon name="hero-briefcase" class="size-5 text-primary" />
               <h3 class="card-title">Υπηρεσίες</h3>
             </div>
-             <div class="form-control">
+            <div class="form-control">
               <label class="label cursor-pointer justify-start gap-4">
-                <input type="checkbox" name="doctor[telemedicine_available]" class="checkbox checkbox-primary" checked={@form[:telemedicine_available].value} />
+                <input
+                  type="checkbox"
+                  name="doctor[telemedicine_available]"
+                  class="checkbox checkbox-primary"
+                  checked={@form[:telemedicine_available].value}
+                />
                 <span class="label-text">Παρέχω υπηρεσίες τηλεϊατρικής (Video Visit)</span>
               </label>
             </div>
@@ -225,7 +238,18 @@ defmodule MedicWeb.DoctorLive.Profile do
   end
 
   def handle_event("validate", %{"doctor" => params}, socket) do
-    params = parse_array_params(params, ["board_certifications", "languages", "insurance_networks", "services", "sub_specialties", "clinical_procedures", "conditions_treated", "awards", "publications"])
+    params =
+      parse_array_params(params, [
+        "board_certifications",
+        "languages",
+        "insurance_networks",
+        "services",
+        "sub_specialties",
+        "clinical_procedures",
+        "conditions_treated",
+        "awards",
+        "publications"
+      ])
 
     changeset =
       socket.assigns.doctor
@@ -236,7 +260,18 @@ defmodule MedicWeb.DoctorLive.Profile do
   end
 
   def handle_event("save", %{"doctor" => params}, socket) do
-    params = parse_array_params(params, ["board_certifications", "languages", "insurance_networks", "services", "sub_specialties", "clinical_procedures", "conditions_treated", "awards", "publications"])
+    params =
+      parse_array_params(params, [
+        "board_certifications",
+        "languages",
+        "insurance_networks",
+        "services",
+        "sub_specialties",
+        "clinical_procedures",
+        "conditions_treated",
+        "awards",
+        "publications"
+      ])
 
     case Doctors.update_doctor(socket.assigns.doctor, params) do
       {:ok, doctor} ->

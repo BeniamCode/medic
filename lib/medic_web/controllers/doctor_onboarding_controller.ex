@@ -36,8 +36,9 @@ defmodule MedicWeb.DoctorOnboardingController do
     step = current_step(params)
 
     case result do
-      {:ok, _doctor} ->
+      {:ok, doctor} ->
         next = next_step(step)
+        maybe_verify_doctor(doctor, next)
 
         if next == :complete do
           redirect(conn, to: ~p"/doctor/schedule")
@@ -57,6 +58,16 @@ defmodule MedicWeb.DoctorOnboardingController do
         |> render_inertia("Doctor/Onboarding")
     end
   end
+
+  defp maybe_verify_doctor(doctor, :complete) do
+    if is_nil(doctor.verified_at) do
+      _ = Doctors.verify_doctor(doctor)
+    end
+
+    :ok
+  end
+
+  defp maybe_verify_doctor(_doctor, _step), do: :ok
 
   defp load_doctor(user) do
     case Doctors.get_doctor_by_user_id(user.id) do

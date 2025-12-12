@@ -17,7 +17,8 @@ config :medic,
     Medic.Patients,
     Medic.Appointments,
     Medic.Scheduling,
-    Medic.Notifications
+    Medic.Notifications,
+    Medic.CalendarSync
   ]
 
 config :ash, :use_all_identities_in_manage_relationship?, false

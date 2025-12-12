@@ -186,7 +186,8 @@ defmodule MedicWeb.DoctorOnboardingLive do
           <div class="inline-flex items-center gap-2 text-base-content/50 text-sm">
             <.icon name="hero-user-circle" class="size-5" />
             <span>
-              Patients will see: <%= @form[:title].value || "Dr." %> <%= @form[:first_name].value || "___" %> <%= @form[:last_name].value ||
+              Patients will see: <%= @form[:title].value || "Dr." %> <%= @form[:first_name].value ||
+                "___" %> <%= @form[:last_name].value ||
                 "___" %>
             </span>
           </div>
@@ -273,7 +274,12 @@ defmodule MedicWeb.DoctorOnboardingLive do
 
         <div class="form-control">
           <label class="label cursor-pointer justify-start gap-4">
-            <input type="checkbox" name="doctor[telemedicine_available]" class="checkbox checkbox-primary" checked={@form[:telemedicine_available].value} />
+            <input
+              type="checkbox"
+              name="doctor[telemedicine_available]"
+              class="checkbox checkbox-primary"
+              checked={@form[:telemedicine_available].value}
+            />
             <span class="label-text text-base font-bold">I offer telemedicine (video visits)</span>
           </label>
         </div>

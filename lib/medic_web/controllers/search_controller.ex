@@ -27,7 +27,7 @@ defmodule MedicWeb.SearchController do
   defp normalize_blank(value), do: value
 
   defp fetch_doctors("", specialty_slug), do: fetch_doctors("*", specialty_slug)
-  
+
   defp fetch_doctors(nil, specialty_slug), do: fetch_doctors("*", specialty_slug)
 
   defp fetch_doctors(query, specialty_slug) do
@@ -41,7 +41,7 @@ defmodule MedicWeb.SearchController do
         IO.inspect(total, label: "Total Found")
         IO.inspect(List.first(results), label: "First Result")
         IO.puts("=== SEARCH DEBUG END ===\n")
-        
+
         {Enum.map(results, &search_result_to_props/1), %{total: total, source: "search"}}
 
       {:error, reason} ->

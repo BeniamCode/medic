@@ -26,7 +26,7 @@ defmodule Medic.Doctors.Review do
 
     attribute :rating, :integer do
       allow_nil? false
-      constraints [min: 1, max: 5]
+      constraints min: 1, max: 5
     end
 
     attribute :comment, :string do
@@ -34,7 +34,7 @@ defmodule Medic.Doctors.Review do
     end
 
     attribute :status, :atom do
-      constraints [one_of: [:published, :hidden]]
+      constraints one_of: [:published, :hidden]
       default :published
       allow_nil? false
     end
