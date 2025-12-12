@@ -215,4 +215,37 @@ defmodule MedicWeb.DoctorScheduleController do
       }
     }
   end
+
+  # POST /api/doctor/schedule/preview
+  def preview(conn, params) do
+    # Ensure we fetch the doctor associated with the current user
+    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
+      result = Scheduling.preview_slots(doctor.id, params)
+      json(conn, result)
+    else
+      _ ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "Doctor not found"})
+    end
+  end
+
+  # POST /api/doctor/schedule/rules/bulk_upsert
+  def bulk_upsert(conn, params) do
+    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
+      result = Scheduling.bulk_upsert_schedule_rules!(doctor.id, params)
+      json(conn, %{ok: true, result: result})
+    else
+      _ ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "Doctor not found"})
+    end
+  rescue
+    e ->
+      # In production, map Ash errors into {path, code, message} and return 422
+      conn
+      |> put_status(:unprocessable_entity)
+      |> json(%{ok: false, error: Exception.message(e)})
+  end
 end

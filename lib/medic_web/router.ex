@@ -73,6 +73,11 @@ defmodule MedicWeb.Router do
 
     post "/doctors/:id/book", DoctorController, :book
     delete "/logout", UserSessionController, :delete
+
+    scope "/api/doctor/schedule" do
+      post "/preview", DoctorScheduleController, :preview
+      post "/rules/bulk_upsert", DoctorScheduleController, :bulk_upsert
+    end
   end
 
   # Doctor-specific routes

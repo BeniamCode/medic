@@ -20,13 +20,13 @@ defmodule Medic.Scheduling.ScheduleRule do
 
     create :create do
       primary? true
-
       accept [
         :doctor_id,
         :timezone,
         :scope_appointment_type_id,
         :scope_doctor_location_id,
         :scope_location_room_id,
+        :scope_consultation_mode,
         :day_of_week,
         :work_start_local,
         :work_end_local,
@@ -34,8 +34,29 @@ defmodule Medic.Scheduling.ScheduleRule do
         :buffer_before_minutes,
         :buffer_after_minutes,
         :label,
-        :priority
+        :priority,
+        :effective_from,
+        :effective_to,
+        :is_active
       ]
+    end
+
+    create :create_with_breaks do
+      accept [
+        :doctor_id, :timezone,
+        :scope_appointment_type_id, :scope_doctor_location_id, :scope_location_room_id, :scope_consultation_mode,
+        :day_of_week, :work_start_local, :work_end_local, :slot_interval_minutes, :priority,
+        :effective_from, :effective_to, :is_active
+      ]
+
+      argument :breaks, {:array, :map}, allow_nil?: true, default: []
+
+      change manage_relationship(:breaks,
+        type: :create,
+        on_no_match: :ignore,
+        on_match: :ignore,
+        value_is_key: :breaks
+      )
     end
 
     update :update do
@@ -44,6 +65,7 @@ defmodule Medic.Scheduling.ScheduleRule do
         :scope_appointment_type_id,
         :scope_doctor_location_id,
         :scope_location_room_id,
+        :scope_consultation_mode,
         :day_of_week,
         :work_start_local,
         :work_end_local,
@@ -51,7 +73,10 @@ defmodule Medic.Scheduling.ScheduleRule do
         :buffer_before_minutes,
         :buffer_after_minutes,
         :label,
-        :priority
+        :priority,
+        :effective_from,
+        :effective_to,
+        :is_active
       ]
     end
   end
@@ -68,6 +93,15 @@ defmodule Medic.Scheduling.ScheduleRule do
     attribute :buffer_after_minutes, :integer, allow_nil?: false, default: 0
     attribute :label, :string
     attribute :priority, :integer, allow_nil?: false, default: 0
+
+    # New attributes
+    attribute :scope_consultation_mode, :atom do
+      constraints one_of: [:in_person, :video, :phone]
+      allow_nil? true
+    end
+    attribute :effective_from, :date
+    attribute :effective_to, :date
+    attribute :is_active, :boolean, allow_nil?: false, default: true
 
     timestamps(type: :utc_datetime)
   end
@@ -93,6 +127,7 @@ defmodule Medic.Scheduling.ScheduleRule do
       :scope_appointment_type_id,
       :scope_doctor_location_id,
       :scope_location_room_id,
+      :scope_consultation_mode,
       :day_of_week,
       :work_start_local,
       :work_end_local,
@@ -100,7 +135,10 @@ defmodule Medic.Scheduling.ScheduleRule do
       :buffer_before_minutes,
       :buffer_after_minutes,
       :label,
-      :priority
+      :priority,
+      :effective_from,
+      :effective_to,
+      :is_active
     ])
     |> validate_required([:doctor_id, :day_of_week, :work_start_local, :work_end_local])
     |> validate_number(:day_of_week, greater_than_or_equal_to: 1, less_than_or_equal_to: 7)

@@ -660,4 +660,251 @@ defmodule Medic.Scheduling do
     # This is a bit hacky but works for now until we have proper Ash exception handling
     inspect(error) =~ constraint_name
   end
+  # ---------- BULK UPSERT ----------
+
+  def bulk_upsert_schedule_rules!(doctor_id, payload) do
+    Repo.transaction(fn ->
+      scope = normalize_scope!(payload["scope"] || %{})
+      replace_mode = parse_replace_mode(payload["replaceMode"] || "replace_selected_days")
+
+      days =
+        payload["days"]
+        |> List.wrap()
+        |> Enum.filter(&(&1["enabled"] == true))
+
+      selected_dows = Enum.map(days, & &1["dayOfWeek"])
+
+      if replace_mode == :replace_selected_days do
+        delete_rules_for_scope_and_days!(doctor_id, scope, selected_dows)
+      end
+
+      # Insert new rules + breaks
+      inserted =
+        for day <- days,
+            window <- List.wrap(day["windows"]),
+            do: create_rule_with_breaks!(doctor_id, scope, day["dayOfWeek"], window)
+
+      %{inserted_rules: length(inserted), deleted_days: selected_dows}
+    end)
+    |> case do
+      {:ok, result} -> result
+      {:error, reason} -> raise reason
+    end
+  end
+
+  defp delete_rules_for_scope_and_days!(doctor_id, scope, dows) do
+    # Fetch matching rules then destroy via Ash (so breaks cascade properly).
+    query =
+      ScheduleRule
+      |> Ash.Query.filter(doctor_id == ^doctor_id and day_of_week in ^dows)
+      |> apply_scope_filter(scope)
+
+    rules = Ash.read!(query)
+
+    Enum.each(rules, fn rule ->
+      Ash.destroy!(rule)
+    end)
+  end
+
+  defp create_rule_with_breaks!(doctor_id, scope, dow, window) do
+    breaks =
+      window["breaks"]
+      |> List.wrap()
+      |> Enum.map(fn b ->
+        %{
+          break_start_local: parse_time!(b["breakStartLocal"]),
+          break_end_local: parse_time!(b["breakEndLocal"]),
+          label: b["label"]
+        }
+      end)
+
+    attrs = %{
+      doctor_id: doctor_id,
+      timezone: scope.timezone,
+
+      scope_appointment_type_id: scope.appointment_type_id,
+      scope_doctor_location_id: scope.doctor_location_id,
+      scope_location_room_id: scope.location_room_id,
+      scope_consultation_mode: scope.consultation_mode,
+
+      day_of_week: dow,
+      work_start_local: parse_time!(window["workStartLocal"]),
+      work_end_local: parse_time!(window["workEndLocal"]),
+      slot_interval_minutes: window["slotIntervalMinutes"] || 10,
+      priority: window["priority"] || 0,
+      effective_from: parse_date_maybe(window["effectiveFrom"]),
+      effective_to: parse_date_maybe(window["effectiveTo"]),
+      is_active: true,
+      breaks: breaks
+    }
+
+    Ash.create!(ScheduleRule, attrs, action: :create_with_breaks)
+  end
+
+  # ---------- PREVIEW ----------
+
+  def preview_slots(_doctor_id, payload) do
+    scope = normalize_scope!(payload["scope"] || %{})
+
+    days =
+      payload["days"]
+      |> List.wrap()
+      |> Enum.filter(&(&1["enabled"] == true))
+
+    %{"start" => start_s, "end" => end_s} = payload["dateRange"] || %{}
+    start_date = Date.from_iso8601!(start_s)
+    end_date   = Date.from_iso8601!(end_s)
+
+    date_list = Date.range(start_date, end_date) |> Enum.to_list()
+
+    preview =
+      for date <- date_list,
+          dow = iso_dow(date),
+          day <- days,
+          day["dayOfWeek"] == dow,
+          window <- List.wrap(day["windows"]) do
+        build_preview_for_window(scope.timezone, date, window)
+      end
+      |> List.flatten()
+
+    total = length(preview)
+
+    %{
+      summary: %{totalSlots: total, daysEnabled: length(days)},
+      slots: preview
+    }
+  end
+
+  defp build_preview_for_window(tz, date, window) do
+    work_start = parse_time!(window["workStartLocal"])
+    work_end   = parse_time!(window["workEndLocal"])
+    interval   = window["slotIntervalMinutes"] || 10
+
+    {:ok, ws_utc} = local_to_utc(date, work_start, tz)
+    {:ok, we_utc} = local_to_utc(date, work_end, tz)
+
+    # subtract breaks
+    breaks =
+      window["breaks"]
+      |> List.wrap()
+      |> Enum.map(fn b ->
+        bs = parse_time!(b["breakStartLocal"])
+        be = parse_time!(b["breakEndLocal"])
+        {:ok, bs_utc} = local_to_utc(date, bs, tz)
+        {:ok, be_utc} = local_to_utc(date, be, tz)
+        {bs_utc, be_utc}
+      end)
+
+    intervals =
+      [{ws_utc, we_utc}]
+      |> subtract_breaks(breaks)
+
+    # slice into slot starts (preview only)
+    for {a, b} <- intervals,
+        slot <- slice_interval(a, b, interval),
+        do: slot
+  end
+
+  defp slice_interval(a_utc, b_utc, interval_minutes) do
+    step = interval_minutes * 60
+
+    Stream.unfold(a_utc, fn current ->
+      next = DateTime.add(current, step, :second)
+      if DateTime.compare(next, b_utc) in [:lt, :eq] do
+        slot = %{startUtc: current, endUtc: next}
+        {slot, next}
+      else
+        nil
+      end
+    end)
+    |> Enum.to_list()
+  end
+
+  defp subtract_breaks(intervals, breaks) do
+    Enum.reduce(breaks, intervals, fn {bs, be}, acc ->
+      Enum.flat_map(acc, fn {a, b} ->
+        cond do
+          DateTime.compare(be, a) != :gt -> [{a, b}]   # break ends before interval starts
+          DateTime.compare(bs, b) != :lt -> [{a, b}]   # break starts after interval ends
+          DateTime.compare(bs, a) == :gt and DateTime.compare(be, b) == :lt ->
+            [{a, bs}, {be, b}]
+          DateTime.compare(bs, a) != :gt and DateTime.compare(be, b) == :lt ->
+            [{be, b}]
+          DateTime.compare(bs, a) == :gt and DateTime.compare(be, b) != :lt ->
+            [{a, bs}]
+          true ->
+            [] # break covers whole interval
+        end
+      end)
+    end)
+    |> Enum.filter(fn {a, b} -> DateTime.compare(b, a) == :gt end)
+  end
+
+  # ---------- Helpers ----------
+
+  defp normalize_scope!(%{} = s) do
+    %{
+      timezone: s["timezone"] || "Europe/Athens",
+      appointment_type_id: blank_to_nil(s["appointmentTypeId"]),
+      doctor_location_id: blank_to_nil(s["doctorLocationId"]),
+      location_room_id: blank_to_nil(s["locationRoomId"]),
+      consultation_mode: parse_mode(blank_to_nil(s["consultationMode"]))
+    }
+  end
+
+  defp apply_scope_filter(query, scope) do
+    query
+    |> Ash.Query.filter(timezone == ^scope.timezone)
+    |> Ash.Query.filter(scope_appointment_type_id == ^scope.appointment_type_id)
+    |> Ash.Query.filter(scope_doctor_location_id == ^scope.doctor_location_id)
+    |> Ash.Query.filter(scope_location_room_id == ^scope.location_room_id)
+    |> Ash.Query.filter(scope_consultation_mode == ^scope.consultation_mode)
+  end
+
+  defp parse_replace_mode("append"), do: :append
+  defp parse_replace_mode(_), do: :replace_selected_days
+
+  defp parse_mode(nil), do: nil
+  defp parse_mode("in_person"), do: :in_person
+  defp parse_mode("video"), do: :video
+  defp parse_mode("phone"), do: :phone
+  defp parse_mode(_), do: nil
+
+  defp parse_time!(t) when is_binary(t) do
+    # expects "HH:MM"
+    [h, m] = String.split(t, ":")
+    {:ok, time} = Time.new(String.to_integer(h), String.to_integer(m), 0)
+    time
+  end
+
+  defp parse_date_maybe(nil), do: nil
+  defp parse_date_maybe(""), do: nil
+  defp parse_date_maybe(s), do: Date.from_iso8601!(s)
+
+  defp blank_to_nil(nil), do: nil
+  defp blank_to_nil(""), do: nil
+  defp blank_to_nil(v), do: v
+
+  defp iso_dow(date), do: Date.day_of_week(date, :monday)
+
+  # DST-safe-ish conversion:
+  # - if ambiguous: pick the earlier
+  # - if gap: shift forward by the gap (fallback to later valid time)
+  defp local_to_utc(date, time, tz) do
+    naive = NaiveDateTime.new!(date, time)
+
+    case DateTime.from_naive(naive, tz) do
+      {:ok, dt} ->
+        {:ok, DateTime.shift_zone!(dt, "Etc/UTC")}
+
+      {:ambiguous, dt1, _dt2} ->
+        {:ok, DateTime.shift_zone!(dt1, "Etc/UTC")}
+
+      {:gap, _dt_before, dt_after} ->
+        {:ok, DateTime.shift_zone!(dt_after, "Etc/UTC")}
+
+      other ->
+        other
+    end
+  end
 end
