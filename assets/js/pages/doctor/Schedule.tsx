@@ -17,9 +17,11 @@ import {
   Empty,
   Switch,
   InputNumber,
+  Input,
   Divider,
   message,
-  Steps
+  Steps,
+  Radio
 } from 'antd'
 import {
   IconClock,
@@ -95,6 +97,13 @@ type AvailabilityRule = {
   breaks?: { break_start_local: string; break_end_local: string }[]
 }
 
+type ScheduleException = {
+  id: string
+  start_date: string
+  end_date: string
+  reason: string
+}
+
 type Appointment = {
   id: string
   patient: {
@@ -110,7 +119,7 @@ type Appointment = {
 type PageProps = AppPageProps<{
   availabilityRules: AvailabilityRule[]
   upcomingAppointments: Appointment[]
-  blockedDates: string[]
+  exceptions: ScheduleException[]
   doctor: { id: string; timezone?: string }
 }>
 
@@ -137,11 +146,17 @@ const INITIAL_FORM_VALUES: AddSlotFormValues = {
 const DoctorSchedule = ({
   availabilityRules = [],
   upcomingAppointments = [],
-  blockedDates = [],
+  exceptions = [],
   doctor
 }: PageProps) => {
+  /* Add form instance */
+  const [form] = Form.useForm()
+  const exceptionType = Form.useWatch('type', form)
+  const isRange = exceptionType === 'range'
+
   const { t } = useTranslation('default')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('1') // 1=Monday
   const [previewData, setPreviewData] = useState<any>(null)
   const queryClient = useQueryClient()
@@ -203,14 +218,32 @@ const DoctorSchedule = ({
     saveMutation.mutate(data)
   }
 
-  const handleBlockDate = (date: Dayjs) => {
-    if (!date) return
-    router.post('/doctor/schedule/day_off', { exception: { date: date.format('YYYY-MM-DD') } })
+  const handleCreateException = (values: any) => {
+    const { range, date, reason, type } = values
+    let startsAt, endsAt
+
+    if (type === 'range' && range && range.length === 2) {
+      startsAt = range[0].startOf('day').toISOString()
+      endsAt = range[1].endOf('day').toISOString()
+    } else if (type === 'single' && date) {
+      startsAt = date.startOf('day').toISOString()
+      endsAt = date.endOf('day').toISOString()
+    } else {
+      return
+    }
+
+    router.post('/doctor/schedule/exceptions', {
+      exception: { starts_at: startsAt, ends_at: endsAt, reason }
+    }, {
+      onSuccess: () => {
+        setIsTimeOffModalOpen(false)
+        form.resetFields()
+      }
+    })
   }
 
-  const handleUnblockDate = (dateStr: string) => {
-    // router.delete not directly supported for bodies in some setups, using post for now or standard inertia delete
-    // Assuming existing controller handles logic, simplified for this replace
+  const handleDeleteException = (id: string) => {
+    router.delete(`/doctor/schedule/exceptions/${id}`)
   }
 
   const daysOptions = [
@@ -309,36 +342,117 @@ const DoctorSchedule = ({
             title={t('schedule.time_off', 'Time Off & Holidays')}
             style={{ marginTop: 24, boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)' }}
             bordered={false}
+            extra={
+              <Button
+                type="dashed"
+                icon={<IconPlus size={14} />}
+                onClick={() => setIsTimeOffModalOpen(true)}
+              >
+                {t('common.add', 'Add')}
+              </Button>
+            }
           >
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Text type="secondary">{t('schedule.block_dates_desc', 'Block specific dates when you are unavailable (e.g. holidays, vacations).')}</Text>
-              <DatePicker
-                style={{ width: 300 }}
-                onChange={handleBlockDate}
-                placeholder={t('schedule.select_date_to_block', 'Select date to block')}
-                disabledDate={(current) => current && current < dayjs().endOf('day')}
-              />
-
-              {blockedDates.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <Text strong>{t('schedule.blocked_days', 'Blocked Days:')}</Text>
-                  <Space size={[8, 8]} wrap style={{ marginTop: 8 }}>
-                    {blockedDates.map((date: string) => (
-                      <Tag
-                        key={date}
-                        color="error"
-                        closable
-                        onClose={() => handleUnblockDate(date)}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* DEBUG: Remove after verifying */}
+              <div style={{ fontSize: 10, fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(exceptions, null, 2)}
+              </div>
+              {exceptions.length > 0 ? (
+                exceptions.map((ex: ScheduleException) => (
+                  <Card key={ex.id} size="small" type="inner" bodyStyle={{ padding: '8px 12px' }}>
+                    <Flex justify="space-between" align="center">
+                      <Space direction="vertical" size={2}>
+                        <Space>
+                          <IconCalendarEvent size={14} style={{ color: '#64748b' }} />
+                          <Text strong>
+                            {dayjs(ex.start_date).isSame(dayjs(ex.end_date), 'day')
+                              ? dayjs(ex.start_date).format('MMM D, YYYY')
+                              : `${dayjs(ex.start_date).format('MMM D')} - ${dayjs(ex.end_date).format('MMM D, YYYY')}`
+                            }
+                          </Text>
+                        </Space>
+                        <Text type="secondary" style={{ fontSize: 12, paddingLeft: 20 }}>
+                          {ex.reason || 'Day Off'}
+                        </Text>
+                      </Space>
+                      <Popconfirm
+                        title={t('common.are_you_sure')}
+                        onConfirm={() => handleDeleteException(ex.id)}
                       >
-                        {dayjs(date).format('MMM D, YYYY')}
-                      </Tag>
-                    ))}
-                  </Space>
-                </div>
+                        <Button type="text" danger icon={<IconTrash size={14} />} size="small" />
+                      </Popconfirm>
+                    </Flex>
+                  </Card>
+                ))
+              ) : (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('schedule.no_time_off', 'No time off scheduled')} />
               )}
-            </Space>
+            </div>
           </Card>
         </Col>
+
+        {/* --- TIME OFF MODAL --- */}
+        <Modal
+          title={t('schedule.add_time_off', 'Add Time Off')}
+          open={isTimeOffModalOpen}
+          onCancel={() => setIsTimeOffModalOpen(false)}
+          footer={null}
+        >
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleCreateException}
+            initialValues={{ reason: 'Holiday', type: 'single' }}
+          >
+            <Form.Item name="type" style={{ marginBottom: 12 }}>
+              <Radio.Group
+                optionType="button"
+                buttonStyle="solid"
+              >
+                <Radio.Button value="single">{t('common.single_day', 'Single Day')}</Radio.Button>
+                <Radio.Button value="range">{t('common.date_range', 'Date Range')}</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
+
+            {isRange ? (
+              <Form.Item
+                label={t('common.date_range', 'Date Range')}
+                name="range"
+                rules={[{ required: true, message: 'Please select dates' }]}
+              >
+                <DatePicker.RangePicker style={{ width: '100%' }} format="MMM D, YYYY" />
+              </Form.Item>
+            ) : (
+              <Form.Item
+                label={t('common.date', 'Date')}
+                name="date"
+                rules={[{ required: true, message: 'Please select date' }]}
+              >
+                <DatePicker style={{ width: '100%' }} format="MMM D, YYYY" />
+              </Form.Item>
+            )}
+
+            <Form.Item label={t('common.reason', 'Reason')} name="reason">
+              <Select>
+                <Option value="Holiday">Holiday</Option>
+                <Option value="Vacation">Vacation</Option>
+                <Option value="Personal">Personal</Option>
+                <Option value="Conference">Conference</Option>
+                <Option value="Other">Other</Option>
+              </Select>
+              {/* Fallback to simple input via free text if Select is clearable/editable, but standard Select is fine for MVP */}
+            </Form.Item>
+
+            <Flex justify="end" gap="small" style={{ marginTop: 24 }}>
+              <Button onClick={() => setIsTimeOffModalOpen(false)}>
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              <Button type="primary" htmlType="submit">
+                {t('common.save', 'Save')}
+              </Button>
+            </Flex>
+          </Form>
+        </Modal>
 
         {/* Right Column: Upcoming */}
         <Col xs={24} lg={8}>

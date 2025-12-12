@@ -78,6 +78,9 @@ defmodule MedicWeb.Router do
       post "/preview", DoctorScheduleController, :preview
       post "/rules/bulk_upsert", DoctorScheduleController, :bulk_upsert
     end
+
+    post "/doctor/schedule/exceptions", DoctorScheduleController, :create_exception
+    delete "/doctor/schedule/exceptions/:id", DoctorScheduleController, :delete_exception
   end
 
   # Doctor-specific routes

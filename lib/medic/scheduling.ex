@@ -393,6 +393,8 @@ defmodule Medic.Scheduling do
     Ash.read!(query)
   end
 
+  def get_availability_exception(id), do: Ash.get(AvailabilityException, id)
+
   def create_availability_exception(attrs) do
     AvailabilityException
     |> Ash.Changeset.for_create(:create, attrs)
@@ -612,12 +614,22 @@ defmodule Medic.Scheduling do
     day_start = date |> Timex.to_datetime(timezone) |> Timex.beginning_of_day()
     day_end = date |> Timex.to_datetime(timezone) |> Timex.end_of_day()
 
-    Appointment
-    |> where([a], a.doctor_id == ^doctor_id)
-    |> where([a], a.starts_at >= ^day_start and a.starts_at <= ^day_end)
-    |> where([a], a.status in ["pending", "confirmed"])
-    |> select([a], {a.starts_at, a.ends_at})
-    |> Repo.all()
+    appointments =
+      Appointment
+      |> where([a], a.doctor_id == ^doctor_id)
+      |> where([a], a.starts_at >= ^day_start and a.starts_at <= ^day_end)
+      |> where([a], a.status in ["pending", "confirmed"])
+      |> select([a], {a.starts_at, a.ends_at})
+      |> Repo.all()
+
+    exceptions =
+      AvailabilityException
+      |> where([e], e.doctor_id == ^doctor_id)
+      |> where([e], e.starts_at <= ^day_end and e.ends_at >= ^day_start)
+      |> select([e], {e.starts_at, e.ends_at})
+      |> Repo.all()
+
+    appointments ++ exceptions
   end
 
   defp mark_slot_availability(slots, booked_ranges) do

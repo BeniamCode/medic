@@ -9,6 +9,8 @@ defmodule MedicWeb.DoctorScheduleController do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
       rules = Scheduling.list_schedule_rules_for_ui(doctor.id)
 
+      exceptions = Scheduling.list_availability_exceptions(doctor.id, upcoming_only: true)
+
       upcoming =
         Appointments.list_appointments(
           doctor_id: doctor.id,
@@ -19,6 +21,18 @@ defmodule MedicWeb.DoctorScheduleController do
       conn
       |> assign(:page_title, dgettext("default", "Schedule"))
       |> assign_prop(:availability_rules, Enum.map(rules, &rule_props/1))
+      mapped_exceptions = Enum.map(exceptions, &exception_props/1)
+      IO.inspect(mapped_exceptions, label: "DEBUG EXCEPTIONS PROPS")
+
+      conn
+      |> assign(:page_title, dgettext("default", "Schedule"))
+      |> assign_prop(:availability_rules, Enum.map(rules, &rule_props/1))
+      mapped_exceptions = Enum.map(exceptions, &exception_props/1)
+
+      conn
+      |> assign(:page_title, dgettext("default", "Schedule"))
+      |> assign_prop(:availability_rules, Enum.map(rules, &rule_props/1))
+      |> assign_prop(:exceptions, mapped_exceptions)
       |> assign_prop(:upcoming_appointments, Enum.map(upcoming, &appointment_props/1))
       |> render_inertia("Doctor/Schedule")
     else
@@ -132,36 +146,47 @@ defmodule MedicWeb.DoctorScheduleController do
   defp blank_to_nil_value(value) when value in [nil, ""], do: nil
   defp blank_to_nil_value(value), do: value
 
-  def block_day(conn, %{"exception" => %{"date" => date}}) do
+  def create_exception(conn, %{"exception" => params}) do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
-         {:ok, parsed_date} <- Date.from_iso8601(date),
-         {:ok, starts_at} <- DateTime.new(parsed_date, ~T[00:00:00], "Etc/UTC"),
-         {:ok, ends_at} <- DateTime.new(parsed_date, ~T[23:59:59], "Etc/UTC"),
-         {:ok, _} <-
-           Scheduling.create_schedule_exception(%{
-             doctor_id: doctor.id,
-             starts_at: starts_at,
-             ends_at: ends_at,
-             exception_type: "blocked",
-             reason: "doctor_day_off",
-             source: "manual"
-           }),
-         {:ok, _} <-
-           Scheduling.create_availability_exception(%{
-             doctor_id: doctor.id,
-             starts_at: starts_at,
-             ends_at: ends_at,
-             status: "blocked",
-             reason: "doctor_day_off",
-             source: "manual"
-           }) do
+         {:ok, starts_at} <- parse_datetime(params["starts_at"]),
+         {:ok, ends_at} <- parse_datetime(params["ends_at"]) do
+      
+      attrs = %{
+        doctor_id: doctor.id,
+        starts_at: starts_at,
+        ends_at: ends_at,
+        reason: params["reason"] || "doctor_day_off",
+        status: "blocked",
+        source: "manual"
+      }
+
+      # Create both for now to maintain consistency
+      Scheduling.create_schedule_exception(Map.put(attrs, :exception_type, "blocked"))
+      Scheduling.create_availability_exception(attrs)
+
       conn
-      |> put_flash(:success, dgettext("default", "Day blocked"))
+      |> put_flash(:success, dgettext("default", "Time off added"))
       |> redirect(to: ~p"/doctor/schedule")
     else
       _ ->
         conn
-        |> put_flash(:error, dgettext("default", "Unable to block day"))
+        |> put_flash(:error, dgettext("default", "Unable to add time off"))
+        |> redirect(to: ~p"/doctor/schedule")
+    end
+  end
+
+  def delete_exception(conn, %{"id" => id}) do
+    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
+         {:ok, exception} <- Scheduling.get_availability_exception(id),
+         true <- exception.doctor_id == doctor.id,
+         :ok <- Scheduling.delete_availability_exception(exception) do
+      conn
+      |> put_flash(:success, dgettext("default", "Time off removed"))
+      |> redirect(to: ~p"/doctor/schedule")
+    else
+      _ ->
+        conn
+        |> put_flash(:error, dgettext("default", "Unable to remove time off"))
         |> redirect(to: ~p"/doctor/schedule")
     end
   end
@@ -247,5 +272,22 @@ defmodule MedicWeb.DoctorScheduleController do
       conn
       |> put_status(:unprocessable_entity)
       |> json(%{ok: false, error: Exception.message(e)})
+  end
+  defp parse_datetime(nil), do: {:error, :missing_date}
+  defp parse_datetime(iso_str) do
+    case DateTime.from_iso8601(iso_str) do
+      {:ok, dt, _offset} -> {:ok, dt}
+      _ -> {:error, :invalid_format}
+    end
+  end
+
+  defp exception_props(ex) do
+    %{
+      id: ex.id,
+      # Explicit naming to avoid snake_case/camelCase confusion in JS
+      start_date: DateTime.to_iso8601(ex.starts_at),
+      end_date: DateTime.to_iso8601(ex.ends_at),
+      reason: ex.reason
+    }
   end
 end
