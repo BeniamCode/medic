@@ -17,11 +17,11 @@ import {
   ThemeIcon,
   Title
 } from '@mantine/core'
-import { IconArrowLeft, IconArrowRight, IconCheck } from '@tabler/icons-react'
-import { useForm } from '@mantine/form'
-import { router } from '@inertiajs/react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { router } from '@inertiajs/react'
+import { useEffect, useMemo } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
 
 import type { AppPageProps } from '@/types/app'
 
@@ -53,27 +53,33 @@ type PageProps = AppPageProps<{
 
 const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) => {
   const { t } = useTranslation('default')
+  const normalizedDoctor = normalizeDoctor(doctor)
 
   const form = useForm<DoctorForm>({
-    initialValues: {
-      title: doctor.title || '',
-      first_name: doctor.first_name || '',
-      last_name: doctor.last_name || '',
-      registration_number: doctor.registration_number || '',
-      years_of_experience: doctor.years_of_experience ?? null,
-      specialty_id: doctor.specialty_id || '',
-      bio: doctor.bio || '',
-      city: doctor.city || '',
-      address: doctor.address || '',
-      telemedicine_available: doctor.telemedicine_available ?? false,
-      consultation_fee: doctor.consultation_fee ?? null
-    }
+    defaultValues: normalizedDoctor
   })
+
+  const { control, register, getValues, reset } = form
+
+  useEffect(() => {
+    reset(normalizedDoctor)
+  }, [normalizedDoctor, reset])
 
   const currentStep = useMemo<Step>(() => (steps.includes(step) ? (step as Step) : 'welcome'), [step, steps])
   const stepIndex = STEPS_ORDER.indexOf(currentStep)
   const isComplete = currentStep === 'complete'
   const progress = Math.round((stepIndex / (STEPS_ORDER.length - 1)) * 100)
+
+  const mutation = useMutation({
+    mutationFn: async ({ values, step }: { values: DoctorForm; step: Step }) =>
+      await new Promise<void>((resolve, reject) => {
+        router.post(`/onboarding/doctor?step=${step}`, { doctor: values }, {
+          onSuccess: () => resolve(),
+          onError: () => reject(new Error('Failed to save onboarding step')),
+          preserveScroll: true
+        })
+      })
+  })
 
   const nextStep = () => {
     if (currentStep === 'welcome') {
@@ -81,7 +87,7 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
       return
     }
 
-    router.post(`/onboarding/doctor?step=${currentStep}`, { doctor: form.values }, { preserveScroll: true })
+    mutation.mutate({ values: getValues(), step: currentStep })
   }
 
   const prevStep = () => {
@@ -119,13 +125,7 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
                 const active = s === currentStep
                 const completed = idx < stepIndex
                 return (
-                  <Button
-                    key={s}
-                    variant={active ? 'filled' : completed ? 'light' : 'subtle'}
-                    color="teal"
-                    size="xs"
-                    radius="xl"
-                  >
+                  <Button key={s} variant={active ? 'filled' : completed ? 'light' : 'subtle'} color="teal" size="xs" radius="xl">
                     {t(`onboarding.step.${s}`, s)}
                   </Button>
                 )
@@ -134,7 +134,7 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
           </Stack>
 
           <Center>
-            <Paper radius="xl" p="xl" shadow="xl" className="bg-white text-slate-900" maw={640} w="100%">
+            <Paper radius="xl" p="xl" shadow="xl" className="bg-white text-slate-900" maw={600} w="100%">
               {renderStep(currentStep, form, specialties, t)}
             </Paper>
           </Center>
@@ -154,6 +154,8 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
                 radius="xl"
                 rightSection={<IconArrowRight size={20} />}
                 onClick={nextStep}
+                loading={mutation.isPending}
+                disabled={mutation.isPending}
                 color="teal"
               >
                 {currentStep === 'pricing'
@@ -176,6 +178,8 @@ const renderStep = (
   specialties: { id: string; name: string }[],
   t: ReturnType<typeof useTranslation>['t']
 ) => {
+  const { register, control } = form
+
   switch (step) {
     case 'welcome':
       return (
@@ -195,13 +199,24 @@ const renderStep = (
           <Title order={2}>{t('onboarding.personal.title', 'Tell us about you')}</Title>
           <Text c="dimmed">{t('onboarding.personal.helper', 'A warm introduction helps patients know they are in excellent hands.')}</Text>
           <Group grow>
-            <TextInput label={t('doctor.profile.title_field', 'Title')} placeholder="Dr." {...form.getInputProps('title')} />
-            <TextInput label={t('doctor.profile.first_name', 'First name')} required {...form.getInputProps('first_name')} />
+            <TextInput label={t('doctor.profile.title_field', 'Title')} placeholder="Dr." {...register('title')} />
+            <TextInput label={t('doctor.profile.first_name', 'First name')} required {...register('first_name')} />
           </Group>
-          <TextInput label={t('doctor.profile.last_name', 'Last name')} required {...form.getInputProps('last_name')} />
+          <TextInput label={t('doctor.profile.last_name', 'Last name')} required {...register('last_name')} />
           <Group grow>
-            <TextInput label={t('doctor.profile.registration_number', 'Registration number')} {...form.getInputProps('registration_number')} />
-            <NumberInput label={t('doctor.profile.experience', 'Years of experience')} min={0} {...form.getInputProps('years_of_experience')} />
+            <TextInput label={t('doctor.profile.registration_number', 'Registration number')} {...register('registration_number')} />
+            <Controller
+              control={control}
+              name="years_of_experience"
+              render={({ field }) => (
+                <NumberInput
+                  label={t('doctor.profile.experience', 'Years of experience')}
+                  min={0}
+                  value={field.value ?? undefined}
+                  onChange={(value) => field.onChange(value === '' ? null : Number(value))}
+                />
+              )}
+            />
           </Group>
         </Stack>
       )
@@ -209,19 +224,26 @@ const renderStep = (
       return (
         <Stack gap="md">
           <Title order={2}>{t('onboarding.specialty.title', 'What is your area of expertise?')}</Title>
-          <Select
-            data={specialties.map((s) => ({ value: s.id, label: s.name }))}
-            label={t('doctor.profile.specialty', 'Specialty')}
-            placeholder={t('onboarding.specialty.placeholder', 'Select your specialty')}
-            searchable
-            {...form.getInputProps('specialty_id')}
+          <Controller
+            control={control}
+            name="specialty_id"
+            render={({ field }) => (
+              <Select
+                data={specialties.map((s) => ({ value: s.id, label: s.name }))}
+                label={t('doctor.profile.specialty', 'Specialty')}
+                placeholder={t('onboarding.specialty.placeholder', 'Select your specialty')}
+                searchable
+                value={field.value || ''}
+                onChange={field.onChange}
+              />
+            )}
           />
           <Textarea
             label={t('doctor.profile.bio_en', 'Professional bio')}
             description={t('onboarding.specialty.helper', 'Share a short paragraph highlighting your style and focus areas.')}
             autosize
             minRows={4}
-            {...form.getInputProps('bio')}
+            {...register('bio')}
           />
         </Stack>
       )
@@ -230,20 +252,20 @@ const renderStep = (
         <Stack gap="md">
           <Title order={2}>{t('onboarding.location.title', 'Where do you meet patients?')}</Title>
           <Group grow>
-            <TextInput label={t('doctor.profile.city', 'City')} {...form.getInputProps('city')} />
-            <TextInput label={t('doctor.profile.address', 'Street address')} {...form.getInputProps('address')} />
+            <TextInput label={t('doctor.profile.city', 'City')} {...register('city')} />
+            <TextInput label={t('doctor.profile.address', 'Street address')} {...register('address')} />
           </Group>
-          <Paper withBorder radius="md" p="md">
-            <Group justify="space-between">
-              <div>
-                <Text fw={600}>{t('onboarding.location.telemedicine', 'Offer telemedicine?')}</Text>
-                <Text size="sm" c="dimmed">
-                  {t('onboarding.location.telemedicine_helper', 'Toggle on if patients can book remote visits.')}
-                </Text>
-              </div>
-              <Switch {...form.getInputProps('telemedicine_available', { type: 'checkbox' })} />
-            </Group>
-          </Paper>
+          <Controller
+            control={control}
+            name="telemedicine_available"
+            render={({ field }) => (
+              <Switch
+                label={t('onboarding.location.telemedicine', 'Offer telemedicine appointments?')}
+                checked={field.value ?? false}
+                onChange={(event) => field.onChange(event.currentTarget.checked)}
+              />
+            )}
+          />
         </Stack>
       )
     case 'pricing':
@@ -251,13 +273,20 @@ const renderStep = (
         <Stack gap="md">
           <Title order={2}>{t('onboarding.pricing.title', 'Set your consultation fee')}</Title>
           <Text c="dimmed">{t('onboarding.pricing.helper', 'Transparency builds trust—you can always fine-tune later.')}</Text>
-          <NumberInput
-            size="xl"
-            leftSection={<Text fw={700}>€</Text>}
-            placeholder="60"
-            min={0}
-            step={5}
-            {...form.getInputProps('consultation_fee')}
+          <Controller
+            control={control}
+            name="consultation_fee"
+            render={({ field }) => (
+              <NumberInput
+                size="xl"
+                leftSection={<Text fw={700}>€</Text>}
+                min={0}
+                step={5}
+                placeholder="60"
+                value={field.value ?? undefined}
+                onChange={(value) => field.onChange(value === '' ? null : Number(value))}
+              />
+            )}
           />
         </Stack>
       )
@@ -292,3 +321,17 @@ const renderStep = (
 DoctorOnboardingPage.layout = (page: any) => page
 
 export default DoctorOnboardingPage
+
+const normalizeDoctor = (doctor: DoctorForm): DoctorForm => ({
+  title: doctor.title || '',
+  first_name: doctor.first_name || '',
+  last_name: doctor.last_name || '',
+  registration_number: doctor.registration_number || '',
+  years_of_experience: doctor.years_of_experience ?? null,
+  specialty_id: doctor.specialty_id || '',
+  bio: doctor.bio || '',
+  city: doctor.city || '',
+  address: doctor.address || '',
+  telemedicine_available: doctor.telemedicine_available ?? false,
+  consultation_fee: doctor.consultation_fee ?? null
+})

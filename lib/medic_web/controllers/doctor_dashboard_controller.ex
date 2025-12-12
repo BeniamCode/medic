@@ -1,10 +1,9 @@
 defmodule MedicWeb.DoctorDashboardController do
   use MedicWeb, :controller
 
-  alias Decimal
   alias Medic.Appointments
   alias Medic.Doctors
-  alias Medic.Patients
+  alias Medic.Patients.Patient
 
   def show(conn, _params) do
     user = conn.assigns.current_user
@@ -22,7 +21,7 @@ defmodule MedicWeb.DoctorDashboardController do
       |> assign_prop(:upcoming_count, stats.upcoming)
       |> render_inertia("Doctor/Dashboard")
     else
-      _ -> redirect(conn, to: ~p"/doctor/profile")
+      _ -> redirect(conn, to: ~p"/dashboard/doctor/profile")
     end
   end
 
@@ -45,7 +44,7 @@ defmodule MedicWeb.DoctorDashboardController do
   end
 
   defp appointment_props(appt) do
-    patient = appt.patient || %Medic.Patients.Patient{}
+    patient = appt.patient || %Patient{}
 
     %{
       id: appt.id,

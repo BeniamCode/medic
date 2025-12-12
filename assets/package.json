@@ -22,6 +22,7 @@
     "@inertiajs/core": "^1.1.0",
     "@inertiajs/progress": "^0.2.7",
     "@inertiajs/react": "^1.1.0",
+    "@tanstack/react-query": "^5.62.10",
     "@mantine/core": "^7.13.0",
     "@mantine/dates": "^7.13.0",
     "@mantine/form": "^7.13.0",
@@ -34,6 +35,7 @@
     "mapbox-gl": "^3.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
     "react-i18next": "^15.5.2",
     "three": "^0.166.1",
     "zustand": "^4.5.3"

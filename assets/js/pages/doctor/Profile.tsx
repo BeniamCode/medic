@@ -16,8 +16,9 @@ import {
   ThemeIcon,
   Title
 } from '@mantine/core'
-import { useForm } from '@mantine/form'
 import { router } from '@inertiajs/react'
+import { useMutation } from '@tanstack/react-query'
+import { Controller, useForm } from 'react-hook-form'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -62,207 +63,298 @@ type PageProps = AppPageProps<{
   errors?: Record<string, string[]>
 }>
 
-const DoctorProfilePage = ({ app, auth, doctor, specialties, errors }: PageProps) => {
+const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
   const { t } = useTranslation('default')
-
   const normalizedDoctor = normalizeDoctor(doctor)
 
-  const form = useForm<Profile>({
-    initialValues: normalizedDoctor
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors: formErrors }
+  } = useForm<Profile>({
+    defaultValues: normalizedDoctor
   })
 
   useEffect(() => {
-    form.setValues(normalizeDoctor(doctor))
-  }, [doctor])
+    reset(normalizedDoctor)
+  }, [normalizedDoctor, reset])
 
-  const handleSubmit = (values: Profile) => {
-    router.post('/dashboard/doctor/profile', { doctor: values }, { preserveScroll: true })
-  }
+  const mutation = useMutation({
+    mutationFn: async (values: Profile) =>
+      await new Promise<void>((resolve, reject) => {
+        router.post('/dashboard/doctor/profile', { doctor: values }, {
+          preserveScroll: true,
+          onSuccess: () => resolve(),
+          onError: () => reject(new Error('Failed to save doctor profile'))
+        })
+      })
+  })
 
-  const completion = calculateCompletion(doctor)
+  const onSubmit = (values: Profile) => mutation.mutate(values)
+
+  const completion = calculateCompletion(normalizedDoctor)
 
   return (
     <Stack gap="xl" p="xl">
-          <Paper radius="lg" p="xl" withBorder className="bg-gradient-to-r from-sky-50 to-teal-50">
-            <Group justify="space-between" align="flex-start" gap="xl" wrap="wrap">
-              <div>
-                <Title order={2}>{t('doctor.profile.title', 'Doctor profile')}</Title>
-                <Text c="dimmed" maw={520} mt="sm">
-                  {t(
-                    'doctor.profile.subtitle',
-                    'Polish your public profile so patients instantly understand who you are, what you treat, and how to book you.'
-                  )}
-                </Text>
-                <Group gap="xs" mt="md">
-                  <Badge variant="filled" color="teal">
-                    {t('doctor.profile.badge_verified', 'Visible in search')}
-                  </Badge>
-                  <Badge variant="light" color="blue">
-                    {t('doctor.profile.badge_secure', 'Secure data')}
-                  </Badge>
-                </Group>
-              </div>
-
-              <Stack gap="xs" className="min-w-[220px]">
-                <Group justify="space-between" gap="xs">
-                  <Text size="sm" fw={600}>
-                    {t('doctor.profile.completeness', 'Profile completeness')}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    {completion}%
-                  </Text>
-                </Group>
-                <Progress radius="xl" value={completion} color="teal" size="lg" striped animated>
-                  <Progress.Section value={completion} color="teal" />
-                </Progress>
-                <Group gap="xs">
-                  <ThemeIcon size="sm" radius="xl" color="teal" variant="light">
-                    <IconClipboardText size={14} />
-                  </ThemeIcon>
-                  <Text size="sm" c="dimmed">
-                    {t('doctor.profile.helptext', 'Complete all sections to unlock premium placements.')}
-                  </Text>
-                </Group>
-              </Stack>
+      <Paper radius="lg" p="xl" withBorder className="bg-gradient-to-r from-sky-50 to-teal-50">
+        <Group justify="space-between" align="flex-start" gap="xl" wrap="wrap">
+          <div>
+            <Title order={2}>{t('doctor.profile.title', 'Doctor profile')}</Title>
+            <Text c="dimmed" maw={520} mt="sm">
+              {t(
+                'doctor.profile.subtitle',
+                'Polish your public profile so patients instantly understand who you are, what you treat, and how to book you.'
+              )}
+            </Text>
+            <Group gap="xs" mt="md">
+              <Badge variant="filled" color="teal">
+                {t('doctor.profile.badge_verified', 'Visible in search')}
+              </Badge>
+              <Badge variant="light" color="blue">
+                {t('doctor.profile.badge_secure', 'Secure data')}
+              </Badge>
             </Group>
-          </Paper>
+          </div>
 
-          <Paper radius="lg" p="xl" withBorder>
-            <Stack gap="md">
-              <Group gap="sm" align="center">
-                <ThemeIcon size="lg" radius="xl" color="teal" variant="light">
-                  <IconMapPin size={18} />
-                </ThemeIcon>
-                <div>
-                  <Text fw={600}>{t('doctor.profile.quick_actions', 'Quick actions')}</Text>
-                  <Text size="sm" c="dimmed">
-                    {t('doctor.profile.quick_actions_desc', 'Update your public card in one place and preview the patient-facing layout.')}
-                  </Text>
-                </div>
-              </Group>
-              <Divider my="xs" />
-              <Group gap="md" wrap="wrap">
-                {['basic', 'professional', 'location', 'expertise'].map((section) => (
-                  <Button
-                    key={section}
-                    variant="light"
-                    size="sm"
-                    color="teal"
-                    radius="xl"
-                    leftSection={<IconCheck size={16} />}
-                    component="a"
-                    href={`#${section}`}
-                  >
-                    {t(`doctor.profile.jump_${section}`, section)}
-                  </Button>
-                ))}
-              </Group>
-            </Stack>
-          </Paper>
+          <Stack gap="xs" className="min-w-[220px]">
+            <Group justify="space-between" gap="xs">
+              <Text size="sm" fw={600}>
+                {t('doctor.profile.completeness', 'Profile completeness')}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {completion}%
+              </Text>
+            </Group>
+            <Progress radius="xl" value={completion} color="teal" size="lg" striped animated>
+              <Progress.Section value={completion} color="teal" />
+            </Progress>
+            <Group gap="xs">
+              <ThemeIcon size="sm" radius="xl" color="teal" variant="light">
+                <IconClipboardText size={14} />
+              </ThemeIcon>
+              <Text size="sm" c="dimmed">
+                {t('doctor.profile.helptext', 'Complete all sections to unlock premium placements.')}
+              </Text>
+            </Group>
+          </Stack>
+        </Group>
+      </Paper>
 
-        <form onSubmit={form.onSubmit(handleSubmit)} className="space-y-24">
-          <Card withBorder padding="xl" radius="lg">
-            <Stack gap="md" id="basic">
-              <Title order={4}>{t('doctor.profile.basic', 'Basic info')}</Title>
-              <Group grow>
-                <TextInput label={t('doctor.profile.first_name', 'First name')} {...form.getInputProps('first_name')} required />
-                <TextInput label={t('doctor.profile.last_name', 'Last name')} {...form.getInputProps('last_name')} required />
-              </Group>
-              <Group grow>
-                <TextInput label={t('doctor.profile.title_field', 'Title')} {...form.getInputProps('title')} />
-                <TextInput label={t('doctor.profile.academic_title', 'Academic title')} {...form.getInputProps('academic_title')} />
-              </Group>
-              <Group grow>
-                <TextInput label={t('doctor.profile.registration_number', 'Registration number')} {...form.getInputProps('registration_number')} />
-                <NumberInput label={t('doctor.profile.experience', 'Years of experience')} {...form.getInputProps('years_of_experience')} min={0} />
-              </Group>
-              <TextInput label={t('doctor.profile.hospital', 'Hospital affiliation')} {...form.getInputProps('hospital_affiliation')} />
-              <TextInput
-                label={t('doctor.profile.specialty', 'Specialty')}
-                component="select"
-                {...form.getInputProps('specialty_id')}
-              >
-                <option value="">{t('doctor.profile.select_specialty', 'Select specialty')}</option>
-                {specialties.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.name}
-                  </option>
-                ))}
-              </TextInput>
-              <Textarea label={t('doctor.profile.bio_en', 'Bio (EN)')} autosize minRows={4} {...form.getInputProps('bio')} />
-              <Textarea label={t('doctor.profile.bio_el', 'Bio (EL)')} autosize minRows={4} {...form.getInputProps('bio_el')} />
-            </Stack>
-          </Card>
-
-          <Card withBorder padding="xl" radius="lg">
-            <Stack gap="md" id="professional">
-              <Title order={4}>{t('doctor.profile.professional', 'Professional')}</Title>
-              <TagInput
-                label={t('doctor.profile.certifications', 'Certifications')}
-                value={form.values.board_certifications}
-                onChange={(val) => form.setFieldValue('board_certifications', val)}
-                options={CERTIFICATION_HINTS}
-                placeholder={t('doctor.profile.certifications_placeholder', 'e.g. European Board of ...')}
-              />
-              <TagInput
-                label={t('doctor.profile.languages', 'Languages')}
-                value={form.values.languages}
-                onChange={(val) => form.setFieldValue('languages', val)}
-                options={LANGUAGE_OPTIONS}
-                placeholder={t('doctor.profile.languages_placeholder', 'Select or add languages')}
-              />
-              <TagInput
-                label={t('doctor.profile.insurance', 'Insurance networks')}
-                value={form.values.insurance_networks}
-                onChange={(val) => form.setFieldValue('insurance_networks', val)}
-                options={INSURANCE_OPTIONS}
-                placeholder={t('doctor.profile.insurance_placeholder', 'Choose accepted networks')}
-              />
-            </Stack>
-          </Card>
-
-          <Card withBorder padding="xl" radius="lg">
-            <Stack gap="md" id="location">
-              <Title order={4}>{t('doctor.profile.location', 'Location & services')}</Title>
-              <Group grow>
-                <TextInput label={t('doctor.profile.address', 'Address')} {...form.getInputProps('address')} />
-                <TextInput label={t('doctor.profile.city', 'City')} {...form.getInputProps('city')} />
-              </Group>
-              <Switch label={t('doctor.profile.telemedicine', 'Telemedicine available')} {...form.getInputProps('telemedicine_available', { type: 'checkbox' })} />
-              <NumberInput label={t('doctor.profile.fee', 'Consultation fee (€)')} {...form.getInputProps('consultation_fee')} min={0} step={5} />
-            </Stack>
-          </Card>
-
-          <Card withBorder padding="xl" radius="lg">
-            <Stack gap="md" id="expertise">
-              <Title order={4}>{t('doctor.profile.expertise', 'Expertise')}</Title>
-              <TagInput
-                label={t('doctor.profile.sub_specialties', 'Sub-specialties')}
-                value={form.values.sub_specialties}
-                onChange={(val) => form.setFieldValue('sub_specialties', val)}
-                options={SUB_SPECIALTY_OPTIONS}
-                placeholder={t('doctor.profile.sub_specialties_placeholder', 'Add focus areas')}
-              />
-              <TagInput
-                label={t('doctor.profile.procedures', 'Clinical procedures')}
-                value={form.values.clinical_procedures}
-                onChange={(val) => form.setFieldValue('clinical_procedures', val)}
-                options={PROCEDURE_OPTIONS}
-              />
-              <TagInput
-                label={t('doctor.profile.conditions', 'Conditions treated')}
-                value={form.values.conditions_treated}
-                onChange={(val) => form.setFieldValue('conditions_treated', val)}
-                options={CONDITION_OPTIONS}
-              />
-            </Stack>
-          </Card>
-
-          <Group justify="flex-end">
-            <Button type="submit">{t('doctor.profile.save', 'Save')}</Button>
+      <Paper radius="lg" p="xl" withBorder>
+        <Stack gap="md">
+          <Group gap="sm" align="center">
+            <ThemeIcon size="lg" radius="xl" color="teal" variant="light">
+              <IconMapPin size={18} />
+            </ThemeIcon>
+            <div>
+              <Text fw={600}>{t('doctor.profile.quick_actions', 'Quick actions')}</Text>
+              <Text size="sm" c="dimmed">
+                {t('doctor.profile.quick_actions_desc', 'Update your public card in one place and preview the patient-facing layout.')}
+              </Text>
+            </div>
           </Group>
-        </form>
-      </Stack>
+          <Divider my="xs" />
+          <Group gap="md" wrap="wrap">
+            {['basic', 'professional', 'location', 'expertise'].map((section) => (
+              <Button
+                key={section}
+                variant="light"
+                size="sm"
+                color="teal"
+                radius="xl"
+                leftSection={<IconCheck size={16} />}
+                component="a"
+                href={`#${section}`}
+              >
+                {t(`doctor.profile.jump_${section}`, section)}
+              </Button>
+            ))}
+          </Group>
+        </Stack>
+      </Paper>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-24">
+        <Card withBorder padding="xl" radius="lg">
+          <Stack gap="md" id="basic">
+            <Title order={4}>{t('doctor.profile.basic', 'Basic info')}</Title>
+            <Group grow>
+              <TextInput
+                label={t('doctor.profile.first_name', 'First name')}
+                required
+                {...register('first_name', { required: true })}
+                error={formErrors.first_name?.message}
+              />
+              <TextInput
+                label={t('doctor.profile.last_name', 'Last name')}
+                required
+                {...register('last_name', { required: true })}
+                error={formErrors.last_name?.message}
+              />
+            </Group>
+            <Group grow>
+              <TextInput label={t('doctor.profile.title_field', 'Title')} {...register('title')} />
+              <TextInput label={t('doctor.profile.academic_title', 'Academic title')} {...register('academic_title')} />
+            </Group>
+            <Group grow>
+              <TextInput label={t('doctor.profile.registration_number', 'Registration number')} {...register('registration_number')} />
+              <Controller
+                control={control}
+                name="years_of_experience"
+                render={({ field }) => (
+                  <NumberInput
+                    label={t('doctor.profile.experience', 'Years of experience')}
+                    min={0}
+                    value={field.value ?? undefined}
+                    onChange={(value) => field.onChange(value === '' ? null : Number(value))}
+                  />
+                )}
+              />
+            </Group>
+            <TextInput label={t('doctor.profile.hospital', 'Hospital affiliation')} {...register('hospital_affiliation')} />
+            <TextInput label={t('doctor.profile.specialty', 'Specialty')} component="select" {...register('specialty_id')}>
+              <option value="">{t('doctor.profile.select_specialty', 'Select specialty')}</option>
+              {specialties.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </TextInput>
+            <Textarea label={t('doctor.profile.bio_en', 'Bio (EN)')} autosize minRows={4} {...register('bio')} />
+            <Textarea label={t('doctor.profile.bio_el', 'Bio (EL)')} autosize minRows={4} {...register('bio_el')} />
+          </Stack>
+        </Card>
+
+        <Card withBorder padding="xl" radius="lg">
+          <Stack gap="md" id="professional">
+            <Title order={4}>{t('doctor.profile.professional', 'Professional')}</Title>
+            <Controller
+              control={control}
+              name="board_certifications"
+              render={({ field }) => (
+                <TagInput
+                  label={t('doctor.profile.certifications', 'Certifications')}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={CERTIFICATION_HINTS}
+                  placeholder={t('doctor.profile.certifications_placeholder', 'e.g. European Board of ...')}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="languages"
+              render={({ field }) => (
+                <TagInput
+                  label={t('doctor.profile.languages', 'Languages')}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={LANGUAGE_OPTIONS}
+                  placeholder={t('doctor.profile.languages_placeholder', 'Select or add languages')}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="insurance_networks"
+              render={({ field }) => (
+                <TagInput
+                  label={t('doctor.profile.insurance', 'Insurance networks')}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={INSURANCE_OPTIONS}
+                  placeholder={t('doctor.profile.insurance_placeholder', 'Choose accepted networks')}
+                />
+              )}
+            />
+          </Stack>
+        </Card>
+
+        <Card withBorder padding="xl" radius="lg">
+          <Stack gap="md" id="location">
+            <Title order={4}>{t('doctor.profile.location', 'Location & services')}</Title>
+            <Group grow>
+              <TextInput label={t('doctor.profile.address', 'Address')} {...register('address')} />
+              <TextInput label={t('doctor.profile.city', 'City')} {...register('city')} />
+            </Group>
+            <Controller
+              control={control}
+              name="telemedicine_available"
+              render={({ field }) => (
+                <Switch
+                  label={t('doctor.profile.telemedicine', 'Telemedicine available')}
+                  checked={field.value}
+                  onChange={(event) => field.onChange(event.currentTarget.checked)}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="consultation_fee"
+              render={({ field }) => (
+                <NumberInput
+                  label={t('doctor.profile.fee', 'Consultation fee (€)')}
+                  min={0}
+                  step={5}
+                  value={field.value ?? undefined}
+                  onChange={(value) => field.onChange(value === '' ? null : Number(value))}
+                />
+              )}
+            />
+          </Stack>
+        </Card>
+
+        <Card withBorder padding="xl" radius="lg">
+          <Stack gap="md" id="expertise">
+            <Title order={4}>{t('doctor.profile.expertise', 'Expertise')}</Title>
+            <Controller
+              control={control}
+              name="sub_specialties"
+              render={({ field }) => (
+                <TagInput
+                  label={t('doctor.profile.sub_specialties', 'Sub-specialties')}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={SUB_SPECIALTY_OPTIONS}
+                  placeholder={t('doctor.profile.sub_specialties_placeholder', 'Add focus areas')}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="clinical_procedures"
+              render={({ field }) => (
+                <TagInput
+                  label={t('doctor.profile.procedures', 'Clinical procedures')}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={PROCEDURE_OPTIONS}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="conditions_treated"
+              render={({ field }) => (
+                <TagInput
+                  label={t('doctor.profile.conditions', 'Conditions treated')}
+                  value={field.value || []}
+                  onChange={field.onChange}
+                  options={CONDITION_OPTIONS}
+                />
+              )}
+            />
+          </Stack>
+        </Card>
+
+        <Group justify="flex-end">
+          <Button type="submit" loading={mutation.isPending} disabled={mutation.isPending}>
+            {t('doctor.profile.save', 'Save')}
+          </Button>
+        </Group>
+      </form>
+    </Stack>
   )
 }
 

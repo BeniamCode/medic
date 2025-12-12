@@ -33,7 +33,6 @@ defmodule MedicWeb.UserSessionController do
 
   defp create(conn, user_params, info) do
     %{"email" => email, "password" => password} = user_params
-    remember_me = Map.get(user_params, "remember_me", false)
 
     # The UserAuth.log_in_user expects params to maybe have remember_me? No typically it takes separate arg or options.
     # checking UserAuth.log_in_user signature isn't possible directly here but standard phx auth usually just takes user.

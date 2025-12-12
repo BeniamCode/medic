@@ -2,7 +2,6 @@ defmodule MedicWeb.Admin.DoctorLive.Index do
   use MedicWeb, :live_view
 
   alias Medic.Doctors
-  alias Medic.Doctors.Doctor
 
   def render(assigns) do
     ~H"""

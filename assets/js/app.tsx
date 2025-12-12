@@ -7,7 +7,8 @@ import { MantineProvider, ColorSchemeScript, createTheme } from '@mantine/core'
 import { InertiaProgress } from '@inertiajs/progress'
 import { createInertiaApp, router } from '@inertiajs/react'
 import { Notifications } from '@mantine/notifications'
-import { StrictMode, createContext, useContext } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { StrictMode, createContext, useContext, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { useLocalStorage } from '@mantine/hooks'
 
@@ -168,6 +169,8 @@ function ThemeModeProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+const queryClient = new QueryClient()
+
 createInertiaApp<AppPageProps>({
   progress: { showSpinner: false },
   resolve: async (name) => {
@@ -183,9 +186,11 @@ createInertiaApp<AppPageProps>({
 
     root.render(
       <StrictMode>
-        <ThemeModeProvider>
-          <App {...props} />
-        </ThemeModeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeModeProvider>
+            <App {...props} />
+          </ThemeModeProvider>
+        </QueryClientProvider>
       </StrictMode>
     )
   }

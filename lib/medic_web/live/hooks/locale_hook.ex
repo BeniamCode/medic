@@ -1,6 +1,5 @@
 defmodule MedicWeb.LiveHooks.Locale do
   import Phoenix.Component
-  import Phoenix.LiveView
 
   def on_mount(:default, _params, session, socket) do
     locale = session["locale"] || "en"

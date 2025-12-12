@@ -31,6 +31,7 @@ defmodule MedicWeb.Router do
     get "/", PageController, :home
     get "/search", SearchController, :index
     get "/doctors/:id", DoctorController, :show
+    get "/users/confirm/:token", UserConfirmationController, :update
   end
 
   # Routes that require user to NOT be logged in
@@ -65,6 +66,7 @@ defmodule MedicWeb.Router do
       get "/doctor/schedule", DoctorScheduleController, :show
       post "/doctor/schedule", DoctorScheduleController, :update
       delete "/doctor/schedule/:id", DoctorScheduleController, :delete
+      post "/doctor/schedule/day_off", DoctorScheduleController, :block_day
       post "/notifications/mark_all", NotificationController, :mark_all
       get "/notifications", NotificationController, :index
     end
@@ -80,7 +82,6 @@ defmodule MedicWeb.Router do
     get "/doctor", DoctorDashboardController, :show
     get "/doctor/profile", DoctorProfileController, :show
     post "/doctor/profile", DoctorProfileController, :update
-    post "/doctor/schedule/day_off", DoctorScheduleController, :block_day
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

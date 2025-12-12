@@ -1,7 +1,6 @@
 defmodule MedicWeb.Admin.OnDutyLive do
   use MedicWeb, :live_view
 
-  alias Medic.Hospitals
   alias Medic.Hospitals.Importer
 
   def render(assigns) do

@@ -3,14 +3,14 @@ defmodule MedicWeb.Plugs.InertiaContext do
   Shares common props (auth, locale, flash, etc.) with every Inertia response.
   """
 
-  import Plug.Conn
-  import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2]
+  import Phoenix.Controller, only: [fetch_flash: 1, get_csrf_token: 0]
   import Inertia.Controller, only: [assign_prop: 3, inertia_always: 1]
 
   alias Medic.Accounts.User
   alias Medic.Notifications
   alias MedicWeb.I18n
   alias MedicWeb.Gettext, as: WebGettext
+  alias Phoenix.Flash
 
   def init(opts), do: opts
 
@@ -75,9 +75,15 @@ defmodule MedicWeb.Plugs.InertiaContext do
   end
 
   defp flash_payload(conn) do
+    flash_map =
+      conn
+      |> fetch_flash()
+      |> Map.get(:assigns)
+      |> Map.get(:flash, %{})
+
     [:info, :success, :error, :warning]
     |> Enum.reduce(%{}, fn type, acc ->
-      case get_flash(conn, type) do
+      case Flash.get(flash_map, type) do
         nil -> acc
         "" -> acc
         message -> Map.put(acc, type, message)

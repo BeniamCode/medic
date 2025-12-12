@@ -1,7 +1,6 @@
 defmodule MedicWeb.Admin.PatientLive.Index do
   use MedicWeb, :live_view
 
-  alias Medic.Accounts
   alias Medic.Accounts.User
   require Ash.Query
 

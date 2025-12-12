@@ -17,9 +17,10 @@ import {
 } from '@mantine/core'
 import { DateInput } from '@mantine/dates'
 import { useDisclosure } from '@mantine/hooks'
-import { useForm } from '@mantine/form'
 import { router } from '@inertiajs/react'
 import { useEffect, useMemo, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
 import type { AppPageProps } from '@/types/app'
@@ -114,11 +115,25 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
     setDraftRules(initialDrafts)
   }, [initialDrafts])
 
-  const form = useForm({
-    initialValues: draftRules[modalDay] || DEFAULT_VALUES
+  const form = useForm<typeof DEFAULT_VALUES>({
+    defaultValues: draftRules[modalDay] || { ...DEFAULT_VALUES, day_of_week: modalDay }
   })
 
-  const syncDraft = (day: string, values: typeof form.values) => {
+  const { control, handleSubmit, reset, watch, getValues } = form
+
+  useEffect(() => {
+    reset(draftRules[modalDay] || { ...DEFAULT_VALUES, day_of_week: modalDay })
+  }, [modalDay, draftRules, reset])
+
+  useEffect(() => {
+    if (!opened) return
+    const subscription = watch((value) => {
+      syncDraft(modalDay, value as typeof DEFAULT_VALUES)
+    })
+    return () => subscription.unsubscribe()
+  }, [watch, opened, modalDay])
+
+  const syncDraft = (day: string, values: typeof DEFAULT_VALUES) => {
     setDraftRules((prev) => ({
       ...prev,
       [day]: { ...values, day_of_week: day }
@@ -128,14 +143,14 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
   const openModalForDay = (day: string) => {
     setModalDay(day)
     setCopySource(null)
-    form.setValues(draftRules[day] || { ...DEFAULT_VALUES, day_of_week: day })
+    reset(draftRules[day] || { ...DEFAULT_VALUES, day_of_week: day })
     open()
   }
 
   const handleCopyFrom = (sourceDay: string) => {
     const source = draftRules[sourceDay]
     if (!source) {
-      form.setValues({ ...DEFAULT_VALUES, day_of_week: modalDay })
+      reset({ ...DEFAULT_VALUES, day_of_week: modalDay })
       syncDraft(modalDay, { ...DEFAULT_VALUES, day_of_week: modalDay })
       return
     }
@@ -145,31 +160,50 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
       id: '',
       day_of_week: modalDay
     }
-    form.setValues(copied)
+    reset(copied)
     syncDraft(modalDay, copied)
   }
 
-  const submit = (values: typeof form.values) => {
-    router.post('/doctor/schedule', { rule: values }, { preserveScroll: true })
-    close()
+  const saveRuleMutation = useMutation({
+    mutationFn: async (values: typeof DEFAULT_VALUES) =>
+      await new Promise<void>((resolve, reject) => {
+        router.post('/doctor/schedule', { rule: values }, {
+          preserveScroll: true,
+          onSuccess: () => resolve(),
+          onError: () => reject(new Error('Failed to save rule'))
+        })
+      }),
+    onSuccess: () => close()
+  })
+
+  const blockDayMutation = useMutation({
+    mutationFn: async (isoDate: string) =>
+      await new Promise<void>((resolve, reject) => {
+        router.post('/doctor/schedule/day_off', { exception: { date: isoDate } }, {
+          preserveScroll: true,
+          onSuccess: () => resolve(),
+          onError: () => reject(new Error('Failed to block day'))
+        })
+      }),
+    onSuccess: () => setDayOffDate(null)
+  })
+
+  const submit = (values: typeof DEFAULT_VALUES) => {
+    saveRuleMutation.mutate(values)
   }
 
-  useEffect(() => {
-    if (opened) {
-      syncDraft(modalDay, form.values)
-    }
-  }, [form.values, modalDay, opened])
-
   const dayOffPreview = dayOffDate ? dayOffDate.toLocaleDateString() : '—'
+  const startTime = watch('start_time')
+  const endTime = watch('end_time')
+  const duration = watch('slot_duration_minutes')
   const previewSlots = useMemo(
-    () => buildPreviewSlots(form.values.start_time, form.values.end_time, form.values.slot_duration_minutes),
-    [form.values.start_time, form.values.end_time, form.values.slot_duration_minutes]
+    () => buildPreviewSlots(startTime, endTime, duration),
+    [startTime, endTime, duration]
   )
 
   const handleBlockDay = () => {
     if (!dayOffDate) return
-    router.post('/doctor/schedule/day_off', { exception: { date: dayOffDate.toISOString().slice(0, 10) } })
-    setDayOffDate(null)
+    blockDayMutation.mutate(dayOffDate.toISOString().slice(0, 10))
   }
 
   return (
@@ -200,7 +234,13 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
             </Group>
             <Group grow>
               <DateInput value={dayOffDate} onChange={setDayOffDate} label={t('doctor.schedule.day_off.date', 'Select date')} placeholder="2025-04-12" />
-              <Button variant="light" onClick={handleBlockDay} disabled={!dayOffDate} radius="md">
+              <Button
+                variant="light"
+                onClick={handleBlockDay}
+                disabled={!dayOffDate || blockDayMutation.isPending}
+                loading={blockDayMutation.isPending}
+                radius="md"
+              >
                 {t('doctor.schedule.day_off.block', 'Block day')}
               </Button>
             </Group>
@@ -318,7 +358,7 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
         size="70%"
         overlayProps={{ blur: 3, opacity: 0.55 }}
       >
-        <form onSubmit={form.onSubmit(submit)}>
+        <form onSubmit={handleSubmit(submit)}>
           <Stack gap="lg">
             <div>
               <Title order={4}>{t('doctor.schedule.modal_heading', 'Define your working window')}</Title>
@@ -340,9 +380,9 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
                     variant={modalDay === option.value ? 'filled' : 'light'}
                     color="teal"
                     onClick={() => {
-                      syncDraft(modalDay, form.values)
+                      syncDraft(modalDay, getValues())
                       setModalDay(option.value)
-                      form.setValues(draftRules[option.value] || { ...DEFAULT_VALUES, day_of_week: option.value })
+                      reset(draftRules[option.value] || { ...DEFAULT_VALUES, day_of_week: option.value })
                     }}
                   >
                     {option.label}
@@ -383,29 +423,54 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
                       {t('doctor.schedule.active_helper', 'Toggle off if you take this weekday off every week.')}
                     </Text>
                   </div>
-                  <Switch color="teal" size="md" {...form.getInputProps('is_active', { type: 'checkbox' })} />
+                  <Controller
+                    control={control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <Switch size="md" color="teal" checked={field.value} onChange={(event) => field.onChange(event.currentTarget.checked)} />
+                    )}
+                  />
                 </Group>
               </Paper>
-              <NumberInput
-                label={t('doctor.schedule.duration', 'Slot duration (minutes)')}
-                min={10}
-                step={5}
-                {...form.getInputProps('slot_duration_minutes')}
+              <Controller
+                control={control}
+                name="slot_duration_minutes"
+                render={({ field }) => (
+                  <NumberInput
+                    label={t('doctor.schedule.duration', 'Slot duration (minutes)')}
+                    min={10}
+                    step={5}
+                    value={field.value}
+                    onChange={(value) => field.onChange(typeof value === 'number' ? value : 0)}
+                  />
+                )}
               />
             </Group>
 
             <Group grow>
-              <TextInput
-                label={t('doctor.schedule.start', 'Clinic opens at')}
-                type="time"
-                placeholder="09:00"
-                {...form.getInputProps('start_time')}
+              <Controller
+                control={control}
+                name="start_time"
+                render={({ field }) => (
+                  <TextInput
+                    label={t('doctor.schedule.start', 'Clinic opens at')}
+                    type="time"
+                    value={field.value}
+                    onChange={(event) => field.onChange(event.currentTarget.value)}
+                  />
+                )}
               />
-              <TextInput
-                label={t('doctor.schedule.end', 'Clinic closes at')}
-                type="time"
-                placeholder="17:00"
-                {...form.getInputProps('end_time')}
+              <Controller
+                control={control}
+                name="end_time"
+                render={({ field }) => (
+                  <TextInput
+                    label={t('doctor.schedule.end', 'Clinic closes at')}
+                    type="time"
+                    value={field.value}
+                    onChange={(event) => field.onChange(event.currentTarget.value)}
+                  />
+                )}
               />
             </Group>
 
@@ -418,28 +483,39 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
                   </Text>
                 </div>
                 <Switch
-                  checked={Boolean(form.values.break_start || form.values.break_end)}
+                  checked={Boolean(getValues('break_start') || getValues('break_end'))}
                   onChange={(event) => {
                     if (!event.currentTarget.checked) {
-                      form.setFieldValue('break_start', '')
-                      form.setFieldValue('break_end', '')
+                      reset({ ...getValues(), break_start: '', break_end: '' })
                     }
                   }}
                 />
               </Group>
               <Divider my="sm" />
               <Group grow>
-                <TextInput
-                  label={t('doctor.schedule.break_start', 'Starts')}
-                  type="time"
-                  placeholder="13:00"
-                  {...form.getInputProps('break_start')}
+                <Controller
+                  control={control}
+                  name="break_start"
+                  render={({ field }) => (
+                    <TextInput
+                      label={t('doctor.schedule.break_start', 'Starts')}
+                      type="time"
+                      value={field.value}
+                      onChange={(event) => field.onChange(event.currentTarget.value)}
+                    />
+                  )}
                 />
-                <TextInput
-                  label={t('doctor.schedule.break_end', 'Ends')}
-                  type="time"
-                  placeholder="14:00"
-                  {...form.getInputProps('break_end')}
+                <Controller
+                  control={control}
+                  name="break_end"
+                  render={({ field }) => (
+                    <TextInput
+                      label={t('doctor.schedule.break_end', 'Ends')}
+                      type="time"
+                      value={field.value}
+                      onChange={(event) => field.onChange(event.currentTarget.value)}
+                    />
+                  )}
                 />
               </Group>
             </Paper>
@@ -466,7 +542,7 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
               </Stack>
             </Paper>
 
-            <Button type="submit" size="md" radius="md">
+            <Button type="submit" size="md" radius="md" loading={saveRuleMutation.isPending} disabled={saveRuleMutation.isPending}>
               {t('doctor.schedule.save', 'Save rule')}
             </Button>
           </Stack>
@@ -502,6 +578,7 @@ const buildPreviewSlots = (start?: string, finish?: string, duration?: number) =
 }
 
 const timeToMinutes = (value: string) => {
+  if (!value) return null
   const [h, m] = value.split(':').map((val) => Number(val))
   if (Number.isNaN(h) || Number.isNaN(m)) {
     return null
