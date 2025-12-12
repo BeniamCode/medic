@@ -58,7 +58,11 @@ type PageProps = AppPageProps<{
   blockedDates: string[]
 }>
 
-const DoctorSchedule = ({ availabilityRules, upcomingAppointments, blockedDates }: PageProps) => {
+const DoctorSchedule = ({
+  availabilityRules = [],
+  upcomingAppointments = [],
+  blockedDates = []
+}: PageProps) => {
   const { t } = useTranslation('default')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<AvailabilityRule | null>(null)
