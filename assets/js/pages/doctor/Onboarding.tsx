@@ -1,22 +1,25 @@
 import {
-  Box,
   Button,
-  Center,
-  Container,
-  Group,
-  NumberInput,
-  Paper,
+  Card,
+  Col,
+  Row,
   Progress,
-  RingProgress,
+  Typography,
+  Steps,
+  Form,
+  Input,
+  InputNumber,
   Select,
-  Stack,
   Switch,
-  Text,
-  Textarea,
-  TextInput,
-  ThemeIcon,
-  Title
-} from '@mantine/core'
+  Result,
+  Space,
+  Flex
+} from 'antd'
+import {
+  IconArrowLeft,
+  IconArrowRight,
+  IconCheck
+} from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { router } from '@inertiajs/react'
 import { useEffect, useMemo } from 'react'
@@ -24,6 +27,9 @@ import { Controller, useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 
 import type { AppPageProps } from '@/types/app'
+
+const { Title, Text } = Typography
+const { TextArea } = Input
 
 const STEPS_ORDER = ['welcome', 'personal', 'specialty', 'location', 'pricing', 'complete'] as const
 
@@ -55,11 +61,12 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
   const { t } = useTranslation('default')
   const normalizedDoctor = normalizeDoctor(doctor)
 
-  const form = useForm<DoctorForm>({
+  const { control, register, getValues, reset, setValue, watch, trigger } = useForm<DoctorForm>({
     defaultValues: normalizedDoctor
   })
 
-  const { control, register, getValues, reset } = form
+  // Watch values for controlled inputs that might need re-render
+  const watchedValues = watch()
 
   useEffect(() => {
     reset(normalizedDoctor)
@@ -81,13 +88,16 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
       })
   })
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStep === 'welcome') {
       router.get('/onboarding/doctor?step=personal')
       return
     }
 
-    mutation.mutate({ values: getValues(), step: currentStep })
+    const isValid = await trigger()
+    if (isValid) {
+      mutation.mutate({ values: getValues(), step: currentStep })
+    }
   }
 
   const prevStep = () => {
@@ -97,52 +107,65 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
   }
 
   return (
-    <Box className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      <Container size="lg" py="xl">
-        <Stack gap="xl">
-          <Group justify="space-between">
-            <Group gap="xs" align="center">
-              <img src="/images/logo-medic.svg" alt="Medic" className="h-8" />
-              <Text fw={600} c="white">
+    <div className="min-h-screen bg-slate-900 text-white" style={{ background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)', minHeight: '100vh', padding: '40px 0' }}>
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px' }}>
+        <Flex vertical gap="large">
+          <Flex justify="space-between" align="center">
+            <Space align="center">
+              <img src="/images/logo-medic.svg" alt="Medic" style={{ height: 32 }} />
+              <Text strong style={{ color: 'white', fontSize: 20 }}>
                 Medic
               </Text>
-            </Group>
-            <Button component="a" href="/logout" method="delete" variant="subtle" color="white" size="xs">
+            </Space>
+            <Button type="text" href="/logout" onClick={(e) => { e.preventDefault(); router.visit('/logout', { method: 'delete' }) }} style={{ color: 'white' }}>
               {t('onboarding.sign_out', 'Sign out')}
             </Button>
-          </Group>
+          </Flex>
 
-          <Stack gap="xs">
-            <Text size="sm" fw={600} tt="uppercase" opacity={0.7}>
-              {t('onboarding.progress', 'Profile progress')}
-            </Text>
-            <Group gap="sm" align="center">
-              <Progress value={progress} className="flex-1" size="lg" radius="xl" color="teal" />
-              <Text fw={600}>{progress}%</Text>
-            </Group>
-            <Group gap="xs" wrap="wrap">
+          <Flex vertical gap="small">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>
+                {t('onboarding.progress', 'Profile progress')}
+              </Text>
+              <Text strong style={{ color: 'white' }}>{progress}%</Text>
+            </div>
+            <Progress percent={progress} showInfo={false} strokeColor="#0d9488" trailColor="rgba(255,255,255,0.2)" />
+            <Space size={[8, 8]} wrap>
               {STEPS_ORDER.filter((s) => s !== 'complete').map((s, idx) => {
                 const active = s === currentStep
                 const completed = idx < stepIndex
                 return (
-                  <Button key={s} variant={active ? 'filled' : completed ? 'light' : 'subtle'} color="teal" size="xs" radius="xl">
+                  <Button
+                    key={s}
+                    type={active ? 'primary' : 'default'}
+                    shape="round"
+                    size="small"
+                    style={{
+                      borderColor: active || completed ? '#0d9488' : 'rgba(255,255,255,0.2)',
+                      backgroundColor: active ? '#0d9488' : 'transparent',
+                      color: active ? 'white' : 'rgba(255,255,255,0.7)'
+                    }}
+                  >
                     {t(`onboarding.step.${s}`, s)}
                   </Button>
                 )
               })}
-            </Group>
-          </Stack>
+            </Space>
+          </Flex>
 
-          <Center>
-            <Paper radius="xl" p="xl" shadow="xl" className="bg-white text-slate-900" maw={600} w="100%">
-              {renderStep(currentStep, form, specialties, t)}
-            </Paper>
-          </Center>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+            <Card
+              style={{ width: '100%', maxWidth: 600, borderRadius: 24, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
+              bodyStyle={{ padding: 40 }}
+            >
+              {renderStep(currentStep, control, register, specialties, t)}
+            </Card>
+          </div>
 
           {!isComplete && (
-            <Group justify="space-between">
+            <Flex justify="space-between" style={{ maxWidth: 600, margin: '0 auto', width: '100%' }}>
               {currentStep !== 'welcome' ? (
-                <Button variant="subtle" leftSection={<IconArrowLeft size={18} />} onClick={prevStep}>
+                <Button type="text" icon={<IconArrowLeft size={18} />} onClick={prevStep} style={{ color: 'white' }}>
                   {t('onboarding.back', 'Back')}
                 </Button>
               ) : (
@@ -150,13 +173,15 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
               )}
 
               <Button
-                size="lg"
-                radius="xl"
-                rightSection={<IconArrowRight size={20} />}
+                type="primary"
+                size="large"
+                shape="round"
+                icon={<IconArrowRight size={20} />}
+                iconPosition="end"
                 onClick={nextStep}
                 loading={mutation.isPending}
                 disabled={mutation.isPending}
-                color="teal"
+                style={{ backgroundColor: '#0d9488', borderColor: '#0d9488' }}
               >
                 {currentStep === 'pricing'
                   ? t('onboarding.finish', 'Submit profile')
@@ -164,154 +189,221 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
                     ? t('onboarding.lets_start', "Let's start")
                     : t('onboarding.next', 'Continue')}
               </Button>
-            </Group>
+            </Flex>
           )}
-        </Stack>
-      </Container>
-    </Box>
+        </Flex>
+      </div>
+    </div>
   )
 }
 
 const renderStep = (
   step: Step,
-  form: ReturnType<typeof useForm<DoctorForm>>,
+  control: any,
+  register: any,
   specialties: { id: string; name: string }[],
-  t: ReturnType<typeof useTranslation>['t']
+  t: any
 ) => {
-  const { register, control } = form
 
   switch (step) {
     case 'welcome':
       return (
-        <Stack gap="md" align="flex-start">
-          <ThemeIcon size={56} radius="xl" color="teal" variant="light">
+        <Flex vertical gap="large" align="flex-start">
+          <div style={{ width: 56, height: 56, borderRadius: '50%', backgroundColor: '#e6fffa', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d9488' }}>
             <IconCheck size={28} />
-          </ThemeIcon>
-          <Title order={1}>{t('onboarding.welcome.title', 'Welcome to Medic')}</Title>
-          <Text size="lg" c="dimmed">
+          </div>
+          <Title level={2} style={{ margin: 0 }}>{t('onboarding.welcome.title', 'Welcome to Medic')}</Title>
+          <Text type="secondary" style={{ fontSize: 18 }}>
             {t('onboarding.welcome.copy', 'Think of this as a guided intro—answer a few friendly questions and we will shape your booking profile.')}
           </Text>
-        </Stack>
+        </Flex>
       )
     case 'personal':
       return (
-        <Stack gap="md">
-          <Title order={2}>{t('onboarding.personal.title', 'Tell us about you')}</Title>
-          <Text c="dimmed">{t('onboarding.personal.helper', 'A warm introduction helps patients know they are in excellent hands.')}</Text>
-          <Group grow>
-            <TextInput label={t('doctor.profile.title_field', 'Title')} placeholder="Dr." {...register('title')} />
-            <TextInput label={t('doctor.profile.first_name', 'First name')} required {...register('first_name')} />
-          </Group>
-          <TextInput label={t('doctor.profile.last_name', 'Last name')} required {...register('last_name')} />
-          <Group grow>
-            <TextInput label={t('doctor.profile.registration_number', 'Registration number')} {...register('registration_number')} />
+        <Flex vertical gap="middle">
+          <div>
+            <Title level={3} style={{ margin: 0 }}>{t('onboarding.personal.title', 'Tell us about you')}</Title>
+            <Text type="secondary">{t('onboarding.personal.helper', 'A warm introduction helps patients know they are in excellent hands.')}</Text>
+          </div>
+
+          <Row gutter={16}>
+            <Col span={8}>
+              <div style={{ marginBottom: 8 }}><Text strong>Title</Text></div>
+              <Controller
+                name="title"
+                control={control}
+                render={({ field }) => <Input {...field} placeholder="Dr." />}
+              />
+            </Col>
+            <Col span={16}>
+              <div style={{ marginBottom: 8 }}><Text strong>First Name</Text></div>
+              <Controller
+                name="first_name"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => <Input {...field} />}
+              />
+            </Col>
+          </Row>
+
+          <div>
+            <div style={{ marginBottom: 8 }}><Text strong>Last Name</Text></div>
             <Controller
+              name="last_name"
               control={control}
-              name="years_of_experience"
-              render={({ field }) => (
-                <NumberInput
-                  label={t('doctor.profile.experience', 'Years of experience')}
-                  min={0}
-                  value={field.value ?? undefined}
-                  onChange={(value) => field.onChange(value === '' ? null : Number(value))}
-                />
-              )}
+              rules={{ required: true }}
+              render={({ field }) => <Input {...field} />}
             />
-          </Group>
-        </Stack>
+          </div>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <div style={{ marginBottom: 8 }}><Text strong>Registration No.</Text></div>
+              <Controller
+                name="registration_number"
+                control={control}
+                render={({ field }) => <Input {...field} />}
+              />
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 8 }}><Text strong>Experience (Years)</Text></div>
+              <Controller
+                name="years_of_experience"
+                control={control}
+                render={({ field }) => <InputNumber style={{ width: '100%' }} min={0} {...field} />}
+              />
+            </Col>
+          </Row>
+        </Flex>
       )
     case 'specialty':
       return (
-        <Stack gap="md">
-          <Title order={2}>{t('onboarding.specialty.title', 'What is your area of expertise?')}</Title>
-          <Controller
-            control={control}
-            name="specialty_id"
-            render={({ field }) => (
-              <Select
-                data={specialties.map((s) => ({ value: s.id, label: s.name }))}
-                label={t('doctor.profile.specialty', 'Specialty')}
-                placeholder={t('onboarding.specialty.placeholder', 'Select your specialty')}
-                searchable
-                value={field.value || ''}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <Textarea
-            label={t('doctor.profile.bio_en', 'Professional bio')}
-            description={t('onboarding.specialty.helper', 'Share a short paragraph highlighting your style and focus areas.')}
-            autosize
-            minRows={4}
-            {...register('bio')}
-          />
-        </Stack>
+        <Flex vertical gap="middle">
+          <div>
+            <Title level={3} style={{ margin: 0 }}>{t('onboarding.specialty.title', 'What is your area of expertise?')}</Title>
+          </div>
+
+          <div>
+            <div style={{ marginBottom: 8 }}><Text strong>Specialty</Text></div>
+            <Controller
+              name="specialty_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  style={{ width: '100%' }}
+                  placeholder={t('onboarding.specialty.placeholder', 'Select your specialty')}
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={specialties.map(s => ({ value: s.id, label: s.name }))}
+                />
+              )}
+            />
+          </div>
+
+          <div>
+            <div style={{ marginBottom: 8 }}><Text strong>Professional Bio</Text></div>
+            <Controller
+              name="bio"
+              control={control}
+              render={({ field }) => (
+                <TextArea
+                  {...field}
+                  placeholder={t('onboarding.specialty.helper', 'Share a short paragraph highlighting your style and focus areas.')}
+                  autoSize={{ minRows: 4 }}
+                />
+              )}
+            />
+          </div>
+        </Flex>
       )
     case 'location':
       return (
-        <Stack gap="md">
-          <Title order={2}>{t('onboarding.location.title', 'Where do you meet patients?')}</Title>
-          <Group grow>
-            <TextInput label={t('doctor.profile.city', 'City')} {...register('city')} />
-            <TextInput label={t('doctor.profile.address', 'Street address')} {...register('address')} />
-          </Group>
-          <Controller
-            control={control}
-            name="telemedicine_available"
-            render={({ field }) => (
-              <Switch
-                label={t('onboarding.location.telemedicine', 'Offer telemedicine appointments?')}
-                checked={field.value ?? false}
-                onChange={(event) => field.onChange(event.currentTarget.checked)}
+        <Flex vertical gap="middle">
+          <div>
+            <Title level={3} style={{ margin: 0 }}>{t('onboarding.location.title', 'Where do you meet patients?')}</Title>
+          </div>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <div style={{ marginBottom: 8 }}><Text strong>City</Text></div>
+              <Controller
+                name="city"
+                control={control}
+                render={({ field }) => <Input {...field} />}
               />
-            )}
-          />
-        </Stack>
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 8 }}><Text strong>Street Address</Text></div>
+              <Controller
+                name="address"
+                control={control}
+                render={({ field }) => <Input {...field} />}
+              />
+            </Col>
+          </Row>
+
+          <Card bordered size="small">
+            <Controller
+              name="telemedicine_available"
+              control={control}
+              render={({ field }) => (
+                <Flex justify="space-between" align="center">
+                  <Text>{t('onboarding.location.telemedicine', 'Offer telemedicine appointments?')}</Text>
+                  <Switch checked={field.value} onChange={field.onChange} />
+                </Flex>
+              )}
+            />
+          </Card>
+        </Flex>
       )
     case 'pricing':
       return (
-        <Stack gap="md">
-          <Title order={2}>{t('onboarding.pricing.title', 'Set your consultation fee')}</Title>
-          <Text c="dimmed">{t('onboarding.pricing.helper', 'Transparency builds trust—you can always fine-tune later.')}</Text>
-          <Controller
-            control={control}
-            name="consultation_fee"
-            render={({ field }) => (
-              <NumberInput
-                size="xl"
-                leftSection={<Text fw={700}>€</Text>}
-                min={0}
-                step={5}
-                placeholder="60"
-                value={field.value ?? undefined}
-                onChange={(value) => field.onChange(value === '' ? null : Number(value))}
-              />
-            )}
-          />
-        </Stack>
+        <Flex vertical gap="middle">
+          <div>
+            <Title level={3} style={{ margin: 0 }}>{t('onboarding.pricing.title', 'Set your consultation fee')}</Title>
+            <Text type="secondary">{t('onboarding.pricing.helper', 'Transparency builds trust—you can always fine-tune later.')}</Text>
+          </div>
+
+          <div>
+            <Controller
+              name="consultation_fee"
+              control={control}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  style={{ width: '100%' }}
+                  size="large"
+                  prefix="€"
+                  min={0}
+                  step={5}
+                  placeholder="60"
+                />
+              )}
+            />
+          </div>
+        </Flex>
       )
     case 'complete':
       return (
-        <Stack gap="md" align="center" ta="center">
-          <RingProgress
-            size={200}
-            roundCaps
-            thickness={18}
-            sections={[{ value: 100, color: 'teal' }]}
-            label={
-              <Center>
-                <IconCheck size={64} color="var(--mantine-color-teal-6)" />
-              </Center>
-            }
-          />
-          <Title order={1}>{t('onboarding.complete.title', 'Profile ready!')}</Title>
-          <Text maw={440} c="dimmed">
-            {t('onboarding.complete.helper', 'Next stop: availability. Set your calendar so patients can start booking you right away.')}
-          </Text>
-          <Button component="a" href="/doctor/schedule" size="lg" radius="xl" color="teal">
+        <Flex vertical gap="large" align="center" style={{ textAlign: 'center', padding: '20px 0' }}>
+          <div style={{ position: 'relative' }}>
+            <Progress type="circle" percent={100} width={120} strokeColor="#0d9488" format={() => <IconCheck size={48} color="#0d9488" />} />
+          </div>
+
+          <div>
+            <Title level={2} style={{ margin: 0 }}>{t('onboarding.complete.title', 'Profile ready!')}</Title>
+            <Text type="secondary" style={{ maxWidth: 440, margin: '16px auto' }}>
+              {t('onboarding.complete.helper', 'Next stop: availability. Set your calendar so patients can start booking you right away.')}
+            </Text>
+          </div>
+
+          <Button type="primary" size="large" shape="round" href="/doctor/schedule" style={{ backgroundColor: '#0d9488' }}>
             {t('onboarding.complete.cta', 'Manage availability')}
           </Button>
-        </Stack>
+        </Flex>
       )
     default:
       return null
@@ -335,3 +427,4 @@ const normalizeDoctor = (doctor: DoctorForm): DoctorForm => ({
   telemedicine_available: doctor.telemedicine_available ?? false,
   consultation_fee: doctor.consultation_fee ?? null
 })
+

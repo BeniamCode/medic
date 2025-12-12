@@ -1,11 +1,32 @@
-import { Badge, Button, Card, Group, Stack, Text, Title } from '@mantine/core'
-import { IconCalendar, IconCheck, IconClock, IconVideo, IconStar } from '@tabler/icons-react'
+import {
+  Button,
+  Card,
+  Col,
+  Row,
+  Statistic,
+  Table,
+  Tag,
+  Typography,
+  Space,
+  Avatar,
+  List,
+  Flex
+} from 'antd'
+import {
+  IconCalendar,
+  IconCheck,
+  IconClock,
+  IconVideo,
+  IconStar,
+  IconUser
+} from '@tabler/icons-react'
 import { Link } from '@inertiajs/react'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 
-import { PublicLayout } from '@/layouts/PublicLayout'
 import type { AppPageProps } from '@/types/app'
+
+const { Title, Text } = Typography
 
 type Appointment = {
   id: string
@@ -38,95 +59,141 @@ const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCoun
   const { t } = useTranslation('default')
 
   return (
-    <Stack gap="xl" p="xl">
-      <Group justify="space-between">
+    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
         <div>
-          <Title order={2}>{t('doctor.dashboard.title', 'Doctor Dashboard')}</Title>
-          <Text c="dimmed">
+          <Title level={2} style={{ margin: 0 }}>{t('doctor.dashboard.title', 'Doctor Dashboard')}</Title>
+          <Text type="secondary">
             {t('doctor.dashboard.subtitle', 'Good morning, Dr. {{lastName}}', {
               lastName: doctor.lastName
             })}
           </Text>
         </div>
-        <Button component={Link} href="/dashboard/doctor/profile">
-          {t('doctor.dashboard.edit_profile', 'Edit profile')}
-        </Button>
-      </Group>
+        <Link href="/dashboard/doctor/profile">
+          <Button type="default">
+            {t('doctor.dashboard.edit_profile', 'Edit profile')}
+          </Button>
+        </Link>
+      </Flex>
 
-      <Group grow>
-        <StatCard
-          icon={<IconCalendar size={20} />}
-          label={t('doctor.dashboard.stats.today', 'Today')}
-          value={todayAppointments.length}
-          subtitle={t('doctor.dashboard.stats.today_sub', 'appointments')}
-        />
-        <StatCard
-          icon={<IconCheck size={20} />}
-          label={t('doctor.dashboard.stats.pending', 'Pending requests')}
-          value={pendingCount}
-          subtitle={t('doctor.dashboard.stats.pending_sub', 'Action required')}
-        />
-        <StatCard
-          icon={<IconCalendar size={20} />}
-          label={t('doctor.dashboard.stats.week', 'Confirmed (week)')}
-          value={upcomingCount}
-          subtitle={t('doctor.dashboard.stats.week_sub', 'upcoming visits')}
-        />
-        <StatCard
-          icon={<IconStar size={20} />}
-          label={t('doctor.dashboard.stats.rating', 'Rating')}
-          value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
-          subtitle={`${doctor.reviewCount || 0} ${t('doctor.dashboard.stats.reviews', 'reviews')}`}
-        />
-      </Group>
+      <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
+        <Col xs={24} sm={12} md={6}>
+          <StatCard
+            icon={<IconCalendar size={20} />}
+            label={t('doctor.dashboard.stats.today', 'Today')}
+            value={todayAppointments.length}
+            subtitle={t('doctor.dashboard.stats.today_sub', 'appointments')}
+            color="#3b82f6"
+            bg="#eff6ff"
+          />
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <StatCard
+            icon={<IconCheck size={20} />}
+            label={t('doctor.dashboard.stats.pending', 'Pending requests')}
+            value={pendingCount}
+            subtitle={t('doctor.dashboard.stats.pending_sub', 'Action required')}
+            color="#eab308"
+            bg="#fef9c3"
+          />
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <StatCard
+            icon={<IconCalendar size={20} />}
+            label={t('doctor.dashboard.stats.week', 'Confirmed (week)')}
+            value={upcomingCount}
+            subtitle={t('doctor.dashboard.stats.week_sub', 'upcoming visits')}
+            color="#10b981"
+            bg="#d1fae5"
+          />
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <StatCard
+            icon={<IconStar size={20} />}
+            label={t('doctor.dashboard.stats.rating', 'Rating')}
+            value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
+            subtitle={`${doctor.reviewCount || 0} ${t('doctor.dashboard.stats.reviews', 'reviews')}`}
+            color="#f59e0b"
+            bg="#fffbeb"
+          />
+        </Col>
+      </Row>
 
-      <Group align="flex-start" grow>
-        <Card withBorder padding="lg" radius="lg" style={{ flex: 2 }}>
-          <Stack gap="md">
-            <Title order={4}>{t('doctor.dashboard.today_schedule', "Today's schedule")}</Title>
+      <Row gutter={24}>
+        <Col xs={24} lg={16}>
+          <Card
+            title={<Title level={4} style={{ margin: 0 }}>{t('doctor.dashboard.today_schedule', "Today's schedule")}</Title>}
+            bordered
+            style={{ height: '100%', borderRadius: 12 }}
+          >
             {todayAppointments.length === 0 ? (
-              <Text c="dimmed">{t('doctor.dashboard.no_appointments', 'No appointments today')}</Text>
+              <div style={{ padding: '40px 0', textAlign: 'center' }}>
+                <Text type="secondary">{t('doctor.dashboard.no_appointments', 'No appointments today')}</Text>
+              </div>
             ) : (
-              todayAppointments.map((appt) => <AppointmentRow key={appt.id} appointment={appt} />)
+              <List
+                itemLayout="horizontal"
+                dataSource={todayAppointments}
+                renderItem={(appt) => <AppointmentRow appointment={appt} />}
+              />
             )}
-          </Stack>
-        </Card>
+          </Card>
+        </Col>
 
-        <Card withBorder padding="lg" radius="lg" style={{ flex: 1 }}>
-          <Stack gap="sm">
-            <Title order={4}>{t('doctor.dashboard.quick_actions', 'Quick actions')}</Title>
-            <Button component={Link} href="/doctor/schedule" variant="light">
-              {t('doctor.dashboard.manage_schedule', 'Manage availability')}
-            </Button>
-            <Button component={Link} href="/dashboard/doctor/profile" variant="light">
-              {t('doctor.dashboard.edit_profile', 'Edit profile')}
-            </Button>
-            <Button variant="light" disabled>
-              {t('doctor.dashboard.analytics', 'Analytics (coming soon)')}
-            </Button>
-          </Stack>
-        </Card>
-      </Group>
-    </Stack>
+        <Col xs={24} lg={8}>
+          <Card
+            title={<Title level={4} style={{ margin: 0 }}>{t('doctor.dashboard.quick_actions', 'Quick actions')}</Title>}
+            bordered
+            style={{ height: '100%', borderRadius: 12 }}
+          >
+            <Flex vertical gap="middle">
+              <Link href="/doctor/schedule" style={{ display: 'block' }}>
+                <Button block size="large">
+                  {t('doctor.dashboard.manage_schedule', 'Manage availability')}
+                </Button>
+              </Link>
+              <Link href="/dashboard/doctor/profile" style={{ display: 'block' }}>
+                <Button block size="large">
+                  {t('doctor.dashboard.edit_profile', 'Edit profile')}
+                </Button>
+              </Link>
+              <Button block size="large" disabled>
+                {t('doctor.dashboard.analytics', 'Analytics (coming soon)')}
+              </Button>
+            </Flex>
+          </Card>
+        </Col>
+      </Row>
+    </div>
   )
 }
 
-const StatCard = ({ icon, label, value, subtitle }: { icon: React.ReactNode; label: string; value: number | string; subtitle: string }) => (
-  <Card padding="md" radius="lg" withBorder>
-    <Group gap="sm" align="center">
-      <div className="rounded-full bg-blue-50 p-2 text-blue-600">{icon}</div>
+const StatCard = ({ icon, label, value, subtitle, color, bg }: { icon: React.ReactNode; label: string; value: number | string; subtitle: string, color: string, bg: string }) => (
+  <Card bordered style={{ borderRadius: 12, height: '100%' }} bodyStyle={{ padding: 20 }}>
+    <Flex gap="middle" align="center">
+      <div style={{
+        borderRadius: '50%',
+        backgroundColor: bg,
+        color: color,
+        padding: 12,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {icon}
+      </div>
       <div>
-        <Text size="xs" c="dimmed">
+        <Text type="secondary" style={{ fontSize: 12, fontWeight: 500, textTransform: 'uppercase' }}>
           {label}
         </Text>
-        <Text size="xl" fw={700} lh={1.2}>
+        <div style={{ fontSize: 24, fontWeight: 700, lineHeight: 1.2 }}>
           {value}
-        </Text>
-        <Text size="xs" c="dimmed">
+        </div>
+        <Text type="secondary" style={{ fontSize: 12 }}>
           {subtitle}
         </Text>
       </div>
-    </Group>
+    </Flex>
   </Card>
 )
 
@@ -136,27 +203,30 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
   const startText = format(startsAt, 'p')
 
   return (
-    <Card padding="md" radius="lg" withBorder>
-      <Group justify="space-between" align="flex-start">
-        <Stack gap={4}>
-          <Text fw={600}>
+    <Card bordered={false} style={{ marginBottom: 16, border: '1px solid #f0f0f0', borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
+      <Flex justify="space-between" align="flex-start">
+        <Space direction="vertical" size={2}>
+          <Text strong style={{ fontSize: 16 }}>
             {appointment.patient.firstName} {appointment.patient.lastName}
           </Text>
-          <Text size="sm" c="dimmed">
+          <Text type="secondary" style={{ fontSize: 14 }}>
             {appointment.appointmentType === 'telemedicine'
               ? t('doctor.dashboard.telemed', 'Telemedicine')
               : t('doctor.dashboard.in_person', 'In-person')}
           </Text>
-          {appointment.notes && <Text size="sm">“{appointment.notes}”</Text>}
-        </Stack>
-        <Stack align="flex-end" gap={4}>
-          <Group gap="xs">
+          {appointment.notes && <Text style={{ fontSize: 14, fontStyle: 'italic' }}>“{appointment.notes}”</Text>}
+        </Space>
+
+        <Flex vertical align="flex-end" gap={4}>
+          <Space size={4} style={{ color: '#595959' }}>
             <IconClock size={14} />
             <Text>{startText}</Text>
-          </Group>
-          <Badge>{appointment.status}</Badge>
-        </Stack>
-      </Group>
+          </Space>
+          <Tag color={appointment.status === 'confirmed' ? 'green' : 'blue'}>
+            {appointment.status.toUpperCase()}
+          </Tag>
+        </Flex>
+      </Flex>
     </Card>
   )
 }

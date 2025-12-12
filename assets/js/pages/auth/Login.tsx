@@ -1,18 +1,17 @@
 import {
-    Anchor,
     Button,
     Card,
     Checkbox,
-    Container,
-    Group,
-    PasswordInput,
-    Stack,
-    Text,
-    TextInput,
-    Title
-} from '@mantine/core'
+    Input,
+    Typography,
+    Form,
+    Flex
+} from 'antd'
 import { Link, useForm } from '@inertiajs/react'
 import { FormEvent } from 'react'
+import { LockOutlined, MailOutlined } from '@ant-design/icons'
+
+const { Title, Text, Link: AntLink } = Typography
 
 export default function LoginPage() {
     const { data, setData, post, processing, errors } = useForm({
@@ -27,57 +26,70 @@ export default function LoginPage() {
     }
 
     return (
-        <Container size="xs" py={80}>
-            <Stack align="center" mb="xl">
-                <Title order={1}>Welcome back</Title>
-                <Text c="dimmed">Sign in to manage your appointments</Text>
-            </Stack>
+        <div style={{ maxWidth: 400, margin: '80px auto' }}>
+            <Flex vertical align="center" style={{ marginBottom: 32 }}>
+                <Title level={1}>Welcome back</Title>
+                <Text type="secondary">Sign in to manage your appointments</Text>
+            </Flex>
 
-            <Card withBorder shadow="md" p={30} radius="md">
+            <Card bordered shadow="always" style={{ padding: 24 }}>
                 <form onSubmit={submit}>
-                    <Stack gap="md">
-                        <TextInput
-                            label="Email address"
-                            placeholder="you@medic.com"
-                            required
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            error={errors.email}
-                        />
-
-                        <PasswordInput
-                            label="Password"
-                            placeholder="Your password"
-                            required
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            error={errors.password}
-                        />
-
-                        <Group justify="space-between" mt="lg">
-                            <Checkbox
-                                label="Remember me"
-                                checked={data.remember_me}
-                                onChange={(e) => setData('remember_me', e.currentTarget.checked)}
+                    <Flex vertical gap="middle">
+                        <Form.Item
+                            validateStatus={errors.email ? 'error' : ''}
+                            help={errors.email}
+                            style={{ marginBottom: 0 }}
+                        >
+                            <div style={{ marginBottom: 8 }}><Text strong>Email address</Text></div>
+                            <Input
+                                prefix={<MailOutlined />}
+                                placeholder="you@medic.com"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
+                                size="large"
                             />
-                            <Anchor component={Link} href="/forgot-password" size="sm">
-                                Forgot password?
-                            </Anchor>
-                        </Group>
+                        </Form.Item>
 
-                        <Button fullWidth mt="xl" type="submit" loading={processing}>
+                        <Form.Item
+                            validateStatus={errors.password ? 'error' : ''}
+                            help={errors.password}
+                            style={{ marginBottom: 0 }}
+                        >
+                            <div style={{ marginBottom: 8 }}><Text strong>Password</Text></div>
+                            <Input.Password
+                                prefix={<LockOutlined />}
+                                placeholder="Your password"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                size="large"
+                            />
+                        </Form.Item>
+
+                        <Flex justify="space-between" align="center" style={{ marginTop: 16 }}>
+                            <Checkbox
+                                checked={data.remember_me}
+                                onChange={(e) => setData('remember_me', e.target.checked)}
+                            >
+                                Remember me
+                            </Checkbox>
+                            <Link href="/forgot-password" className="text-sm">
+                                Forgot password?
+                            </Link>
+                        </Flex>
+
+                        <Button type="primary" htmlType="submit" loading={processing} block size="large" style={{ marginTop: 24 }}>
                             Sign in
                         </Button>
-                    </Stack>
+                    </Flex>
                 </form>
             </Card>
 
-            <Text ta="center" mt="md">
+            <Text style={{ display: 'block', textAlign: 'center', marginTop: 16 }}>
                 Don&apos;t have an account?{' '}
-                <Anchor component={Link} href="/register" fw={700}>
+                <Link href="/register" style={{ fontWeight: 700 }}>
                     Register
-                </Anchor>
+                </Link>
             </Text>
-        </Container>
+        </div>
     )
 }

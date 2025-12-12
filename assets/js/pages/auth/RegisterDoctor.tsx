@@ -1,17 +1,17 @@
 import {
-    Anchor,
     Button,
     Card,
-    Container,
-    Group,
-    PasswordInput,
-    Stack,
-    Text,
-    TextInput,
-    Title
-} from '@mantine/core'
+    Input,
+    Typography,
+    Form,
+    Flex,
+    Row,
+    Col
+} from 'antd'
 import { Link, useForm } from '@inertiajs/react'
 import { FormEvent } from 'react'
+
+const { Title, Text } = Typography
 
 export default function RegisterDoctorPage() {
     const { data, setData, post, processing, errors } = useForm({
@@ -27,72 +27,92 @@ export default function RegisterDoctorPage() {
     }
 
     return (
-        <Container size="xs" py={80}>
-            <Stack align="center" mb="xl">
-                <Title order={1}>Join as a Specialist</Title>
-                <Text c="dimmed">Managing your practice has never been easier</Text>
-            </Stack>
+        <div style={{ maxWidth: 400, margin: '80px auto' }}>
+            <Flex vertical align="center" style={{ marginBottom: 32 }}>
+                <Title level={1}>Join as a Specialist</Title>
+                <Text type="secondary">Managing your practice has never been easier</Text>
+            </Flex>
 
-            <Card withBorder shadow="md" p={30} radius="md">
+            <Card bordered shadow="always" style={{ padding: 24 }}>
                 <form onSubmit={submit}>
-                    <Stack gap="md">
-                        <Group grow>
-                            <TextInput
-                                label="First name"
-                                placeholder="John"
-                                required
-                                value={data.first_name}
-                                onChange={(e) => setData('first_name', e.target.value)}
-                                error={errors.first_name}
+                    <Flex vertical gap="middle">
+                        <Row gutter={16}>
+                            <Col span={12}>
+                                <Form.Item
+                                    validateStatus={errors.first_name ? 'error' : ''}
+                                    help={errors.first_name}
+                                    style={{ marginBottom: 0 }}
+                                >
+                                    <div style={{ marginBottom: 8 }}><Text strong>First name</Text></div>
+                                    <Input
+                                        placeholder="John"
+                                        value={data.first_name}
+                                        onChange={(e) => setData('first_name', e.target.value)}
+                                    />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item
+                                    validateStatus={errors.last_name ? 'error' : ''}
+                                    help={errors.last_name}
+                                    style={{ marginBottom: 0 }}
+                                >
+                                    <div style={{ marginBottom: 8 }}><Text strong>Last name</Text></div>
+                                    <Input
+                                        placeholder="Doe"
+                                        value={data.last_name}
+                                        onChange={(e) => setData('last_name', e.target.value)}
+                                    />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+
+                        <Form.Item
+                            validateStatus={errors.email ? 'error' : ''}
+                            help={errors.email}
+                            style={{ marginBottom: 0 }}
+                        >
+                            <div style={{ marginBottom: 8 }}><Text strong>Email address</Text></div>
+                            <Input
+                                placeholder="doctor@clinic.com"
+                                value={data.email}
+                                onChange={(e) => setData('email', e.target.value)}
                             />
-                            <TextInput
-                                label="Last name"
-                                placeholder="Doe"
-                                required
-                                value={data.last_name}
-                                onChange={(e) => setData('last_name', e.target.value)}
-                                error={errors.last_name}
+                        </Form.Item>
+
+                        <Form.Item
+                            validateStatus={errors.password ? 'error' : ''}
+                            help={errors.password}
+                            style={{ marginBottom: 0 }}
+                        >
+                            <div style={{ marginBottom: 8 }}><Text strong>Password</Text></div>
+                            <Input.Password
+                                placeholder="Min. 8 characters"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
                             />
-                        </Group>
+                        </Form.Item>
 
-                        <TextInput
-                            label="Email address"
-                            placeholder="doctor@clinic.com"
-                            required
-                            value={data.email}
-                            onChange={(e) => setData('email', e.target.value)}
-                            error={errors.email}
-                        />
-
-                        <PasswordInput
-                            label="Password"
-                            placeholder="Min. 8 characters"
-                            required
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            error={errors.password}
-                        />
-
-                        <Button fullWidth mt="xl" type="submit" loading={processing} color="teal">
+                        <Button type="primary" htmlType="submit" loading={processing} block size="large" style={{ marginTop: 24 }}>
                             Start Application
                         </Button>
-                    </Stack>
+                    </Flex>
                 </form>
             </Card>
 
-            <Text ta="center" mt="md">
+            <Text style={{ display: 'block', textAlign: 'center', marginTop: 16 }}>
                 Are you a patient?{' '}
-                <Anchor component={Link} href="/register" fw={700}>
+                <Link href="/register" style={{ fontWeight: 700 }}>
                     Create Patient Account
-                </Anchor>
+                </Link>
             </Text>
 
-            <Text ta="center" mt="xs">
+            <Text style={{ display: 'block', textAlign: 'center', marginTop: 8 }}>
                 Already have an account?{' '}
-                <Anchor component={Link} href="/login" fw={700}>
+                <Link href="/login" style={{ fontWeight: 700 }}>
                     Sign in
-                </Anchor>
+                </Link>
             </Text>
-        </Container>
+        </div>
     )
 }

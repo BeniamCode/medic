@@ -2,31 +2,27 @@ import { useMemo, useState, useEffect, useRef, type FormEvent } from 'react'
 import { Link, router } from '@inertiajs/react'
 import { useDebouncedValue } from '@mantine/hooks'
 import {
-  Badge,
-  Box,
   Button,
   Card,
-  Container,
-  Grid,
-  Group,
-  Image,
-  Stack,
-  Text,
-  TextInput,
-  Title,
+  Col,
+  Row,
+  Input,
   Select,
-  RangeSlider,
-  Paper,
-  Divider,
-  ThemeIcon,
-  rem,
+  Slider,
+  Typography,
+  Tag,
   Avatar,
-  Rating,
-  SimpleGrid
-} from '@mantine/core'
-import { IconFilter, IconMapPin, IconSearch, IconStar, IconStethoscope } from '@tabler/icons-react'
+  Rate,
+  Space,
+  Empty
+} from 'antd'
+import { IconFilter, IconMapPin, IconSearch } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import type { AppPageProps } from '@/types/app'
+import DoctorMap from '@/components/Map'
+
+const { Title, Text } = Typography
+const { Search: AntSearch } = Input
 
 export type SearchDoctor = {
   id: string
@@ -58,8 +54,6 @@ const createParams = (query: string, specialty: string) => {
   return params
 }
 
-import DoctorMap from '@/components/Map'
-
 export default function SearchPage({ app, auth, doctors = [], specialties = [], filters = { query: '', specialty: '' }, meta }: SearchProps) {
   const { t } = useTranslation('default')
 
@@ -74,18 +68,15 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
 
   // Live Search Effect
   useEffect(() => {
-    // Skip the first render to avoid double fetching (since initial state matches props)
     if (!isMounted.current) {
       isMounted.current = true
       return
     }
 
-    // Only fire if the debounced query is different from what's currently filtered (prevents loops if backend cleans string)
-    // Actually, simple router.get is safer, Inertia handles duplicate visits efficiently.
     router.get(`/search?${createParams(debouncedQuery, specialty).toString()}`, undefined, {
       preserveScroll: true,
       preserveState: true,
-      replace: true // Replace history state for typing updates to avoid massive back-button history
+      replace: true
     })
   }, [debouncedQuery, specialty])
 
@@ -98,10 +89,9 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
     [specialties]
   )
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const submit = (value: string) => {
     // Instant trigger (ignores debounce)
-    router.get(`/search?${createParams(query, specialty).toString()}`, undefined, {
+    router.get(`/search?${createParams(value, specialty).toString()}`, undefined, {
       preserveScroll: true,
       preserveState: true
     })
@@ -114,13 +104,13 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
   }
 
   return (
-    <Box>
+    <div>
       {/* 1. Map Container - Top */}
-      <Paper
-        h={mapHeight}
-        w="100%"
-        bg="gray.1"
+      <div
         style={{
+          height: mapHeight,
+          width: '100%',
+          backgroundColor: '#f5f5f5',
           transition: 'height 0.3s ease',
           zIndex: 10,
           position: 'relative',
@@ -129,154 +119,154 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
         onMouseEnter={() => setMapHeight(500)}
         onMouseLeave={() => setMapHeight(250)}
       >
-        {/* Render Map at full 500px height always, so it just "reveals" instead of resizing */}
         <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} focusedDoctorId={focusedDoctorId} />
-      </Paper>
+      </div>
 
       {/* 2. Google-Style Search Bar - Centered */}
-      <Container size="md" mt={-30} style={{ position: 'relative', zIndex: 20 }}>
-        <Paper shadow="xl" radius="xl" p="xs" withBorder>
-          <form onSubmit={submit}>
-            <TextInput
-              placeholder={t('search.placeholder', 'Search doctors, clinics, specialties, etc.')}
-              size="lg"
-              variant="unstyled"
-              radius="xl"
-              pl="md"
-              value={query}
-              onChange={(event) => setQuery(event.currentTarget.value)}
-              leftSection={<IconSearch size={22} color="var(--mantine-color-dimmed)" />}
-              rightSection={
-                <Button type="submit" radius="xl" size="sm" color="teal">
-                  Search
-                </Button>
-              }
-              rightSectionWidth={100}
-            />
-          </form>
-        </Paper>
-      </Container>
+      <div style={{ maxWidth: 960, margin: '-24px auto 0', padding: '0 24px', position: 'relative', zIndex: 20 }}>
+        <Card style={{ borderRadius: 24, padding: 8 }} bodyStyle={{ padding: 0 }} bordered shadow="always">
+          <AntSearch
+            placeholder={t('search.placeholder', 'Search doctors, clinics, specialties, etc.')}
+            size="large"
+            bordered={false}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onSearch={submit}
+            enterButton={
+              <Button type="primary" shape="round" icon={<IconSearch size={18} />}>
+                Search
+              </Button>
+            }
+          />
+        </Card>
+      </div>
 
 
-      <Container size="xl" mt={50} pb={50}>
-        <Grid gutter={40}>
+      <div style={{ maxWidth: 1200, margin: '50px auto', padding: '0 24px' }}>
+        <Row gutter={40}>
           {/* Sidebar Filters */}
-          <Grid.Col span={{ base: 12, md: 3 }}>
-            <Stack gap="lg" style={{ position: 'sticky', top: 20 }}>
-              <Paper shadow="sm" radius="lg" p="lg" withBorder>
-                <Group mb="md">
-                  <ThemeIcon color="teal" variant="light"><IconFilter size={18} /></ThemeIcon>
-                  <Text fw={700}>Filters</Text>
-                </Group>
+          <Col xs={24} md={6}>
+            <div style={{ position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <Card bordered style={{ borderRadius: 12 }}>
+                <Space align="center" style={{ marginBottom: 16 }}>
+                  <div style={{ padding: 6, borderRadius: 6, backgroundColor: '#e6fffa', color: '#0d9488' }}>
+                    <IconFilter size={16} />
+                  </div>
+                  <Text strong>Filters</Text>
+                </Space>
 
-                <Stack gap="md">
-                  <Select
-                    label={t('search.form.specialty', 'Specialty')}
-                    placeholder="Any specialty"
-                    data={specialtyOptions}
-                    value={specialty}
-                    onChange={(value) => setSpecialty(value || '')}
-                    clearable
-                    searchable
-                  />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Specialty</Text>
+                    <Select
+                      placeholder="Any specialty"
+                      options={specialtyOptions}
+                      value={specialty}
+                      onChange={(value) => setSpecialty(value || '')}
+                      allowClear
+                      showSearch
+                      style={{ width: '100%' }}
+                    />
+                  </div>
 
                   {/* RangeSlider */}
-                  <Box>
-                    <Text size="sm" fw={500} mb="xs">Price Range</Text>
-                    <RangeSlider
-                      color="teal"
-                      min={0} max={300}
+                  <div>
+                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Price Range</Text>
+                    <Slider
+                      range
+                      min={0}
+                      max={300}
                       step={10}
                       defaultValue={[0, 300]}
-                      label={(val) => `€${val}`}
+                      tooltip={{ formatter: (val) => `€${val}`, open: false }}
                     />
-                  </Box>
-
-                  <Button onClick={() => submit({ preventDefault: () => { } } as any)} fullWidth mt="md" variant="light">
-                    {t('search.form.apply', 'Update Results')}
-                  </Button>
-                </Stack>
-              </Paper>
-            </Stack>
-          </Grid.Col>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </Col>
 
           {/* Results */}
-          <Grid.Col span={{ base: 12, md: 9 }}>
-            <Group justify="space-between" mb="lg">
-              <Text fw={600} size="lg"> {meta.total} specialists found</Text>
-              <Badge color="gray" variant="light">Sort by: Best Match</Badge>
-            </Group>
+          <Col xs={24} md={18}>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+              <Text strong style={{ fontSize: 16 }}> {meta.total} specialists found</Text>
+              <Tag>Sort by: Best Match</Tag>
+            </Row>
 
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+            <Row gutter={[24, 24]}>
               {doctors.map((doctor: SearchDoctor) => {
+                const isFocused = focusedDoctorId === doctor.id
                 return (
-                  <Card
-                    key={doctor.id}
-                    shadow="sm"
-                    padding="lg"
-                    radius="lg"
-                    withBorder
-                    onClick={() => handleDoctorClick(doctor.id)}
-                    style={{ cursor: 'pointer', transition: 'transform 0.2s', borderColor: focusedDoctorId === doctor.id ? 'var(--mantine-color-teal-5)' : undefined }}
-                    className="hover:shadow-md"
-                  >
-                    <Card.Section>
-                      <Box h={200} bg="gray.1" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Avatar
-                          src={doctor.profileImageUrl}
-                          size={120}
-                          radius="xl"
-                        >
-                          {doctor.firstName?.charAt(0) || 'D'}
-                        </Avatar>
-                      </Box>
-                    </Card.Section>
+                  <Col xs={24} sm={12} md={8} key={doctor.id}>
+                    <Card
+                      hoverable
+                      style={{
+                        borderRadius: 12,
+                        borderColor: isFocused ? '#13c2c2' : undefined,
+                        transition: 'all 0.2s',
+                        overflow: 'hidden'
+                      }}
+                      bodyStyle={{ padding: 16 }}
+                      cover={
+                        <div style={{ height: 200, backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Avatar
+                            src={doctor.profileImageUrl}
+                            size={120}
+                          >
+                            {doctor.firstName?.charAt(0) || 'D'}
+                          </Avatar>
+                        </div>
+                      }
+                      onClick={() => handleDoctorClick(doctor.id)}
+                    >
 
-                    <Stack mt="md" gap="xs">
-                      <Group justify="space-between" align="start">
-                        <Box>
-                          <Title order={3} size="h4" lh={1.2}>
-                            {doctor.firstName} {doctor.lastName}
-                          </Title>
-                          {doctor.verified && <Badge variant="dot" color="teal" size="xs" mt={4}>Verified</Badge>}
-                        </Box>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <Title level={4} style={{ margin: 0, fontSize: 16, lineHeight: 1.2 }}>
+                              {doctor.firstName} {doctor.lastName}
+                            </Title>
+                            {doctor.verified && <Tag color="cyan" style={{ marginTop: 4, marginRight: 0 }}>Verified</Tag>}
+                          </div>
+                          <Rate disabled defaultValue={doctor.rating || 0} style={{ fontSize: 12 }} />
+                        </div>
 
-                        <Rating value={doctor.rating || 0} readOnly size="xs" />
-                      </Group>
+                        <Text type="secondary" style={{ fontSize: 13 }}>{doctor.specialtyName || 'General Practitioner'}</Text>
 
-                      <Text size="sm" c="dimmed" fw={500}>{doctor.specialtyName || 'General Practitioner'}</Text>
+                        <Space size={4} style={{ color: 'rgba(0,0,0,0.45)' }}>
+                          <IconMapPin size={16} />
+                          <Text type="secondary" style={{ fontSize: 13 }}>{doctor.city || 'Online'}</Text>
+                        </Space>
 
-                      <Group gap={6} c="dimmed">
-                        <IconMapPin size={16} />
-                        <Text size="sm">{doctor.city || 'Online'}</Text>
-                      </Group>
-
-                      <Group justify="space-between" mt="md" align="center">
-                        <Text fw={700} c="teal" size="lg">
-                          {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
-                        </Text>
-                        <Button component={Link} href={`/doctors/${doctor.id}`} variant="light" size="sm" radius="md" onClick={(e) => e.stopPropagation()}>
-                          View Profile
-                        </Button>
-                      </Group>
-                    </Stack>
-                  </Card>
+                        <Row justify="space-between" align="middle" style={{ marginTop: 8 }}>
+                          <Text strong style={{ fontSize: 18, color: '#0d9488' }}>
+                            {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
+                          </Text>
+                          <Link href={`/doctors/${doctor.id}`}>
+                            <Button size="small" onClick={(e: any) => e.stopPropagation()}>
+                              View Profile
+                            </Button>
+                          </Link>
+                        </Row>
+                      </div>
+                    </Card>
+                  </Col>
                 )
               })}
-            </SimpleGrid>
+            </Row>
 
             {doctors.length === 0 && (
-              <Stack align="center" py={50}>
-                <ThemeIcon size={60} radius="xl" color="gray" variant="light">
-                  <IconSearch size={30} />
-                </ThemeIcon>
-                <Text size="xl" fw={600}>No doctors found</Text>
-                <Text c="dimmed">Try adjusting your filters</Text>
-              </Stack>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '50px 0' }}>
+                <div style={{ padding: 20, borderRadius: 20, backgroundColor: '#f5f5f5', marginBottom: 16 }}>
+                  <IconSearch size={30} color="#999" />
+                </div>
+                <Title level={4} style={{ margin: 0 }}>No doctors found</Title>
+                <Text type="secondary">Try adjusting your filters</Text>
+              </div>
             )}
-          </Grid.Col>
-        </Grid>
-      </Container>
-    </Box >
+          </Col>
+        </Row>
+      </div>
+    </div>
   )
 }

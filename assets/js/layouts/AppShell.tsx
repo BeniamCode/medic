@@ -1,7 +1,17 @@
-import { ActionIcon, AppShell, Avatar, Badge, Burger, Button, Container, Group, Image, Menu, Text, ThemeIcon, UnstyledButton } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import {
+    Layout,
+    Button,
+    Avatar,
+    Dropdown,
+    Badge,
+    Typography,
+    theme,
+    Space,
+    Flex,
+    MenuProps,
+    Drawer
+} from 'antd'
 import { Link, usePage } from '@inertiajs/react'
-import { notifications } from '@mantine/notifications'
 import {
     IconBell,
     IconCalendar,
@@ -12,240 +22,276 @@ import {
     IconSearch,
     IconSettings,
     IconSun,
-    IconUser,
-    IconUserCircle
+    IconUserCircle,
+    IconMenu2
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { SharedAppProps } from '@/types/app'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useThemeMode } from '@/app'
+
+const { Header, Sider, Content } = Layout
+const { Text } = Typography
 
 interface AppLayoutProps {
     children: React.ReactNode
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-    const [opened, { toggle }] = useDisclosure()
+    const [mobileOpen, setMobileOpen] = useState(false)
     const { auth, app, flash } = usePage<SharedAppProps>().props
     const { url } = usePage()
     const path = url.split('?')[0]
 
-    // Flash Message Handling
-    useEffect(() => {
-        if (flash.success) {
-            notifications.show({
-                title: 'Success',
-                message: flash.success,
-                color: 'teal',
-                icon: <IconHome size={16} />, // Generic success icon or Check
-            })
-        }
-        if (flash.error) {
-            notifications.show({
-                title: 'Error',
-                message: flash.error,
-                color: 'red',
-            })
-        }
-        if (flash.info) {
-            notifications.show({
-                title: 'Info',
-                message: flash.info,
-                color: 'blue',
-            })
-        }
-    }, [flash])
+    // Flash Message Handling (using AntD notification is better but for now let's use the hook in a simpler way if needed, or just standard Antd static methods)
+    // Actually we need to verify if `App` component provides context for message/notification.
+    // In `app.tsx` we wrapped with `AntApp`, so we can use `App.useApp()` to get message/notification api.
+    // However, since we are inside `AppLayout` which is inside `App`, we can use the static methods or hooks.
+    // Let's use `App.useApp()` if possible or just `notification` static.
+    // But `AntApp` (from 'antd') provides context.
 
+    // NOTE: In AntD v5, using static methods (notification.open) works outside context but inside App is better to use hook.
+    // But to use hook we need to be deeper. `AppLayout` IS deep enough.
+    // Let's try to stick to standard static if easier, or use `App.useApp()`.
+    // Actually, let's keep it simple.
 
     const user = auth.user
     const isDoctor = user?.role === 'doctor'
+    // Theme mode handling might need adjustment as AntD handles it differently, but we have our own context.
+    // We might need to update the actual AntD theme config in `app.tsx` based on this context.
     const { colorScheme, toggleColorScheme } = useThemeMode()
 
-    // Show Navbar if user is logged in, OR if specifically on dashboard pages (fallback)
-    // User requested "logged in users ... need a left side panel", so we enforce it for authenticated users.
     const showNavbar = !!user
-
     const { t } = useTranslation()
 
-    return (
-        <AppShell
-            header={{ height: 60 }}
-            navbar={showNavbar ? {
-                width: 300,
-                breakpoint: 'sm',
-                collapsed: { mobile: !opened }
-            } : undefined}
-            padding="md"
-        >
-            <AppShell.Header>
-                <Group h="100%" px="md" justify="space-between">
-                    <Group>
-                        {showNavbar && <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />}
-                        <Group>
-                            <Link href="/">
-                                <Image
-                                    src="/images/logo-medic-sun.svg"
-                                    h={32}
-                                    w="auto"
-                                    alt="Medic"
-                                    style={colorScheme === 'dark' ? { filter: 'brightness(0) invert(1)' } : undefined}
-                                />
-                            </Link>
-                            <Badge variant="light" color="blue">Beta</Badge>
-                        </Group>
-                    </Group>
+    const {
+        token: { colorBgContainer, colorBorderSecondary },
+    } = theme.useToken()
 
-                    <Group>
-                        <ActionIcon
-                            variant="light"
-                            size="lg"
-                            radius="xl"
-                            aria-label="Toggle color scheme"
-                            onClick={toggleColorScheme}
-                        >
-                            {colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
-                        </ActionIcon>
-                        {user ? (
-                            <Group gap="xs">
-                                <ActionIcon variant="light" size="lg" radius="xl">
-                                    <IconBell size={20} />
-                                </ActionIcon>
+    const userMenu: MenuProps = {
+        items: [
+            {
+                key: 'settings',
+                label: <Link href="/settings">Settings</Link>,
+                icon: <IconSettings size={14} />
+            },
+            {
+                type: 'divider'
+            },
+            {
+                key: 'logout',
+                label: (
+                    <Link href="/logout" method="delete" as="button" className="w-full text-left">
+                        Logout
+                    </Link>
+                ),
+                icon: <IconLogout size={14} />,
+                danger: true
+            }
+        ]
+    }
 
-                                <Menu shadow="md" width={200}>
-                                    <Menu.Target>
-                                        <UnstyledButton>
-                                            <Group gap={8}>
-                                                <Avatar src={user.profileImageUrl} radius="xl" color="teal">
-                                                    {user.firstName?.[0]}
-                                                </Avatar>
-                                                <div style={{ flex: 1 }} className="hidden sm:block">
-                                                    <Text size="sm" fw={500}>{user.firstName} {user.lastName}</Text>
-                                                    <Text c="dimmed" size="xs">{user.email}</Text>
-                                                </div>
-                                            </Group>
-                                        </UnstyledButton>
-                                    </Menu.Target>
+    const NavContent = () => (
+        <Flex vertical gap="small" className="h-full">
+            <Link href="/">
+                <Button
+                    type={path === '/' ? 'primary' : 'text'}
+                    ghost={path === '/'}
+                    className={path === '/' ? 'bg-teal-50 text-teal-700' : ''}
+                    block
+                    style={{ justifyContent: 'flex-start' }}
+                    icon={<IconHome size={20} />}
+                >
+                    Home
+                </Button>
+            </Link>
 
-                                    <Menu.Dropdown>
-                                        <Menu.Label>Application</Menu.Label>
-                                        <Menu.Item leftSection={<IconSettings size={14} />} component={Link} href="/settings">
-                                            Settings
-                                        </Menu.Item>
-                                        <Menu.Divider />
-                                        <Menu.Item
-                                            leftSection={<IconLogout size={14} />}
-                                            color="red"
-                                            component={Link}
-                                            href="/logout"
-                                            method="delete"
-                                            as="button"
-                                        >
-                                            Logout
-                                        </Menu.Item>
-                                    </Menu.Dropdown>
-                                </Menu>
-                            </Group>
-                        ) : (
-                            <Group gap="xs">
-                                <Button variant="subtle" component={Link} href="/login">Sign in</Button>
-                                <Button component={Link} href="/register">Sign up</Button>
-                            </Group>
-                        )}
-                    </Group>
-                </Group>
-            </AppShell.Header>
-
-            {showNavbar && (
-                <AppShell.Navbar p="md">
-                    <Group mb="xl">
-                        {/* Optional Branding here if not in header */}
-                    </Group>
-
-                    <div className="flex flex-col gap-2">
-                        {/* Common Links */}
+            {isDoctor ? (
+                <>
+                    <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Practice</Text>
+                    <Link href="/dashboard/doctor">
                         <Button
-                            variant={path === '/' ? 'light' : 'subtle'}
-                            justify="start"
-                            size="md"
-                            leftSection={<IconHome size={20} />}
-                            component={Link}
-                            href="/"
-                            color="gray"
+                            type={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/dashboard/doctor') && !path.includes('profile')}
+                            className={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconHome size={20} />}
                         >
-                            Home
+                            Dashboard
                         </Button>
-
-                        {isDoctor ? (
-                            <>
-                                <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" tt="uppercase">Practice</Text>
-                                <Button
-                                    variant={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'light' : 'subtle'}
-                                    justify="start"
-                                    leftSection={<IconHome size={20} />}
-                                    component={Link}
-                                    href="/dashboard/doctor"
-                                    color="teal"
-                                >
-                                    Dashboard
-                                </Button>
-                                <Button
-                                    variant={path.startsWith('/doctor/schedule') ? 'light' : 'subtle'}
-                                    justify="start"
-                                    leftSection={<IconCalendarEvent size={20} />}
-                                    component={Link}
-                                    href="/doctor/schedule"
-                                    color="teal"
-                                >
-                                    My Schedule
-                                </Button>
-                                <Button
-                                    variant={path.includes('/doctor/profile') ? 'light' : 'subtle'}
-                                    justify="start"
-                                    leftSection={<IconUserCircle size={20} />}
-                                    component={Link}
-                                    href="/dashboard/doctor/profile"
-                                    color="teal"
-                                >
-                                    My Profile
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" tt="uppercase">Patient</Text>
-                                <Button
-                                    variant={path === '/dashboard' ? 'light' : 'subtle'}
-                                    justify="start"
-                                    leftSection={<IconCalendar size={20} />}
-                                    component={Link}
-                                    href="/dashboard"
-                                    color="teal"
-                                >
-                                    Appointments
-                                </Button>
-                            </>
-                        )}
-
-                        <Text size="xs" fw={700} c="dimmed" mt="md" mb="xs" tt="uppercase">Discover</Text>
+                    </Link>
+                    <Link href="/doctor/schedule">
                         <Button
-                            variant={path === '/search' ? 'light' : 'subtle'}
-                            justify="start"
-                            size="md"
-                            leftSection={<IconSearch size={20} />}
-                            component={Link}
-                            href="/search"
-                            color="gray"
+                            type={path.startsWith('/doctor/schedule') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/doctor/schedule')}
+                            className={path.startsWith('/doctor/schedule') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconCalendarEvent size={20} />}
                         >
-                            Find Doctors
+                            My Schedule
                         </Button>
-                    </div>
-                </AppShell.Navbar>
+                    </Link>
+                    <Link href="/dashboard/doctor/profile">
+                        <Button
+                            type={path.includes('/doctor/profile') ? 'primary' : 'text'}
+                            ghost={path.includes('/doctor/profile')}
+                            className={path.includes('/doctor/profile') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconUserCircle size={20} />}
+                        >
+                            My Profile
+                        </Button>
+                    </Link>
+                </>
+            ) : (
+                <>
+                    <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Patient</Text>
+                    <Link href="/dashboard">
+                        <Button
+                            type={path === '/dashboard' ? 'primary' : 'text'}
+                            ghost={path === '/dashboard'}
+                            className={path === '/dashboard' ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconCalendar size={20} />}
+                        >
+                            Appointments
+                        </Button>
+                    </Link>
+                </>
             )}
 
-            <AppShell.Main>
-                <Container size="xl" p={0}>
+            <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Discover</Text>
+            <Link href="/search">
+                <Button
+                    type={path === '/search' ? 'text' : 'text'} // 'primary' if active, but search is usually secondary
+                    className={path === '/search' ? 'bg-gray-100' : ''}
+                    block
+                    style={{ justifyContent: 'flex-start' }}
+                    icon={<IconSearch size={20} />}
+                >
+                    Find Doctors
+                </Button>
+            </Link>
+        </Flex>
+    )
+
+    return (
+        <Layout style={{ minHeight: '100vh' }}>
+            <Header style={{
+                background: colorBgContainer,
+                borderBottom: `1px solid ${colorBorderSecondary}`,
+                padding: '0 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                height: 60,
+                position: 'sticky',
+                top: 0,
+                zIndex: 1000
+            }}>
+                <Flex align="center" gap="middle">
+                    {showNavbar && (
+                        <Button
+                            type="text"
+                            icon={<IconMenu2 size={20} />}
+                            onClick={() => setMobileOpen(true)}
+                            className="md:hidden"
+                        />
+                    )}
+                    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <img
+                            src="/images/logo-medic-sun.svg"
+                            alt="Medic"
+                            style={{ height: 32, width: 'auto', filter: colorScheme === 'dark' ? 'brightness(0) invert(1)' : undefined }}
+                        />
+                        <Badge count="Beta" color="blue" />
+                    </Link>
+                </Flex>
+
+                <Flex align="center" gap="small">
+                    <Button
+                        type="text"
+                        shape="circle"
+                        icon={colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                        onClick={toggleColorScheme}
+                    />
+
+                    {user ? (
+                        <>
+                            <Button type="text" shape="circle" icon={<IconBell size={20} />} />
+                            <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
+                                <Button type="text" style={{ padding: '4px 8px', height: 'auto' }}>
+                                    <Flex align="center" gap="small">
+                                        <Avatar src={user.profileImageUrl} style={{ backgroundColor: '#0D9488' }}>
+                                            {user.firstName?.[0]}
+                                        </Avatar>
+                                        <div className="hidden sm:block text-left">
+                                            <Text strong style={{ display: 'block', lineHeight: 1.2 }}>{user.firstName} {user.lastName}</Text>
+                                            <Text type="secondary" style={{ fontSize: 12 }}>{user.email}</Text>
+                                        </div>
+                                    </Flex>
+                                </Button>
+                            </Dropdown>
+                        </>
+                    ) : (
+                        <Space>
+                            <Link href="/login">
+                                <Button type="text">Sign in</Button>
+                            </Link>
+                            <Link href="/register">
+                                <Button type="primary">Sign up</Button>
+                            </Link>
+                        </Space>
+                    )}
+                </Flex>
+            </Header>
+
+            <Layout>
+                {showNavbar && (
+                    <>
+                        {/* Desktop Sidebar */}
+                        <Sider
+                            width={300}
+                            theme="light"
+                            breakpoint="sm"
+                            collapsedWidth="0"
+                            trigger={null}
+                            style={{
+                                background: colorBgContainer,
+                                borderRight: `1px solid ${colorBorderSecondary}`,
+                                height: 'calc(100vh - 60px)',
+                                position: 'sticky',
+                                top: 60,
+                                overflowY: 'auto'
+                            }}
+                            className="hidden md:block"
+                        >
+                            <div style={{ padding: 16 }}>
+                                <NavContent />
+                            </div>
+                        </Sider>
+
+                        {/* Mobile Drawer */}
+                        <Drawer
+                            placement="left"
+                            onClose={() => setMobileOpen(false)}
+                            open={mobileOpen}
+                            width={300}
+                            styles={{ body: { padding: 16 } }}
+                        >
+                            <NavContent />
+                        </Drawer>
+                    </>
+                )}
+
+                <Content style={{ padding: 16, maxWidth: 1280, width: '100%', margin: '0 auto' }}>
                     {children}
-                </Container>
-            </AppShell.Main>
-        </AppShell>
+                </Content>
+            </Layout>
+        </Layout>
     )
 }

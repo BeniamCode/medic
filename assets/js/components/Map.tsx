@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
-import { Box } from '@mantine/core'
 // Define local interface to avoid circular imports
 interface MapDoctor {
     id: string
@@ -142,6 +141,6 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false, 
     }, [height])
 
     return (
-        <Box ref={mapContainer} h={height} w="100%" style={{ borderRadius: 0 }} />
+        <div ref={mapContainer} style={{ height: height, width: '100%', borderRadius: 0 }} />
     )
 }

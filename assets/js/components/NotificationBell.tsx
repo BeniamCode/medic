@@ -1,4 +1,4 @@
-import { Badge, Button } from '@mantine/core'
+import { Badge, Button } from 'antd'
 import { IconBell } from '@tabler/icons-react'
 import { usePage, router } from '@inertiajs/react'
 import type { SharedAppProps } from '@/types/app'
@@ -8,8 +8,14 @@ export const NotificationBell = () => {
   const unread = page.props.app?.unread_count || 0
 
   return (
-    <Button variant="subtle" leftSection={<IconBell size={16} />} onClick={() => router.get('/notifications')}>
-      {unread > 0 && <Badge color="red">{unread > 9 ? '9+' : unread}</Badge>}
-    </Button>
+    <Button
+      type="text"
+      icon={
+        <Badge count={unread} size="small" offset={[0, 0]}>
+          <IconBell size={20} />
+        </Badge>
+      }
+      onClick={() => router.get('/notifications')}
+    />
   )
 }

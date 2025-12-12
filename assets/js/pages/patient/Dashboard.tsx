@@ -1,185 +1,237 @@
-import { Badge, Button, Card, Container, Grid, Group, SimpleGrid, Stack, Text, ThemeIcon, Timeline, Title, Avatar, ActionIcon } from '@mantine/core'
-import { IconCalendar, IconCheck, IconClock, IconX, IconStethoscope, IconArrowRight, IconDotsVertical, IconCalendarEvent } from '@tabler/icons-react'
-import { Link } from '@inertiajs/react'
-import { formatDistanceToNowStrict, parseISO, format } from 'date-fns'
+import {
+  Button,
+  Card,
+  Col,
+  Row,
+  Divider,
+  Typography,
+  Tabs,
+  Tag,
+  Space,
+  Empty,
+  Flex
+} from 'antd'
+import {
+  IconCalendar,
+  IconCalendarEvent,
+  IconClock,
+  IconFileText,
+  IconUser,
+  IconVideo,
+  IconMapPin
+} from '@tabler/icons-react'
+import { Link, router } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
+import dayjs from 'dayjs'
+
 import type { AppPageProps } from '@/types/app'
+
+const { Title, Text } = Typography
 
 type Appointment = {
   id: string
-  startsAt: string
-  status: string
   doctor: {
-    id: string
-    firstName: string
-    lastName: string
-    specialtyName?: string | null
-    profileImageUrl?: string | null
+    first_name: string
+    last_name: string
+    specialty: { name: string }
+    avatar_url?: string
   }
-}
-
-type Stats = {
-  upcoming: number
-  completed: number
-  cancelled: number
+  starts_at: string
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed'
+  type: 'in-person' | 'video'
 }
 
 type PageProps = AppPageProps<{
-  patient: { id: string; firstName: string; lastName: string }
   upcomingAppointments: Appointment[]
   pastAppointments: Appointment[]
-  stats: Stats
+  user: {
+    first_name: string
+    last_name: string
+  }
 }>
 
-const statusColor: Record<string, string> = {
-  pending: 'yellow',
-  confirmed: 'green',
-  completed: 'blue',
-  cancelled: 'red',
-  no_show: 'gray'
-}
-
-export default function DashboardPage({ app, auth, patient, upcomingAppointments, pastAppointments, stats }: PageProps) {
+const PatientDashboard = ({ upcomingAppointments, pastAppointments, user }: PageProps) => {
   const { t } = useTranslation('default')
 
-  return (
-    <Container size="xl" py="xl">
-      <Group justify="space-between" mb="xl">
-        <Stack gap={0}>
-          <Title order={2}>Good morning, {patient.firstName}</Title>
-          <Text c="dimmed">Here is your health overview for today.</Text>
-        </Stack>
-        <Button leftSection={<IconStethoscope size={20} />} component={Link} href="/search" variant="filled" color="teal">
-          Find Specialist
-        </Button>
-      </Group>
-
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg" mb={40}>
-        <StatCard
-          icon={IconCalendarEvent}
-          color="blue"
-          label="Upcoming Visits"
-          value={stats.upcoming}
-          desc="Scheduled appointments"
-        />
-        <StatCard
-          icon={IconCheck}
-          color="teal"
-          label="Completed"
-          value={stats.completed}
-          desc="Past consultations"
-        />
-        <StatCard
-          icon={IconX}
-          color="red"
-          label="Cancelled"
-          value={stats.cancelled}
-          desc="Missed or cancelled"
-        />
-      </SimpleGrid>
-
-      <Grid gutter="xl">
-        <Grid.Col span={{ base: 12, md: 8 }}>
-          <Card withBorder radius="lg" padding="xl">
-            <Group justify="space-between" mb="lg">
-              <Title order={3}>Upcoming Appointments</Title>
-              <ActionIcon variant="subtle" color="gray"><IconDotsVertical size={18} /></ActionIcon>
-            </Group>
-
-            {upcomingAppointments.length > 0 ? (
-              <Stack gap="md">
-                {upcomingAppointments.map(appt => (
-                  <AppointmentCard key={appt.id} appointment={appt} />
-                ))}
-              </Stack>
-            ) : (
-              <Stack align="center" py={40} bg="gray.0" style={{ borderRadius: 12 }}>
-                <ThemeIcon color="gray" variant="light" size={48} radius="xl">
-                  <IconCalendar size={24} />
-                </ThemeIcon>
-                <Text fw={500} mt="sm">No upcoming appointments</Text>
-                <Text size="sm" c="dimmed">Book a consultation to get started</Text>
-                <Button component={Link} href="/search" variant="light" mt="xs">Book Now</Button>
-              </Stack>
-            )}
-          </Card>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card withBorder radius="lg" padding="xl">
-            <Title order={4} mb="lg">Recent History</Title>
-            <Timeline active={0} bulletSize={24} lineWidth={2}>
-              {pastAppointments.slice(0, 5).map(appt => (
-                <Timeline.Item
-                  key={appt.id}
-                  bullet={<IconCheck size={12} />}
-                  title={`Dr. ${appt.doctor.lastName}`}
-                  color={statusColor[appt.status]}
-                >
-                  <Text c="dimmed" size="xs" mt={4}>
-                    {format(parseISO(appt.startsAt), 'MMM d, yyyy')}
-                  </Text>
-                  <Text size="xs" mt={4}>
-                    {appt.status}
-                  </Text>
-                </Timeline.Item>
-              ))}
-              {pastAppointments.length === 0 && (
-                <Text c="dimmed" size="sm">No past history.</Text>
+  const renderAppointment = (appt: Appointment, isUpcoming: boolean) => (
+    <Card
+      key={appt.id}
+      style={{ width: '100%', marginBottom: 16, borderRadius: 12, borderColor: '#e2e8f0' }}
+      bodyStyle={{ padding: 24 }}
+    >
+      <Row gutter={[16, 16]} align="middle">
+        <Col xs={24} sm={16}>
+          <Flex gap="middle" align="start">
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                backgroundColor: '#f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#64748b',
+                flexShrink: 0
+              }}
+            >
+              {appt.doctor.avatar_url ? (
+                <img src={appt.doctor.avatar_url} alt="Doctor" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                <IconUser size={24} />
               )}
-            </Timeline>
-          </Card>
-        </Grid.Col>
-      </Grid>
-    </Container>
-  )
-}
+            </div>
+            <div>
+              <Text strong style={{ fontSize: 16, display: 'block' }}>
+                Dr. {appt.doctor.first_name} {appt.doctor.last_name}
+              </Text>
+              <Text type="secondary" style={{ display: 'block' }}>{appt.doctor.specialty.name}</Text>
+              <Flex gap="small" style={{ marginTop: 8 }} align="center">
+                {appt.type === 'video' ? <IconVideo size={14} color="#0d9488" /> : <IconMapPin size={14} color="#0d9488" />}
+                <Text style={{ fontSize: 13, color: '#0d9488' }}>
+                  {appt.type === 'video' ? t('dashboard.video_visit', 'Video Visit') : t('dashboard.in_person', 'In-person')}
+                </Text>
+              </Flex>
+            </div>
+          </Flex>
+        </Col>
 
-function StatCard({ icon: Icon, label, value, color, desc }: any) {
-  return (
-    <Card withBorder radius="lg" padding="lg">
-      <Group>
-        <ThemeIcon size={48} radius="md" variant="light" color={color}>
-          <Icon size={24} />
-        </ThemeIcon>
-        <div>
-          <Text c="dimmed" size="xs" fw={700} tt="uppercase">{label}</Text>
-          <Text fw={700} size="xl" lh={1}>{value}</Text>
-          <Text c="dimmed" size="xs">{desc}</Text>
-        </div>
-      </Group>
-    </Card>
-  )
-}
+        <Col xs={24} sm={8}>
+          <Flex vertical align="end" gap="small" style={{ textAlign: 'right' }}>
+            <Flex gap="small" align="center">
+              <IconCalendarEvent size={16} />
+              <Text strong>{dayjs(appt.starts_at).format('MMM D, YYYY')}</Text>
+            </Flex>
+            <Flex gap="small" align="center">
+              <IconClock size={16} />
+              <Text>{dayjs(appt.starts_at).format('h:mm A')}</Text>
+            </Flex>
+            <Tag color={getStatusColor(appt.status)}>
+              {t(`dashboard.status.${appt.status}`, appt.status)}
+            </Tag>
+          </Flex>
+        </Col>
+      </Row>
 
-function AppointmentCard({ appointment }: { appointment: Appointment }) {
-  const date = parseISO(appointment.startsAt)
-
-  return (
-    <Card withBorder radius="md" padding="md">
-      <Group wrap="nowrap">
-        <Stack align="center" gap={0} bg="teal.0" p="xs" style={{ borderRadius: 8, minWidth: 70 }}>
-          <Text size="xs" c="teal" fw={700} tt="uppercase">{format(date, 'MMM')}</Text>
-          <Text size="xl" fw={700} lh={1} c="teal">{format(date, 'd')}</Text>
-        </Stack>
-
-        <Group justify="space-between" w="100%" align="flex-start">
-          <div>
-            <Text fw={600}>Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}</Text>
-            <Text size="sm" c="dimmed">{appointment.doctor.specialtyName || 'General Practice'}</Text>
-            <Group gap={6} mt={4}>
-              <IconClock size={14} className="text-gray-500" />
-              <Text size="xs" c="dimmed">{format(date, 'h:mm a')} ({formatDistanceToNowStrict(date, { addSuffix: true })})</Text>
-            </Group>
-          </div>
-          <Stack align="flex-end" gap="xs">
-            <Badge color={statusColor[appointment.status]}>{appointment.status}</Badge>
-            <Button component={Link} href={`/appointments/${appointment.id}`} variant="default" size="xs">
-              Manage
+      {isUpcoming && (
+        <>
+          <Divider style={{ margin: '16px 0' }} />
+          <Flex justify="flex-end" gap="small">
+            {appt.type === 'video' && (
+              <Button type="primary" icon={<IconVideo size={16} />}>
+                {t('dashboard.join_call', 'Join Call')}
+              </Button>
+            )}
+            <Button danger>
+              {t('dashboard.cancel', 'Cancel')}
             </Button>
-          </Stack>
-        </Group>
-      </Group>
+            <Button>
+              {t('dashboard.reschedule', 'Reschedule')}
+            </Button>
+          </Flex>
+        </>
+      )}
     </Card>
   )
+
+  const items = [
+    {
+      key: 'upcoming',
+      label: t('dashboard.tabs.upcoming', 'Upcoming'),
+      children: upcomingAppointments.length > 0 ? (
+        upcomingAppointments.map((appt: Appointment) => renderAppointment(appt, true))
+      ) : (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t('dashboard.no_upcoming', 'No upcoming appointments')}
+        >
+          <Button type="primary" href="/search">
+            {t('dashboard.book_now', 'Book a new appointment')}
+          </Button>
+        </Empty>
+      )
+    },
+    {
+      key: 'past',
+      label: t('dashboard.tabs.past', 'Past'),
+      children: pastAppointments.length > 0 ? (
+        pastAppointments.map((appt: Appointment) => renderAppointment(appt, false))
+      ) : (
+        <Empty description={t('dashboard.no_history', 'No past appointments')} />
+      )
+    }
+  ]
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', paddingBottom: 40 }}>
+      <div style={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', padding: '24px 0' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 24px' }}>
+          <Flex justify="space-between" align="center">
+            <div>
+              <Title level={2} style={{ margin: 0 }}>
+                {t('dashboard.welcome', 'Hello, {{name}}', { name: user.first_name })}
+              </Title>
+              <Text type="secondary" style={{ fontSize: 16 }}>
+                {t('dashboard.subtitle', 'Manage your health journey')}
+              </Text>
+            </div>
+            <Button type="primary" size="large" icon={<IconCalendar size={20} />} href="/search">
+              {t('dashboard.book_new', 'Book Appointment')}
+            </Button>
+          </Flex>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1000, margin: '32px auto', padding: '0 24px' }}>
+        <Row gutter={24}>
+          <Col xs={24} md={16}>
+            <Title level={4} style={{ marginBottom: 16 }}>{t('dashboard.appointments', 'Your Appointments')}</Title>
+            <Tabs defaultActiveKey="upcoming" items={items} />
+          </Col>
+
+          <Col xs={24} md={8}>
+            <Flex vertical gap="large">
+              <Card title={t('dashboard.quick_actions', 'Quick Actions')} bordered={false} style={{ borderRadius: 12 }}>
+                <Flex vertical gap="small">
+                  <Button block icon={<IconFileText size={16} />} style={{ textAlign: 'left' }}>
+                    {t('dashboard.medical_records', 'Medical Records')}
+                  </Button>
+                  <Button block icon={<IconUser size={16} />} style={{ textAlign: 'left' }} href="/profile">
+                    {t('dashboard.profile', 'Edit Profile')}
+                  </Button>
+                </Flex>
+              </Card>
+
+              <Card bordered={false} style={{ borderRadius: 12, background: 'linear-gradient(135deg, #0f766e, #0d9488)', color: 'white' }}>
+                <Title level={5} style={{ color: 'white', marginTop: 0 }}>{t('dashboard.get_app', 'Get the Medic App')}</Title>
+                <Text style={{ color: 'rgba(255,255,255,0.9)', marginBottom: 16, display: 'block' }}>
+                  {t('dashboard.app_promo', 'Manage appointments on the go with our mobile app.')}
+                </Text>
+                <Button ghost style={{ color: 'white', borderColor: 'white' }}>
+                  {t('dashboard.download', 'Download')}
+                </Button>
+              </Card>
+            </Flex>
+          </Col>
+        </Row>
+      </div>
+    </div>
+  )
 }
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'confirmed':
+      return 'success'
+    case 'pending':
+      return 'warning'
+    case 'cancelled':
+      return 'error'
+    case 'completed':
+      return 'default'
+    default:
+      return 'default'
+  }
+}
+
+export default PatientDashboard

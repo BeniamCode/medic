@@ -1,16 +1,11 @@
-import '@mantine/core/styles.css'
-import '@mantine/dates/styles.css'
-import '@mantine/notifications/styles.css'
 import '../css/app.css'
 
-import { MantineProvider, ColorSchemeScript, createTheme } from '@mantine/core'
+import { ConfigProvider, App as AntApp, theme as antTheme } from 'antd'
 import { InertiaProgress } from '@inertiajs/progress'
 import { createInertiaApp, router } from '@inertiajs/react'
-import { Notifications } from '@mantine/notifications'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode, createContext, useContext, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { useLocalStorage } from '@mantine/hooks'
 
 import { ensureI18n } from '@/lib/i18n'
 import type { AppPageProps, SharedAppProps } from '@/types/app'
@@ -48,85 +43,35 @@ router.on('success', (event) => {
   void ensureI18n(newProps.i18n)
 })
 
-
-const surfaceBorder = 'rgba(15, 23, 42, 0.08)'
-
-const theme = createTheme({
-  primaryColor: 'teal',
-  colors: {
-    teal: [
-      '#F0FDFA',
-      '#CCFBF1',
-      '#99F6E4',
-      '#5EEAD4',
-      '#2DD4BF',
-      '#14B8A6',
-      '#0D9488',
-      '#0F766E',
-      '#115E59',
-      '#134E4A'
-    ]
-  },
-  defaultRadius: 'md',
-  fontFamily: 'Inter, system-ui, sans-serif',
-  headings: {
-    fontFamily: 'Inter, system-ui, sans-serif',
-    fontWeight: '700'
-  },
-  components: {
-    Button: {
-      defaultProps: {
-        radius: 'md',
-        fw: 600
-      },
-      styles: {
-        root: {
-          borderRadius: '12px',
-          boxShadow: 'none'
-        }
+// Simple useLocalStorage hook since we removed @mantine/hooks
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      if (typeof window === 'undefined') {
+        return initialValue;
       }
-    },
-    Input: {
-      defaultProps: {
-        radius: 'md'
-      },
-      styles: {
-        input: {
-          borderColor: surfaceBorder,
-          boxShadow: 'none'
-        }
-      }
-    },
-    Textarea: {
-      styles: {
-        input: {
-          borderColor: surfaceBorder,
-          boxShadow: 'none'
-        }
-      }
-    },
-    Card: {
-      defaultProps: {
-        radius: 'md',
-        withBorder: true
-      },
-      styles: {
-        root: {
-          borderColor: surfaceBorder,
-          boxShadow: 'none'
-        }
-      }
-    },
-    Paper: {
-      styles: {
-        root: {
-          borderColor: surfaceBorder,
-          boxShadow: 'none'
-        }
-      }
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.log(error);
+      return initialValue;
     }
-  }
-})
+  });
+
+  const setValue = (value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return [storedValue, setValue];
+}
 
 type ColorScheme = 'light' | 'dark'
 
@@ -146,25 +91,27 @@ export const useThemeMode = () => {
 }
 
 function ThemeModeProvider({ children }: { children: React.ReactNode }) {
-  const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>({
-    key: 'medic-color-scheme',
-    defaultValue: 'light'
-  })
+  const [colorScheme, setColorScheme] = useLocalStorage<ColorScheme>('medic-color-scheme', 'light')
 
   const toggleColorScheme = () =>
     setColorScheme((current) => (current === 'dark' ? 'light' : 'dark'))
 
   return (
     <ThemeModeContext.Provider value={{ colorScheme, toggleColorScheme }}>
-      <ColorSchemeScript defaultColorScheme="light" />
-      <MantineProvider
-        theme={theme}
-        defaultColorScheme="light"
-        forceColorScheme={colorScheme}
+      <ConfigProvider
+        theme={{
+          algorithm: colorScheme === 'dark' ? antTheme.darkAlgorithm : antTheme.defaultAlgorithm,
+          token: {
+            colorPrimary: '#0D9488', // Teal
+            borderRadius: 8,
+            fontFamily: 'Inter, system-ui, sans-serif'
+          }
+        }}
       >
-        <Notifications position="top-right" limit={4} />
-        {children}
-      </MantineProvider>
+        <AntApp>
+          {children}
+        </AntApp>
+      </ConfigProvider>
     </ThemeModeContext.Provider>
   )
 }
@@ -201,3 +148,4 @@ router.on('success', (event) => {
 })
 
 InertiaProgress.init({ color: '#1f7aec', showSpinner: false })
+
