@@ -90,11 +90,11 @@ type AddSlotFormValues = {
 
 type AvailabilityRule = {
   id: string
-  day_of_week: number
-  start_time: string
-  end_time: string
-  visit_type: 'in-person' | 'video'
-  breaks?: { break_start_local: string; break_end_local: string }[]
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  visitType: 'in-person' | 'video'
+  breaks?: { breakStartLocal: string; breakEndLocal: string }[]
 }
 
 type ScheduleException = {
@@ -264,7 +264,7 @@ const DoctorSchedule = ({
   ]
 
   // Filter rules for the active tab (Weekly View)
-  const currentDayRules = availabilityRules.filter((r: AvailabilityRule) => r.day_of_week === parseInt(activeTab))
+  const currentDayRules = availabilityRules.filter((r: AvailabilityRule) => r.dayOfWeek === parseInt(activeTab))
 
   const columns = [
     {
@@ -274,14 +274,14 @@ const DoctorSchedule = ({
         <Space>
           <IconClock size={16} />
           <Text>
-            {dayjs(record.start_time, 'HH:mm:ss').format('h:mm A')} - {dayjs(record.end_time, 'HH:mm:ss').format('h:mm A')}
+            {dayjs(record.startTime, 'HH:mm').format('h:mm A')} - {dayjs(record.endTime, 'HH:mm').format('h:mm A')}
           </Text>
         </Space>
       )
     },
     {
       title: t('schedule.mode', 'Mode'),
-      dataIndex: 'visit_type', // legacy field map, or scope_consultation_mode
+      dataIndex: 'visitType', // legacy field map, or scope_consultation_mode
       render: (val: string) => <Tag>{val || 'In-Person'}</Tag>
     },
     {
@@ -295,6 +295,58 @@ const DoctorSchedule = ({
     }
   ]
 
+  /* Logic to pre-populate form from existing rules */
+  const populateFormWithExistingRules = () => {
+    if (availabilityRules.length === 0) {
+      reset(INITIAL_FORM_VALUES)
+      setIsModalOpen(true)
+      return
+    }
+
+    const transformedDays = [1, 2, 3, 4, 5, 6, 7].map(dayNum => {
+      const rulesForDay = availabilityRules.filter(r => r.dayOfWeek === dayNum)
+
+      if (rulesForDay.length === 0) {
+        return {
+          dayOfWeek: dayNum,
+          enabled: false,
+          windows: [{
+            workStartLocal: '09:00',
+            workEndLocal: '17:00',
+            slotIntervalMinutes: 30,
+            breaks: []
+          }]
+        }
+      }
+
+      // Map existing rules to windows
+      // NOTE: Current UI only supports multiple windows if we refactor 'windows' array usage. 
+      // For now, we take the primary rule or map all rules if the UI supports it.
+      // Based on typical availability, one block per day is standard, but the structure supports multiple.
+      const windows = rulesForDay.map(r => ({
+        workStartLocal: r.startTime, // Formatted as HH:mm from backend
+        workEndLocal: r.endTime,
+        slotIntervalMinutes: 30, // Default or derived if available
+        breaks: r.breaks?.map(b => ({
+          breakStartLocal: b.breakStartLocal,
+          breakEndLocal: b.breakEndLocal
+        })) || [] // Ensure breaks are mapped if they exist locally or from backend
+      }))
+
+      return {
+        dayOfWeek: dayNum,
+        enabled: true,
+        windows: windows
+      }
+    })
+
+    reset({
+      ...INITIAL_FORM_VALUES,
+      days: transformedDays
+    })
+    setIsModalOpen(true)
+  }
+
   return (
     <div style={{ padding: 24, paddingBottom: 80 }}>
       {/* Header */}
@@ -306,9 +358,9 @@ const DoctorSchedule = ({
         <Button
           type="primary"
           icon={<IconPlus size={16} />}
-          onClick={() => { reset(INITIAL_FORM_VALUES); setIsModalOpen(true) }}
+          onClick={populateFormWithExistingRules}
         >
-          {t('schedule.add_availability', 'Add Availability')}
+          {t('schedule.edit_availability', 'Edit Availability')}
         </Button>
       </Flex>
 
