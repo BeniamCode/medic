@@ -13,6 +13,10 @@ defmodule Medic.Scheduling do
     resource Medic.Scheduling.ScheduleTemplateBreak
     resource Medic.Scheduling.AvailabilityException
     resource Medic.Scheduling.TimeOffRequest
+    resource Medic.Scheduling.BookableResource
+    resource Medic.Scheduling.ScheduleRule
+    resource Medic.Scheduling.ScheduleRuleBreak
+    resource Medic.Scheduling.ScheduleException
   end
 
   import Ecto.Query
@@ -21,6 +25,9 @@ defmodule Medic.Scheduling do
   alias Medic.Scheduling.{
     AvailabilityRule,
     AvailabilityException,
+    ScheduleException,
+    ScheduleRule,
+    ScheduleRuleBreak,
     ScheduleTemplate,
     ScheduleTemplateBreak,
     TimeOffRequest
@@ -85,6 +92,249 @@ defmodule Medic.Scheduling do
   def delete_availability_rule(%AvailabilityRule{} = rule) do
     Ash.destroy(rule)
   end
+
+  defp schedule_rule_for_day_map(doctor_id, day_of_week) do
+    case find_schedule_rule_for_day(doctor_id, day_of_week) do
+      nil -> nil
+      rule -> schedule_rule_to_virtual_rule(rule)
+    end
+  end
+
+  defp schedule_rule_to_virtual_rule(%ScheduleRule{} = rule) do
+    rule = Ash.load!(rule, :breaks)
+    break = List.first(rule.breaks || [])
+
+    %{
+      day_of_week: rule.day_of_week,
+      start_time: rule.work_start_local,
+      end_time: rule.work_end_local,
+      break_start: break && break.break_start_local,
+      break_end: break && break.break_end_local,
+      slot_duration_minutes: rule.slot_interval_minutes,
+      timezone: rule.timezone
+    }
+  end
+
+  defp availability_rule_map(doctor_id, day_of_week) do
+    AvailabilityRule
+    |> where([r], r.doctor_id == ^doctor_id)
+    |> where([r], r.day_of_week == ^day_of_week)
+    |> where([r], r.is_active == true)
+    |> Repo.one()
+    |> case do
+      nil ->
+        nil
+
+      rule ->
+        %{
+          day_of_week: rule.day_of_week,
+          start_time: rule.start_time,
+          end_time: rule.end_time,
+          break_start: rule.break_start,
+          break_end: rule.break_end,
+          slot_duration_minutes: rule.slot_duration_minutes,
+          timezone: @timezone
+        }
+    end
+  end
+
+  # --- Schedule Rules (canonical engine) ---
+
+  @doc """
+  Returns schedule rules formatted for the legacy UI. Falls back to
+  availability rules if no schedule rules exist yet.
+  """
+  def list_schedule_rules_for_ui(doctor_id) do
+    schedule_rules =
+      ScheduleRule
+      |> Ash.Query.filter(doctor_id == ^doctor_id)
+      |> Ash.Query.load(:breaks)
+      |> Ash.Query.sort(:day_of_week)
+      |> Ash.read!()
+
+    if Enum.empty?(schedule_rules) do
+      list_availability_rules(doctor_id, include_inactive: true)
+      |> Enum.map(&legacy_rule_to_ui/1)
+    else
+      Enum.map(schedule_rules, &schedule_rule_to_ui/1)
+    end
+  end
+
+  @doc """
+  Creates or updates a schedule rule based on the UI payload.
+  Passing `is_active: false` removes the rule for that weekday.
+  """
+  def upsert_schedule_rule(doctor_id, attrs) when is_map(attrs) do
+    attrs = Map.new(attrs)
+
+    if truthy?(Map.get(attrs, :is_active, true)) do
+      with {:ok, rule} <- persist_schedule_rule(doctor_id, attrs),
+           {:ok, _} <- sync_rule_breaks(rule, attrs[:break_start], attrs[:break_end]) do
+        {:ok, rule}
+      end
+    else
+      delete_schedule_rule(doctor_id, attrs)
+    end
+  end
+
+  @doc """
+  Deletes a schedule rule by id (or attributes containing id/day_of_week).
+  """
+  def delete_schedule_rule(doctor_id, %{id: id}) when not is_nil(id),
+    do: delete_schedule_rule(doctor_id, id)
+
+  def delete_schedule_rule(doctor_id, %{day_of_week: day}) when not is_nil(day) do
+    case find_schedule_rule_for_day(doctor_id, day) do
+      nil -> {:ok, :noop}
+      %ScheduleRule{} = rule -> destroy_schedule_rule(rule)
+    end
+  end
+
+  def delete_schedule_rule(doctor_id, id) when is_binary(id) do
+    with {:ok, %ScheduleRule{} = rule} <- get_schedule_rule(doctor_id, id) do
+      destroy_schedule_rule(rule)
+    end
+  end
+
+  def delete_schedule_rule(_doctor_id, _attrs), do: {:ok, :noop}
+
+  @doc """
+  Creates a schedule exception (new override engine).
+  """
+  def create_schedule_exception(attrs) do
+    ScheduleException
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  defp schedule_rule_to_ui(%ScheduleRule{} = rule) do
+    rule = Ash.load!(rule, :breaks)
+    break = List.first(rule.breaks || [])
+
+    %{
+      id: rule.id,
+      day_of_week: rule.day_of_week,
+      start_time: rule.work_start_local,
+      end_time: rule.work_end_local,
+      break_start: break && break.break_start_local,
+      break_end: break && break.break_end_local,
+      slot_duration_minutes: rule.slot_interval_minutes,
+      is_active: true,
+      timezone: rule.timezone
+    }
+  end
+
+  defp legacy_rule_to_ui(%AvailabilityRule{} = rule) do
+    %{
+      id: rule.id,
+      day_of_week: rule.day_of_week,
+      start_time: rule.start_time,
+      end_time: rule.end_time,
+      break_start: rule.break_start,
+      break_end: rule.break_end,
+      slot_duration_minutes: rule.slot_duration_minutes,
+      is_active: rule.is_active,
+      timezone: @timezone
+    }
+  end
+
+  defp persist_schedule_rule(doctor_id, attrs) do
+    data = %{
+      timezone: Map.get(attrs, :timezone, @timezone),
+      day_of_week: attrs[:day_of_week],
+      work_start_local: attrs[:start_time],
+      work_end_local: attrs[:end_time],
+      slot_interval_minutes: attrs[:slot_duration_minutes] || 30,
+      buffer_before_minutes: 0,
+      buffer_after_minutes: 0,
+      priority: 0
+    }
+
+    case find_schedule_rule_for_upsert(doctor_id, attrs) do
+      nil ->
+        ScheduleRule
+        |> Ash.Changeset.for_create(:create, Map.put(data, :doctor_id, doctor_id))
+        |> Ash.create()
+
+      %ScheduleRule{} = rule ->
+        rule
+        |> Ash.Changeset.for_update(:update, Map.drop(data, [:day_of_week]))
+        |> Ash.update()
+    end
+  end
+
+  defp sync_rule_breaks(rule, nil, nil) do
+    rule
+    |> Ash.load!(:breaks)
+    |> Map.get(:breaks, [])
+    |> Enum.each(&Ash.destroy/1)
+
+    {:ok, rule}
+  end
+
+  defp sync_rule_breaks(rule, break_start, break_end) do
+    rule = Ash.load!(rule, :breaks)
+    payload = %{break_start_local: break_start, break_end_local: break_end}
+
+    case rule.breaks do
+      [existing | _] ->
+        existing
+        |> Ash.Changeset.for_update(:update, payload)
+        |> Ash.update()
+
+      _ ->
+        ScheduleRuleBreak
+        |> Ash.Changeset.for_create(:create, Map.put(payload, :schedule_rule_id, rule.id))
+        |> Ash.create()
+    end
+  end
+
+  defp find_schedule_rule_for_upsert(doctor_id, attrs) do
+    cond do
+      attrs[:id] ->
+        case get_schedule_rule(doctor_id, attrs[:id]) do
+          {:ok, rule} -> rule
+          _ -> nil
+        end
+
+      attrs[:day_of_week] ->
+        find_schedule_rule_for_day(doctor_id, attrs[:day_of_week])
+
+      true ->
+        nil
+    end
+  end
+
+  defp get_schedule_rule(doctor_id, id) do
+    case Ash.get(ScheduleRule, id) do
+      {:ok, %ScheduleRule{doctor_id: ^doctor_id} = rule} -> {:ok, rule}
+      {:ok, _} -> {:error, :forbidden}
+      {:error, reason} -> {:error, reason}
+    end
+  rescue
+    _ -> {:error, :not_found}
+  end
+
+  defp find_schedule_rule_for_day(doctor_id, day_of_week) do
+    ScheduleRule
+    |> Ash.Query.filter(doctor_id == ^doctor_id and day_of_week == ^day_of_week)
+    |> Ash.Query.sort(:priority)
+    |> Ash.Query.limit(1)
+    |> Ash.Query.load(:breaks)
+    |> Ash.read!()
+    |> List.first()
+  end
+
+  defp destroy_schedule_rule(rule) do
+    rule
+    |> Ash.load!(:breaks)
+    |> Map.get(:breaks, [])
+    |> Enum.each(&Ash.destroy/1)
+
+    Ash.destroy(rule)
+  end
+
+  defp truthy?(value), do: value not in [false, "false", 0, "0", nil]
 
   @doc """
   Returns an availability rule changeset.
@@ -205,8 +455,10 @@ defmodule Medic.Scheduling do
         []
 
       rule ->
+        rule_timezone = Map.get(rule, :timezone, timezone)
+
         # Generate slots from the rule
-        potential_slots = generate_slots_from_rule(rule, date, timezone)
+        potential_slots = generate_slots_from_rule(rule, date, rule_timezone)
 
         # Get existing appointments for this doctor on this date
         booked_ranges = get_booked_ranges(doctor_id, date, timezone)
@@ -241,7 +493,11 @@ defmodule Medic.Scheduling do
   The PostgreSQL exclusion constraint will reject double-bookings.
   """
   def book_slot(doctor_id, patient_id, starts_at, ends_at, opts \\ []) do
-    appointment_type = Keyword.get(opts, :appointment_type, "in_person")
+    consultation_mode =
+      Keyword.get(opts, :consultation_mode) ||
+        Keyword.get(opts, :appointment_type) ||
+        "in_person"
+
     notes = Keyword.get(opts, :notes)
 
     Appointment
@@ -251,7 +507,7 @@ defmodule Medic.Scheduling do
       starts_at: starts_at,
       ends_at: ends_at,
       status: "confirmed",
-      appointment_type: appointment_type,
+      consultation_mode_snapshot: consultation_mode,
       notes: notes
     })
     |> Ash.create()
@@ -281,35 +537,38 @@ defmodule Medic.Scheduling do
   # --- Private Functions ---
 
   defp get_rule_for_day(doctor_id, day_of_week) do
-    AvailabilityRule
-    |> where([r], r.doctor_id == ^doctor_id)
-    |> where([r], r.day_of_week == ^day_of_week)
-    |> where([r], r.is_active == true)
-    |> Repo.one()
+    schedule_rule_for_day_map(doctor_id, day_of_week) ||
+      availability_rule_map(doctor_id, day_of_week)
   end
 
   defp generate_slots_from_rule(rule, date, timezone) do
-    slot_duration = rule.slot_duration_minutes
+    slot_duration = Map.get(rule, :slot_duration_minutes, 30)
+    start_time = Map.get(rule, :start_time)
+    end_time = Map.get(rule, :end_time)
 
-    # Convert rule times to datetime in the target timezone
-    day_start = combine_date_time(date, rule.start_time, timezone)
-    day_end = combine_date_time(date, rule.end_time, timezone)
+    if is_nil(start_time) or is_nil(end_time) do
+      []
+    else
+      # Convert rule times to datetime in the target timezone
+      day_start = combine_date_time(date, start_time, timezone)
+      day_end = combine_date_time(date, end_time, timezone)
 
-    # Generate slot boundaries
-    slot_times = generate_slot_times(day_start, day_end, slot_duration)
+      # Generate slot boundaries
+      slot_times = generate_slot_times(day_start, day_end, slot_duration)
 
-    # Remove slots that fall within break time
-    slot_times
-    |> Enum.reject(fn {starts_at, ends_at} ->
-      in_break?(starts_at, ends_at, rule, date, timezone)
-    end)
-    |> Enum.map(fn {starts_at, ends_at} ->
-      %{
-        starts_at: Timex.to_datetime(starts_at, "Etc/UTC"),
-        ends_at: Timex.to_datetime(ends_at, "Etc/UTC"),
-        status: :free
-      }
-    end)
+      # Remove slots that fall within break time
+      slot_times
+      |> Enum.reject(fn {starts_at, _ends_at} ->
+        in_break?(starts_at, rule, date, timezone)
+      end)
+      |> Enum.map(fn {starts_at, ends_at} ->
+        %{
+          starts_at: Timex.to_datetime(starts_at, "Etc/UTC"),
+          ends_at: Timex.to_datetime(ends_at, "Etc/UTC"),
+          status: :free
+        }
+      end)
+    end
   end
 
   defp generate_slot_times(start_dt, end_dt, duration_minutes) do
@@ -331,8 +590,8 @@ defmodule Medic.Scheduling do
     |> Timex.set(hour: time.hour, minute: time.minute, second: 0)
   end
 
-  defp in_break?(starts_at, _ends_at, rule, date, timezone) do
-    case {rule.break_start, rule.break_end} do
+  defp in_break?(starts_at, rule, date, timezone) do
+    case {Map.get(rule, :break_start), Map.get(rule, :break_end)} do
       {nil, _} ->
         false
 

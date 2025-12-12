@@ -140,12 +140,17 @@ defmodule MedicWeb.DoctorController do
   end
 
   defp create_booking(doctor, patient, slot, params) do
+    consultation_mode =
+      Map.get(params, "consultation_mode") ||
+        Map.get(params, "appointment_type") ||
+        "in_person"
+
     Appointments.create_appointment(%{
       doctor_id: doctor.id,
       patient_id: patient.id,
       starts_at: slot.starts_at,
       ends_at: slot.ends_at,
-      appointment_type: Map.get(params, "appointment_type", "in_person"),
+      consultation_mode_snapshot: consultation_mode,
       notes: Map.get(params, "notes")
     })
   end

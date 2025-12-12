@@ -23,7 +23,7 @@ defmodule Medic.Appointments.Appointment do
         :starts_at,
         :ends_at,
         :duration_minutes,
-        :appointment_type,
+        :consultation_mode_snapshot,
         :status,
         :notes,
         :doctor_id,
@@ -37,7 +37,17 @@ defmodule Medic.Appointments.Appointment do
         :reschedule_count,
         :cancelled_by,
         :patient_timezone,
-        :doctor_timezone
+        :doctor_timezone,
+        :service_name_snapshot,
+        :service_duration_snapshot,
+        :service_price_cents_snapshot,
+        :service_currency_snapshot,
+        :external_reference,
+        :hold_expires_at,
+        :created_by_actor_type,
+        :created_by_actor_id,
+        :cancelled_by_actor_type,
+        :cancelled_by_actor_id
       ]
     end
 
@@ -46,7 +56,7 @@ defmodule Medic.Appointments.Appointment do
         :starts_at,
         :ends_at,
         :duration_minutes,
-        :appointment_type,
+        :consultation_mode_snapshot,
         :status,
         :notes,
         :doctor_location_id,
@@ -58,7 +68,15 @@ defmodule Medic.Appointments.Appointment do
         :reschedule_count,
         :cancelled_by,
         :patient_timezone,
-        :doctor_timezone
+        :doctor_timezone,
+        :service_name_snapshot,
+        :service_duration_snapshot,
+        :service_price_cents_snapshot,
+        :service_currency_snapshot,
+        :external_reference,
+        :hold_expires_at,
+        :cancelled_by_actor_type,
+        :cancelled_by_actor_id
       ]
     end
   end
@@ -71,7 +89,7 @@ defmodule Medic.Appointments.Appointment do
     attribute :duration_minutes, :integer, default: 30
     attribute :status, :string, default: "pending"
     attribute :meeting_url, :string
-    attribute :appointment_type, :string, default: "in_person"
+    attribute :consultation_mode_snapshot, :string, default: "in_person"
     attribute :notes, :string
     attribute :cancellation_reason, :string
     attribute :cancelled_at, :utc_datetime
@@ -82,6 +100,16 @@ defmodule Medic.Appointments.Appointment do
     attribute :cancelled_by, :string
     attribute :patient_timezone, :string
     attribute :doctor_timezone, :string
+    attribute :service_name_snapshot, :string
+    attribute :service_duration_snapshot, :integer
+    attribute :service_price_cents_snapshot, :integer
+    attribute :service_currency_snapshot, :string
+    attribute :external_reference, :string
+    attribute :hold_expires_at, :utc_datetime
+    attribute :created_by_actor_type, :string
+    attribute :created_by_actor_id, :uuid
+    attribute :cancelled_by_actor_type, :string
+    attribute :cancelled_by_actor_id, :uuid
 
     timestamps()
   end
@@ -97,12 +125,13 @@ defmodule Medic.Appointments.Appointment do
       destination_attribute: :id
 
     has_many :events, Medic.Appointments.AppointmentEvent
+    has_many :resource_claims, Medic.Appointments.AppointmentResourceClaim
   end
 
   # --- Legacy Logic ---
 
-  @statuses ~w(pending confirmed completed cancelled no_show)
-  @appointment_types ~w(in_person telemedicine)
+  @statuses ~w(pending confirmed completed cancelled no_show held)
+  @consultation_modes ~w(in_person telemedicine)
 
   @doc false
   def changeset(appointment, attrs) do
@@ -111,7 +140,7 @@ defmodule Medic.Appointments.Appointment do
       :starts_at,
       :ends_at,
       :duration_minutes,
-      :appointment_type,
+      :consultation_mode_snapshot,
       :status,
       :notes,
       :doctor_id,
@@ -125,13 +154,24 @@ defmodule Medic.Appointments.Appointment do
       :reschedule_count,
       :cancelled_by,
       :patient_timezone,
-      :doctor_timezone
+      :doctor_timezone,
+      :service_name_snapshot,
+      :service_duration_snapshot,
+      :service_price_cents_snapshot,
+      :service_currency_snapshot,
+      :external_reference,
+      :hold_expires_at,
+      :created_by_actor_type,
+      :created_by_actor_id,
+      :cancelled_by_actor_type,
+      :cancelled_by_actor_id
     ])
     |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)
-    |> validate_inclusion(:appointment_type, @appointment_types)
+    |> validate_inclusion(:consultation_mode_snapshot, @consultation_modes)
     |> validate_number(:duration_minutes, greater_than: 0, less_than_or_equal_to: 240)
     |> validate_number(:reschedule_count, greater_than_or_equal_to: 0)
+    |> validate_number(:service_duration_snapshot, greater_than: 0)
     |> validate_time_order()
     |> validate_future_date()
     |> foreign_key_constraint(:patient_id)
@@ -186,14 +226,14 @@ defmodule Medic.Appointments.Appointment do
       :ends_at,
       :duration_minutes,
       :status,
-      :appointment_type,
+      :consultation_mode_snapshot,
       :notes,
       :doctor_id,
       :patient_id
     ])
     |> validate_required([:starts_at, :ends_at, :doctor_id])
     |> validate_inclusion(:status, @statuses)
-    |> validate_inclusion(:appointment_type, @appointment_types)
+    |> validate_inclusion(:consultation_mode_snapshot, @consultation_modes)
     |> validate_number(:duration_minutes, greater_than: 0, less_than_or_equal_to: 240)
     |> validate_time_order()
     |> foreign_key_constraint(:patient_id)
@@ -248,6 +288,6 @@ defmodule Medic.Appointments.Appointment do
   @doc """
   Checks if the appointment is a telemedicine appointment.
   """
-  def telemedicine?(%{appointment_type: "telemedicine"}), do: true
+  def telemedicine?(%{consultation_mode_snapshot: "telemedicine"}), do: true
   def telemedicine?(_), do: false
 end

@@ -10,6 +10,7 @@ defmodule Medic.Appointments do
     resource Medic.Appointments.AppointmentType
     resource Medic.Appointments.AppointmentTypeLocation
     resource Medic.Appointments.AppointmentEvent
+    resource Medic.Appointments.AppointmentResourceClaim
   end
 
   import Ecto.Query
@@ -17,9 +18,9 @@ defmodule Medic.Appointments do
 
   alias Medic.Appointments.{
     Appointment,
+    AppointmentEvent,
     AppointmentType,
-    AppointmentTypeLocation,
-    AppointmentEvent
+    AppointmentTypeLocation
   }
 
   alias Medic.Notifications
@@ -159,6 +160,11 @@ defmodule Medic.Appointments do
   The PostgreSQL exclusion constraint will reject double-bookings.
   """
   def create_appointment(attrs \\ %{}) do
+    attrs =
+      attrs
+      |> Map.new()
+      |> ensure_consultation_mode_snapshot()
+
     result =
       %Appointment{}
       |> Appointment.changeset(attrs)
@@ -208,6 +214,26 @@ defmodule Medic.Appointments do
     attrs
     |> Map.put(:ends_at, ends_at)
     |> create_appointment()
+  end
+
+  defp ensure_consultation_mode_snapshot(attrs) do
+    cond do
+      Map.has_key?(attrs, :consultation_mode_snapshot) ->
+        attrs
+
+      Map.has_key?(attrs, "consultation_mode_snapshot") ->
+        attrs
+
+      true ->
+        mode =
+          Map.get(attrs, :consultation_mode) ||
+            Map.get(attrs, "consultation_mode") ||
+            Map.get(attrs, :appointment_type) ||
+            Map.get(attrs, "appointment_type") ||
+            "in_person"
+
+        Map.put(attrs, :consultation_mode_snapshot, mode)
+    end
   end
 
   @doc """

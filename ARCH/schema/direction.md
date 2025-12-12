@@ -1,5 +1,24 @@
 Overall: this is a strong, scalable direction for Phoenix + Ash + Postgres, and it’s already thinking about the right “hard parts” (audit log, exceptions, double-booking constraints, service catalog, templates). The main risks are (1) schedule model duplication, (2) parallel sessions vs exclusion constraints, and (3) a couple naming/normalization issues that will bite later.
 
+## Execution plan (how we’ll roll this out)
+
+**Phase 0 – Audit & plan (✅ today):** document gaps vs. the proposal, align on the canonical data model, and freeze any new work on `availability_rules` so we can replace it cleanly.
+
+**Phase 1 – New primitives (this PR):**
+- Create the shared tables: `bookable_resources`, `appointment_resource_claims`, `schedule_rules`, `schedule_rule_breaks`, `schedule_exceptions`.
+- Add snapshot + actor columns to `appointments` and rename the legacy `appointment_type` column to `consultation_mode_snapshot`.
+- Expose Ash resources for the new tables so services can start persisting data without touching legacy flows yet.
+
+**Phase 2 – Feature adoption:**
+- Teach the scheduling context to read from `schedule_rules` (while still backfilling from availability rules for existing doctors) and emit resource claims when booking.
+- Update booking flows (doctor portal + patient booking) to capture consultation mode snapshots and resource assignments.
+
+**Phase 3 – Cutover & cleanup:**
+- Remove/alias `availability_rules`/`schedule_templates` once all traffic is on `schedule_rules`.
+- Drop the legacy `appointment_type` string usages in FE/back-end, delete compatibility code, and enforce `bookable_resources` claims everywhere.
+
+We can iterate on Phase 2/3 in smaller PRs (e.g., “slots now read from schedule_rules for telemedicine” or “create resource claims when confirming appointments”).
+
 Stack fit (Phoenix + Ash + Inertia + TanStack Query + Postgres)
 
 Phoenix + Ash + Postgres is a great combo for this domain: validations, policies, atomic actions, and PG constraints do the real safety work.

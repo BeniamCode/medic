@@ -119,19 +119,17 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
     defaultValues: draftRules[modalDay] || { ...DEFAULT_VALUES, day_of_week: modalDay }
   })
 
-  const { control, handleSubmit, reset, watch, getValues } = form
-
-  useEffect(() => {
-    reset(draftRules[modalDay] || { ...DEFAULT_VALUES, day_of_week: modalDay })
-  }, [modalDay, draftRules, reset])
+  const { control, handleSubmit, reset, watch } = form
 
   useEffect(() => {
     if (!opened) return
-    const subscription = watch((value) => {
-      syncDraft(modalDay, value as typeof DEFAULT_VALUES)
-    })
-    return () => subscription.unsubscribe()
-  }, [watch, opened, modalDay])
+    reset(initialDrafts[modalDay] || { ...DEFAULT_VALUES, day_of_week: modalDay })
+  }, [opened, modalDay, initialDrafts, reset])
+
+  useEffect(() => {
+    if (opened) return
+    syncDraft(modalDay, form.getValues())
+  }, [opened, modalDay, form])
 
   const syncDraft = (day: string, values: typeof DEFAULT_VALUES) => {
     setDraftRules((prev) => ({
@@ -380,7 +378,7 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
                     variant={modalDay === option.value ? 'filled' : 'light'}
                     color="teal"
                     onClick={() => {
-                      syncDraft(modalDay, getValues())
+                      syncDraft(modalDay, form.getValues())
                       setModalDay(option.value)
                       reset(draftRules[option.value] || { ...DEFAULT_VALUES, day_of_week: option.value })
                     }}
@@ -483,10 +481,10 @@ const DoctorSchedulePage = ({ availabilityRules, upcomingAppointments }: PagePro
                   </Text>
                 </div>
                 <Switch
-                  checked={Boolean(getValues('break_start') || getValues('break_end'))}
+                  checked={Boolean(form.getValues('break_start') || form.getValues('break_end'))}
                   onChange={(event) => {
                     if (!event.currentTarget.checked) {
-                      reset({ ...getValues(), break_start: '', break_end: '' })
+                      reset({ ...form.getValues(), break_start: '', break_end: '' })
                     }
                   }}
                 />

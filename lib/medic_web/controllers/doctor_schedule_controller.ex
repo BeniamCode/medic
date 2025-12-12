@@ -4,11 +4,10 @@ defmodule MedicWeb.DoctorScheduleController do
   alias Medic.Appointments
   alias Medic.Doctors
   alias Medic.Scheduling
-  alias Medic.Scheduling.AvailabilityRule
 
   def show(conn, _params) do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
-      rules = Scheduling.list_availability_rules(doctor.id, include_inactive: true)
+      rules = Scheduling.list_schedule_rules_for_ui(doctor.id)
 
       upcoming =
         Appointments.list_appointments(
@@ -28,42 +27,38 @@ defmodule MedicWeb.DoctorScheduleController do
   end
 
   def update(conn, %{"rule" => rule_params}) do
-    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
-      attrs =
-        rule_params
-        |> normalize_rule_params()
-        |> Map.put("doctor_id", doctor.id)
-
-      result =
-        case Map.get(attrs, "id") do
-          "" ->
-            Scheduling.create_availability_rule(attrs)
-
-          nil ->
-            Scheduling.create_availability_rule(attrs)
-
-          id ->
-            rule = Scheduling.get_availability_rule!(id)
-            Scheduling.update_availability_rule(rule, attrs)
-        end
-
-      case result do
-        {:ok, _rule} ->
-          conn
-          |> put_flash(:success, dgettext("default", "Availability saved"))
-          |> redirect(to: ~p"/doctor/schedule")
-
-        {:error, _changeset} ->
-          conn
-          |> put_flash(:error, dgettext("default", "Unable to save rule"))
-          |> redirect(to: ~p"/doctor/schedule")
-      end
+    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
+         attrs <- normalize_rule_params(rule_params),
+         {:ok, _} <- Scheduling.upsert_schedule_rule(doctor.id, attrs) do
+      conn
+      |> put_flash(:success, dgettext("default", "Availability saved"))
+      |> redirect(to: ~p"/doctor/schedule")
     else
-      _ -> redirect(conn, to: ~p"/doctor/schedule")
+      _ ->
+        conn
+        |> put_flash(:error, dgettext("default", "Unable to save rule"))
+        |> redirect(to: ~p"/doctor/schedule")
     end
   end
 
   def delete(conn, %{"id" => id}) do
+    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
+         {:ok, _} <- Scheduling.delete_schedule_rule(doctor.id, id) do
+      conn
+      |> put_flash(:success, dgettext("default", "Rule removed"))
+      |> redirect(to: ~p"/doctor/schedule")
+    else
+      {:error, :not_found} ->
+        fallback_delete_legacy(conn, id)
+
+      _ ->
+        conn
+        |> put_flash(:error, dgettext("default", "Unable to delete rule"))
+        |> redirect(to: ~p"/doctor/schedule")
+    end
+  end
+
+  defp fallback_delete_legacy(conn, id) do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
          {:ok, rule} <- fetch_rule(id, doctor.id),
          {:ok, _} <- Scheduling.delete_availability_rule(rule) do
@@ -79,40 +74,78 @@ defmodule MedicWeb.DoctorScheduleController do
   end
 
   defp normalize_rule_params(params) do
-    params
-    |> Map.update("day_of_week", nil, fn
-      value when is_binary(value) and value != "" -> String.to_integer(value)
-      value -> value
-    end)
-    |> Map.update("slot_duration_minutes", nil, fn
-      value when is_binary(value) and value != "" -> String.to_integer(value)
-      value when is_float(value) -> round(value)
-      value -> value
-    end)
-    |> Map.update("break_start", nil, blank_to_nil())
-    |> Map.update("break_end", nil, blank_to_nil())
-    |> Map.update("id", nil, fn
-      "" -> nil
-      value -> value
-    end)
-    |> Map.update("is_active", true, fn
-      value when value in ["false", false] -> false
-      _ -> true
-    end)
+    %{
+      id: normalize_id(params["id"] || params[:id]),
+      day_of_week: parse_integer(params["day_of_week"] || params[:day_of_week]),
+      slot_duration_minutes:
+        parse_integer(params["slot_duration_minutes"] || params[:slot_duration_minutes]) || 30,
+      start_time: parse_time(params["start_time"] || params[:start_time]),
+      end_time: parse_time(params["end_time"] || params[:end_time]),
+      break_start: parse_time(params["break_start"] || params[:break_start]),
+      break_end: parse_time(params["break_end"] || params[:break_end]),
+      is_active: parse_boolean(params["is_active"] || params[:is_active])
+    }
   end
 
-  defp blank_to_nil do
-    fn
-      value when value in [nil, ""] -> nil
-      value -> value
+  defp normalize_id(value) when value in [nil, ""], do: nil
+  defp normalize_id(value), do: value
+
+  defp parse_integer(value) when is_integer(value), do: value
+  defp parse_integer(value) when is_float(value), do: round(value)
+
+  defp parse_integer(value) when is_binary(value) do
+    case Integer.parse(value) do
+      {int, _} -> int
+      _ -> nil
     end
   end
+
+  defp parse_integer(_), do: nil
+
+  defp parse_boolean(value) when value in [false, "false", 0, "0"], do: false
+  defp parse_boolean(_), do: true
+
+  defp parse_time(value) do
+    value
+    |> blank_to_nil_value()
+    |> do_parse_time()
+  end
+
+  defp do_parse_time(nil), do: nil
+  defp do_parse_time(%Time{} = time), do: time
+
+  defp do_parse_time(value) when is_binary(value) do
+    normalized =
+      case String.split(value, ":") do
+        [hour, minute] -> "#{hour}:#{minute}:00"
+        _ -> value
+      end
+
+    case Time.from_iso8601(normalized) do
+      {:ok, time} -> time
+      _ -> nil
+    end
+  end
+
+  defp do_parse_time(_), do: nil
+
+  defp blank_to_nil_value(value) when value in [nil, ""], do: nil
+  defp blank_to_nil_value(value), do: value
 
   def block_day(conn, %{"exception" => %{"date" => date}}) do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
          {:ok, parsed_date} <- Date.from_iso8601(date),
          {:ok, starts_at} <- DateTime.new(parsed_date, ~T[00:00:00], "Etc/UTC"),
          {:ok, ends_at} <- DateTime.new(parsed_date, ~T[23:59:59], "Etc/UTC"),
+         {:ok, _} <-
+           Scheduling.create_schedule_exception(%{
+             doctor_id: doctor.id,
+             starts_at: starts_at,
+             ends_at: ends_at,
+             exception_type: "blocked",
+             reason: "doctor_day_off",
+             source: "manual"
+           }),
          {:ok, _} <-
            Scheduling.create_availability_exception(%{
              doctor_id: doctor.id,
@@ -152,18 +185,24 @@ defmodule MedicWeb.DoctorScheduleController do
     _ -> {:error, :not_found}
   end
 
-  defp rule_props(%AvailabilityRule{} = rule) do
+  defp rule_props(rule) do
     %{
-      id: rule.id,
-      day_of_week: rule.day_of_week,
-      start_time: Calendar.strftime(rule.start_time, "%H:%M"),
-      end_time: Calendar.strftime(rule.end_time, "%H:%M"),
-      break_start: rule.break_start && Calendar.strftime(rule.break_start, "%H:%M"),
-      break_end: rule.break_end && Calendar.strftime(rule.break_end, "%H:%M"),
-      slot_duration_minutes: rule.slot_duration_minutes,
-      is_active: rule.is_active
+      id: Map.get(rule, :id),
+      day_of_week: Map.get(rule, :day_of_week),
+      start_time: format_time(Map.get(rule, :start_time)),
+      end_time: format_time(Map.get(rule, :end_time)),
+      break_start: format_time(Map.get(rule, :break_start)),
+      break_end: format_time(Map.get(rule, :break_end)),
+      slot_duration_minutes: Map.get(rule, :slot_duration_minutes, 30),
+      is_active: Map.get(rule, :is_active, true)
     }
   end
+
+  defp format_time(nil), do: nil
+  defp format_time(%Time{} = time), do: Calendar.strftime(time, "%H:%M")
+  defp format_time(%NaiveDateTime{} = dt), do: dt |> NaiveDateTime.to_time() |> format_time()
+  defp format_time(value) when is_binary(value), do: value
+  defp format_time(_), do: nil
 
   defp appointment_props(appt) do
     %{
