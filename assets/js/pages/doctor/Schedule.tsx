@@ -31,7 +31,9 @@ import {
   IconCalendarEvent,
   IconUser,
   IconVideo,
-  IconPhone
+  IconPhone,
+  IconCheck,
+  IconMinus
 } from '@tabler/icons-react'
 import { router } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
@@ -85,7 +87,7 @@ type Scope = {
 type AddSlotFormValues = {
   scope: Scope
   days: DayConfig[]
-  replaceMode: 'replace_selected_days' | 'append'
+  replaceMode: 'replace_selected_days' | 'append' | 'reset_all'
 }
 
 type AvailabilityRule = {
@@ -263,48 +265,12 @@ const DoctorSchedule = ({
     { value: 7, label: t('days.sunday', 'Sun') }
   ]
 
-  // Filter rules for the active tab (Weekly View)
-  const currentDayRules = availabilityRules.filter((r: AvailabilityRule) => r.dayOfWeek === parseInt(activeTab))
 
-  const columns = [
-    {
-      title: t('schedule.time_slot', 'Time Slot'),
-      key: 'time',
-      render: (_: any, record: AvailabilityRule) => (
-        <Space>
-          <IconClock size={16} />
-          <Text>
-            {dayjs(record.startTime, 'HH:mm').format('h:mm A')} - {dayjs(record.endTime, 'HH:mm').format('h:mm A')}
-          </Text>
-        </Space>
-      )
-    },
-    {
-      title: t('schedule.mode', 'Mode'),
-      dataIndex: 'visitType', // legacy field map, or scope_consultation_mode
-      render: (val: string) => <Tag>{val || 'In-Person'}</Tag>
-    },
-    {
-      title: t('common.actions', 'Actions'),
-      key: 'actions',
-      render: (_: any, record: AvailabilityRule) => (
-        <Popconfirm title={t('common.are_you_sure')} onConfirm={() => router.delete(`/doctor/schedule/${record.id}`)}>
-          <Button type="text" danger icon={<IconTrash size={16} />} />
-        </Popconfirm>
-      )
-    }
-  ]
 
-  /* Logic to pre-populate form from existing rules */
-  const populateFormWithExistingRules = () => {
-    if (availabilityRules.length === 0) {
-      reset(INITIAL_FORM_VALUES)
-      setIsModalOpen(true)
-      return
-    }
-
+  /* Helper to transform rules to form values for bulk upsert */
+  const transformRulesToFormValues = (rules: AvailabilityRule[]): AddSlotFormValues => {
     const transformedDays = [1, 2, 3, 4, 5, 6, 7].map(dayNum => {
-      const rulesForDay = availabilityRules.filter(r => r.dayOfWeek === dayNum)
+      const rulesForDay = rules.filter(r => r.dayOfWeek === dayNum)
 
       if (rulesForDay.length === 0) {
         return {
@@ -319,18 +285,14 @@ const DoctorSchedule = ({
         }
       }
 
-      // Map existing rules to windows
-      // NOTE: Current UI only supports multiple windows if we refactor 'windows' array usage. 
-      // For now, we take the primary rule or map all rules if the UI supports it.
-      // Based on typical availability, one block per day is standard, but the structure supports multiple.
       const windows = rulesForDay.map(r => ({
-        workStartLocal: r.startTime, // Formatted as HH:mm from backend
+        workStartLocal: r.startTime,
         workEndLocal: r.endTime,
-        slotIntervalMinutes: 30, // Default or derived if available
+        slotIntervalMinutes: 30, // Assuming 30 if not present
         breaks: r.breaks?.map(b => ({
           breakStartLocal: b.breakStartLocal,
           breakEndLocal: b.breakEndLocal
-        })) || [] // Ensure breaks are mapped if they exist locally or from backend
+        })) || []
       }))
 
       return {
@@ -340,11 +302,119 @@ const DoctorSchedule = ({
       }
     })
 
-    reset({
-      ...INITIAL_FORM_VALUES,
-      days: transformedDays
-    })
+    return {
+      scope: INITIAL_FORM_VALUES.scope,
+      days: transformedDays,
+      replaceMode: 'replace_selected_days'
+    }
+  }
+
+  const populateFormWithExistingRules = () => {
+    if (availabilityRules.length === 0) {
+      reset(INITIAL_FORM_VALUES)
+      setIsModalOpen(true)
+      return
+    }
+    const values = transformRulesToFormValues(availabilityRules)
+    reset(values)
     setIsModalOpen(true)
+  }
+
+  /* Toggle Slot Availability */
+  const handleToggleSlot = (rule: AvailabilityRule, slotStart: string, slotEnd: string, isActive: boolean) => {
+    // We need to modify the rules list to add/remove a break
+    const newRules = JSON.parse(JSON.stringify(availabilityRules)) as AvailabilityRule[]
+    const targetRule = newRules.find(r => r.id === rule.id)
+
+    if (!targetRule) return
+
+    if (isActive) {
+      // Slot is currently active, so we deactivate it by ADDING a break
+      targetRule.breaks = targetRule.breaks || []
+      targetRule.breaks.push({
+        breakStartLocal: slotStart,
+        breakEndLocal: slotEnd
+      })
+    } else {
+      // Slot is inactive (break exists), so we activate it by REMOVING the break
+      // We look for a break that exactly matches or covers this slot. 
+      // Simplified: match start time exactly.
+      targetRule.breaks = targetRule.breaks?.filter(b => b.breakStartLocal !== slotStart) || []
+    }
+
+    const payload = transformRulesToFormValues(newRules)
+    saveMutation.mutate(payload)
+  }
+
+  /* Slot Grid Renderer */
+  const SlotGrid = ({ rules }: { rules: AvailabilityRule[] }) => {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {rules.map(rule => {
+          // Generate slots
+          const slots = []
+          // using today's date just for parsing time
+          let current = dayjs(`2000-01-01 ${rule.startTime}`, 'YYYY-MM-DD HH:mm')
+          const end = dayjs(`2000-01-01 ${rule.endTime}`, 'YYYY-MM-DD HH:mm')
+
+          while (current.isBefore(end)) {
+            const slotStart = current.format('HH:mm')
+            const next = current.add(30, 'minute') // Assuming 30 min interval
+            const slotEnd = next.format('HH:mm')
+
+            // Check if blocked by a break
+            const isBlocked = rule.breaks?.some(b => {
+              const bStart = dayjs(`2000-01-01 ${b.breakStartLocal}`, 'YYYY-MM-DD HH:mm')
+              const bEnd = dayjs(`2000-01-01 ${b.breakEndLocal}`, 'YYYY-MM-DD HH:mm')
+              // If slot is within or equal to break
+              return (current.isSame(bStart) || current.isAfter(bStart)) && current.isBefore(bEnd)
+            })
+
+            slots.push({ start: slotStart, end: slotEnd, active: !isBlocked })
+            current = next
+          }
+
+          return (
+            <Card key={rule.id} size="small" type="inner" title={`${dayjs(rule.startTime, 'HH:mm').format('h:mm A')} - ${dayjs(rule.endTime, 'HH:mm').format('h:mm A')}`}>
+              <Flex wrap="wrap" gap={8}>
+                {slots.map(slot => (
+                  <Button
+                    key={slot.start}
+                    type={slot.active ? 'primary' : 'default'} // Active=Primary, Inactive=Default(Greyish)
+                    icon={slot.active ? <IconCheck size={14} /> : <IconMinus size={14} />}
+                    onClick={() => handleToggleSlot(rule, slot.start, slot.end, slot.active)}
+                    ghost={!slot.active} // Ghost for inactive looks like an outline/disabled
+                    style={{
+                      opacity: slot.active ? 1 : 0.6,
+                      borderColor: slot.active ? undefined : '#d9d9d9',
+                    }}
+                  >
+                    {dayjs(slot.start, 'HH:mm').format('h:mm')}
+                  </Button>
+                ))}
+              </Flex>
+            </Card>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Filter rules for the active tab (Weekly View)
+  const currentDayRules = availabilityRules.filter((r: AvailabilityRule) => r.dayOfWeek === parseInt(activeTab))
+
+  /* Reset Schedule */
+  const handleResetSchedule = () => {
+    // To reset, we send a payload that targets all days (1-7) as "enabled"
+    // but with NO windows. This triggers the deletion logic for all 7 days
+    // but inserts nothing, effectively clearing the schedule.
+    const payload: AddSlotFormValues = {
+      scope: INITIAL_FORM_VALUES.scope,
+      days: [], // No days needed for reset_all
+      replaceMode: 'reset_all'
+    }
+
+    saveMutation.mutate(payload)
   }
 
   return (
@@ -355,13 +425,26 @@ const DoctorSchedule = ({
           <Title level={2} style={{ margin: 0 }}>{t('schedule.title', 'Manage Schedule')}</Title>
           <Text type="secondary">{t('schedule.subtitle', 'Set your recurring weekly availability.')}</Text>
         </div>
-        <Button
-          type="primary"
-          icon={<IconPlus size={16} />}
-          onClick={populateFormWithExistingRules}
-        >
-          {t('schedule.edit_availability', 'Edit Availability')}
-        </Button>
+        <Space>
+          <Popconfirm
+            title={t('common.are_you_sure')}
+            description={t('schedule.reset_confirm', 'This will remove ALL your availability rules. Are you sure?')}
+            onConfirm={handleResetSchedule}
+            okText={t('common.yes')}
+            cancelText={t('common.no')}
+          >
+            <Button danger>
+              {t('schedule.reset', 'Reset Schedule')}
+            </Button>
+          </Popconfirm>
+          <Button
+            type="primary"
+            icon={<IconPlus size={16} />}
+            onClick={populateFormWithExistingRules}
+          >
+            {t('schedule.edit_availability', 'Edit Availability')}
+          </Button>
+        </Space>
       </Flex>
 
       <Row gutter={[24, 24]}>
@@ -387,13 +470,11 @@ const DoctorSchedule = ({
               </Space>
             </div>
 
-            <Table
-              dataSource={currentDayRules}
-              columns={columns}
-              rowKey="id"
-              pagination={false}
-              locale={{ emptyText: t('schedule.no_slots', 'No availability slots configured for this day.') }}
-            />
+            {currentDayRules.length > 0 ? (
+              <SlotGrid rules={currentDayRules} />
+            ) : (
+              <Empty description={t('schedule.no_slots', 'No availability slots for this day.')} />
+            )}
           </Card>
 
           {/* Time Off Section */}

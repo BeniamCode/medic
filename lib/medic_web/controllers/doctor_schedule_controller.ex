@@ -218,6 +218,12 @@ defmodule MedicWeb.DoctorScheduleController do
       end_time: format_time(Map.get(rule, :end_time)),
       break_start: format_time(Map.get(rule, :break_start)),
       break_end: format_time(Map.get(rule, :break_end)),
+      breaks: Enum.map(Map.get(rule, :breaks, []), fn b ->
+        %{
+          break_start_local: format_time(b.break_start_local),
+          break_end_local: format_time(b.break_end_local)
+        }
+      end),
       slot_duration_minutes: Map.get(rule, :slot_duration_minutes, 30),
       is_active: Map.get(rule, :is_active, true)
     }

@@ -218,6 +218,7 @@ defmodule Medic.Scheduling do
       end_time: rule.work_end_local,
       break_start: break && break.break_start_local,
       break_end: break && break.break_end_local,
+      breaks: rule.breaks || [],
       slot_duration_minutes: rule.slot_interval_minutes,
       is_active: true,
       timezone: rule.timezone
@@ -686,11 +687,19 @@ defmodule Medic.Scheduling do
 
       selected_dows = Enum.map(days, & &1["dayOfWeek"])
 
-      if replace_mode == :replace_selected_days do
-        delete_rules_for_scope_and_days!(doctor_id, scope, selected_dows)
+      cond do
+        replace_mode == :reset_all ->
+          # Delete ALL rules for the doctor regardless of days or scope
+          delete_all_rules_for_doctor!(doctor_id)
+
+        replace_mode == :replace_selected_days ->
+          delete_rules_for_scope_and_days!(doctor_id, scope, selected_dows)
+        
+        true -> 
+          :ok
       end
 
-      # Insert new rules + breaks
+      # Insert new rules + breaks (only if any provided)
       inserted =
         for day <- days,
             window <- List.wrap(day["windows"]),
@@ -704,6 +713,13 @@ defmodule Medic.Scheduling do
     end
   end
 
+  defp delete_all_rules_for_doctor!(doctor_id) do
+    ScheduleRule
+    |> Ash.Query.filter(doctor_id == ^doctor_id)
+    |> Ash.read!()
+    |> Enum.each(&destroy_schedule_rule/1) 
+  end
+
   defp delete_rules_for_scope_and_days!(doctor_id, scope, dows) do
     # Fetch matching rules then destroy via Ash (so breaks cascade properly).
     query =
@@ -713,9 +729,7 @@ defmodule Medic.Scheduling do
 
     rules = Ash.read!(query)
 
-    Enum.each(rules, fn rule ->
-      Ash.destroy!(rule)
-    end)
+    Enum.each(rules, &destroy_schedule_rule/1)
   end
 
   defp create_rule_with_breaks!(doctor_id, scope, dow, window) do
@@ -873,7 +887,8 @@ defmodule Medic.Scheduling do
     |> Ash.Query.filter(scope_consultation_mode == ^scope.consultation_mode)
   end
 
-  defp parse_replace_mode("append"), do: :append
+  defp parse_replace_mode("replace_selected_days"), do: :replace_selected_days
+  defp parse_replace_mode("reset_all"), do: :reset_all
   defp parse_replace_mode(_), do: :replace_selected_days
 
   defp parse_mode(nil), do: nil
