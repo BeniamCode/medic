@@ -102,14 +102,18 @@ defmodule Medic.Scheduling do
 
   defp schedule_rule_to_virtual_rule(%ScheduleRule{} = rule) do
     rule = Ash.load!(rule, :breaks)
-    break = List.first(rule.breaks || [])
+    breaks = rule.breaks || []
+    # For backward compatibility, also set break_start/break_end from first break
+    first_break = List.first(breaks)
 
     %{
       day_of_week: rule.day_of_week,
       start_time: rule.work_start_local,
       end_time: rule.work_end_local,
-      break_start: break && break.break_start_local,
-      break_end: break && break.break_end_local,
+      break_start: first_break && first_break.break_start_local,
+      break_end: first_break && first_break.break_end_local,
+      # Pass ALL breaks for proper filtering
+      breaks: Enum.map(breaks, fn b -> %{start: b.break_start_local, end: b.break_end_local} end),
       slot_duration_minutes: rule.slot_interval_minutes,
       timezone: rule.timezone
     }
@@ -595,21 +599,37 @@ defmodule Medic.Scheduling do
   end
 
   defp in_break?(starts_at, rule, date, timezone) do
-    case {Map.get(rule, :break_start), Map.get(rule, :break_end)} do
-      {nil, _} ->
-        false
+    # First check the breaks array (new format with multiple breaks)
+    breaks = Map.get(rule, :breaks, [])
 
-      {_, nil} ->
-        false
+    in_any_break = Enum.any?(breaks, fn b ->
+      break_start = Map.get(b, :start)
+      break_end = Map.get(b, :end)
 
+      if break_start && break_end do
+        break_start_dt = combine_date_time(date, break_start, timezone)
+        break_end_dt = combine_date_time(date, break_end, timezone)
+
+        Timex.compare(starts_at, break_start_dt) >= 0 &&
+          Timex.compare(starts_at, break_end_dt) < 0
+      else
+        false
+      end
+    end)
+
+    # Also check legacy single break format for backward compatibility
+    legacy_in_break = case {Map.get(rule, :break_start), Map.get(rule, :break_end)} do
+      {nil, _} -> false
+      {_, nil} -> false
       {break_start, break_end} ->
         break_start_dt = combine_date_time(date, break_start, timezone)
         break_end_dt = combine_date_time(date, break_end, timezone)
 
-        # Slot is in break if it starts during the break
         Timex.compare(starts_at, break_start_dt) >= 0 &&
           Timex.compare(starts_at, break_end_dt) < 0
     end
+
+    in_any_break || legacy_in_break
   end
 
   defp get_booked_ranges(doctor_id, date, timezone) do
