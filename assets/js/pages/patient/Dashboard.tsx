@@ -70,11 +70,11 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
   const { token } = useToken()
   const [messageApi, contextHolder] = message.useMessage()
   const [upcoming, setUpcoming] = useState(upcomingAppointments)
-  const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [loadingKey, setLoadingKey] = useState<string | null>(null)
   const patientName = patient?.firstName || t('dashboard.patient_fallback', 'there')
 
   const handleApprove = async (id: string) => {
-    setLoadingId(id)
+    setLoadingKey(`approve:${id}`)
     try {
       const res = await fetch(`/appointments/${id}/approve_reschedule`, {
         method: 'POST',
@@ -92,12 +92,12 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
       window.location.reload()
     } catch (err) {
       messageApi.error(t('dashboard.approve_error', 'Something went wrong. Please try again.'))
-      setLoadingId(null)
+      setLoadingKey(null)
     }
   }
 
   const handleReject = async (id: string) => {
-    setLoadingId(id)
+    setLoadingKey(`reject:${id}`)
 
     try {
       const body = new URLSearchParams({
@@ -122,12 +122,12 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
       setUpcoming((prev) => prev.filter((item) => item.id !== id))
     } catch (err) {
       messageApi.error(t('dashboard.reject_error', 'Unable to reject right now. Please try again.'))
-      setLoadingId(null)
+      setLoadingKey(null)
     }
   }
 
   const handleCancel = async (id: string) => {
-    setLoadingId(id)
+    setLoadingKey(`cancel:${id}`)
 
     try {
       const body = new URLSearchParams({
@@ -152,7 +152,7 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
       setUpcoming((prev) => prev.filter((item) => item.id !== id))
     } catch (err) {
       messageApi.error(t('dashboard.cancel_error', 'Unable to cancel right now. Please try again.'))
-      setLoadingId(null)
+      setLoadingKey(null)
     }
   }
 
@@ -252,12 +252,20 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
           <Flex justify="flex-end" gap="small" wrap>
             {isReschedulePending ? (
               <>
-                <Button type="primary" onClick={() => handleApprove(appt.id)} loading={loadingId === appt.id}>
+                <Button type="primary" onClick={() => handleApprove(appt.id)} loading={loadingKey === `approve:${appt.id}`}>
                   {t('dashboard.approve', 'Approve')}
                 </Button>
-                <Button onClick={() => handleReject(appt.id)} loading={loadingId === appt.id}>
-                  {t('dashboard.reject', 'Reject')}
-                </Button>
+                <Popconfirm
+                  title={t('dashboard.reject_confirm_title', 'Reject this rescheduled time?')}
+                  description={t('dashboard.reject_confirm_desc', 'This booking will be cancelled if you reject.')}
+                  okText={t('dashboard.yes', 'Yes')}
+                  cancelText={t('dashboard.no', 'No')}
+                  onConfirm={() => handleReject(appt.id)}
+                >
+                  <Button loading={loadingKey === `reject:${appt.id}`}>
+                    {t('dashboard.reject', 'Reject')}
+                  </Button>
+                </Popconfirm>
               </>
             ) : (
               <>
@@ -271,7 +279,7 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
                       cancelText={t('dashboard.no', 'No')}
                       onConfirm={() => handleCancel(appt.id)}
                     >
-                      <Button loading={loadingId === appt.id} danger>
+                      <Button loading={loadingKey === `cancel:${appt.id}`} danger>
                         {t('dashboard.cancel', 'Cancel')}
                       </Button>
                     </Popconfirm>
