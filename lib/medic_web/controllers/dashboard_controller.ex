@@ -54,11 +54,13 @@ defmodule MedicWeb.DashboardController do
       id: appointment.id,
       starts_at: DateTime.to_iso8601(appointment.starts_at),
       status: appointment.status,
+      consultation_mode: appointment.consultation_mode_snapshot,
       doctor: %{
         id: doctor.id,
         first_name: doctor.first_name,
         last_name: doctor.last_name,
-        specialty: doctor.specialty && doctor.specialty.name_en
+        specialty: doctor.specialty && doctor.specialty.name_en,
+        avatar_url: Map.get(doctor, :avatar_url) || Map.get(doctor, :profile_image_url)
       }
     }
   end

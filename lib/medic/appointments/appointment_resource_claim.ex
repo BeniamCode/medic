@@ -19,11 +19,11 @@ defmodule Medic.Appointments.AppointmentResourceClaim do
 
     create :create do
       primary? true
-      accept [:appointment_id, :bookable_resource_id, :starts_at, :ends_at, :status]
+      accept [:appointment_id, :bookable_resource_id, :starts_at, :ends_at, :status, :released_at]
     end
 
     update :update do
-      accept [:status]
+      accept [:status, :released_at]
     end
   end
 
@@ -35,6 +35,7 @@ defmodule Medic.Appointments.AppointmentResourceClaim do
     attribute :starts_at, :utc_datetime, allow_nil?: false
     attribute :ends_at, :utc_datetime, allow_nil?: false
     attribute :status, :string, allow_nil?: false, default: "active"
+    attribute :released_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
   end
@@ -50,7 +51,14 @@ defmodule Medic.Appointments.AppointmentResourceClaim do
   @doc false
   def changeset(claim, attrs) do
     claim
-    |> cast(attrs, [:appointment_id, :bookable_resource_id, :starts_at, :ends_at, :status])
+    |> cast(attrs, [
+      :appointment_id,
+      :bookable_resource_id,
+      :starts_at,
+      :ends_at,
+      :status,
+      :released_at
+    ])
     |> validate_required([:appointment_id, :bookable_resource_id, :starts_at, :ends_at])
     |> validate_inclusion(:status, @statuses)
     |> validate_time_order()

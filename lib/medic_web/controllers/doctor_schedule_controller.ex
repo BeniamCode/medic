@@ -21,12 +21,14 @@ defmodule MedicWeb.DoctorScheduleController do
       conn
       |> assign(:page_title, dgettext("default", "Schedule"))
       |> assign_prop(:availability_rules, Enum.map(rules, &rule_props/1))
+
       mapped_exceptions = Enum.map(exceptions, &exception_props/1)
       IO.inspect(mapped_exceptions, label: "DEBUG EXCEPTIONS PROPS")
 
       conn
       |> assign(:page_title, dgettext("default", "Schedule"))
       |> assign_prop(:availability_rules, Enum.map(rules, &rule_props/1))
+
       mapped_exceptions = Enum.map(exceptions, &exception_props/1)
 
       conn
@@ -150,7 +152,6 @@ defmodule MedicWeb.DoctorScheduleController do
     with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
          {:ok, starts_at} <- parse_datetime(params["starts_at"]),
          {:ok, ends_at} <- parse_datetime(params["ends_at"]) do
-      
       attrs = %{
         doctor_id: doctor.id,
         starts_at: starts_at,
@@ -218,12 +219,13 @@ defmodule MedicWeb.DoctorScheduleController do
       endTime: format_time(Map.get(rule, :end_time)),
       breakStart: format_time(Map.get(rule, :break_start)),
       breakEnd: format_time(Map.get(rule, :break_end)),
-      breaks: Enum.map(Map.get(rule, :breaks, []), fn b ->
-        %{
-          breakStartLocal: format_time(b.break_start_local),
-          breakEndLocal: format_time(b.break_end_local)
-        }
-      end),
+      breaks:
+        Enum.map(Map.get(rule, :breaks, []), fn b ->
+          %{
+            breakStartLocal: format_time(b.break_start_local),
+            breakEndLocal: format_time(b.break_end_local)
+          }
+        end),
       slotDurationMinutes: Map.get(rule, :slot_duration_minutes, 30),
       isActive: Map.get(rule, :is_active, true),
       visitType: Map.get(rule, :visit_type)
@@ -280,7 +282,9 @@ defmodule MedicWeb.DoctorScheduleController do
       |> put_status(:unprocessable_entity)
       |> json(%{ok: false, error: Exception.message(e)})
   end
+
   defp parse_datetime(nil), do: {:error, :missing_date}
+
   defp parse_datetime(iso_str) do
     case DateTime.from_iso8601(iso_str) do
       {:ok, dt, _offset} -> {:ok, dt}

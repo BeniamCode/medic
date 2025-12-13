@@ -507,38 +507,52 @@ defmodule Medic.Scheduling do
         "in_person"
 
     notes = Keyword.get(opts, :notes)
+    approval_required = Keyword.get(opts, :approval_required, false)
+    pending_ttl_seconds = Keyword.get(opts, :pending_ttl_seconds)
 
-    Appointment
-    |> Ash.Changeset.for_create(:create, %{
-      doctor_id: doctor_id,
-      patient_id: patient_id,
-      starts_at: starts_at,
-      ends_at: ends_at,
-      status: "confirmed",
-      consultation_mode_snapshot: consultation_mode,
-      notes: notes
-    })
-    |> Ash.create()
-    |> case do
-      {:ok, appointment} ->
-        notify_doctor_booking(appointment)
-        Medic.Appointments.broadcast_doctor_event(appointment.doctor_id, :refresh_dashboard)
-        {:ok, appointment}
-
+    with {:ok, held} <-
+           Medic.Appointments.hold_slot(%{
+             doctor_id: doctor_id,
+             patient_id: patient_id,
+             starts_at: starts_at,
+             ends_at: ends_at,
+             status: "held",
+             consultation_mode_snapshot: consultation_mode,
+             notes: notes,
+             approval_required_snapshot: approval_required
+           }),
+         {:ok, final} <-
+           finalize_booking_after_hold(held, approval_required, pending_ttl_seconds) do
+      {:ok, final}
+    else
       {:error, error} ->
-        # Check for exclusion constraint violation
-        # AshPostgres usually wraps constraint errors.
-        # For now, we'll log it and return a generic error or try to detect it.
-        # A robust way is to check if the error contains the constraint name.
-
         if is_constraint_error?(error, "no_double_bookings") do
           {:error, :slot_already_booked}
         else
-          # Convert Ash error to changeset for UI compatibility if possible,
-          # or just return the error and let the UI handle it (though UI expects changeset).
-          # For now, let's return the error and see.
           {:error, error}
         end
+    end
+  end
+
+  defp finalize_booking_after_hold(appointment, true, pending_ttl_seconds) do
+    case Medic.Appointments.submit_request(appointment, pending_ttl_seconds: pending_ttl_seconds) do
+      {:ok, pending} ->
+        notify_doctor_booking(pending)
+        {:ok, pending}
+
+      error ->
+        error
+    end
+  end
+
+  defp finalize_booking_after_hold(appointment, _false, _pending_ttl_seconds) do
+    case Medic.Appointments.confirm_booking(appointment) do
+      {:ok, confirmed} ->
+        notify_doctor_booking(confirmed)
+        {:ok, confirmed}
+
+      error ->
+        error
     end
   end
 
@@ -602,32 +616,38 @@ defmodule Medic.Scheduling do
     # First check the breaks array (new format with multiple breaks)
     breaks = Map.get(rule, :breaks, [])
 
-    in_any_break = Enum.any?(breaks, fn b ->
-      break_start = Map.get(b, :start)
-      break_end = Map.get(b, :end)
+    in_any_break =
+      Enum.any?(breaks, fn b ->
+        break_start = Map.get(b, :start)
+        break_end = Map.get(b, :end)
 
-      if break_start && break_end do
-        break_start_dt = combine_date_time(date, break_start, timezone)
-        break_end_dt = combine_date_time(date, break_end, timezone)
+        if break_start && break_end do
+          break_start_dt = combine_date_time(date, break_start, timezone)
+          break_end_dt = combine_date_time(date, break_end, timezone)
 
-        Timex.compare(starts_at, break_start_dt) >= 0 &&
-          Timex.compare(starts_at, break_end_dt) < 0
-      else
-        false
-      end
-    end)
+          Timex.compare(starts_at, break_start_dt) >= 0 &&
+            Timex.compare(starts_at, break_end_dt) < 0
+        else
+          false
+        end
+      end)
 
     # Also check legacy single break format for backward compatibility
-    legacy_in_break = case {Map.get(rule, :break_start), Map.get(rule, :break_end)} do
-      {nil, _} -> false
-      {_, nil} -> false
-      {break_start, break_end} ->
-        break_start_dt = combine_date_time(date, break_start, timezone)
-        break_end_dt = combine_date_time(date, break_end, timezone)
+    legacy_in_break =
+      case {Map.get(rule, :break_start), Map.get(rule, :break_end)} do
+        {nil, _} ->
+          false
 
-        Timex.compare(starts_at, break_start_dt) >= 0 &&
-          Timex.compare(starts_at, break_end_dt) < 0
-    end
+        {_, nil} ->
+          false
+
+        {break_start, break_end} ->
+          break_start_dt = combine_date_time(date, break_start, timezone)
+          break_end_dt = combine_date_time(date, break_end, timezone)
+
+          Timex.compare(starts_at, break_start_dt) >= 0 &&
+            Timex.compare(starts_at, break_end_dt) < 0
+      end
 
     in_any_break || legacy_in_break
   end
@@ -677,14 +697,17 @@ defmodule Medic.Scheduling do
     appointment = Ash.load!(appointment, [:patient, :doctor])
 
     if appointment.doctor do
-      Notifications.create_notification(%{
+      Notifications.enqueue_notification_job(%{
         user_id: appointment.doctor.user_id,
-        type: "booking",
-        title: "New Appointment Request",
-        message:
-          "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
-        resource_id: appointment.id,
-        resource_type: "appointment"
+        template: "appointment_request",
+        payload: %{
+          type: "booking",
+          title: "New Appointment Request",
+          message:
+            "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
       })
     end
   end
@@ -694,6 +717,7 @@ defmodule Medic.Scheduling do
     # This is a bit hacky but works for now until we have proper Ash exception handling
     inspect(error) =~ constraint_name
   end
+
   # ---------- BULK UPSERT ----------
 
   def bulk_upsert_schedule_rules!(doctor_id, payload) do
@@ -715,8 +739,8 @@ defmodule Medic.Scheduling do
 
         replace_mode == :replace_selected_days ->
           delete_rules_for_scope_and_days!(doctor_id, scope, selected_dows)
-        
-        true -> 
+
+        true ->
           :ok
       end
 
@@ -738,7 +762,7 @@ defmodule Medic.Scheduling do
     ScheduleRule
     |> Ash.Query.filter(doctor_id == ^doctor_id)
     |> Ash.read!()
-    |> Enum.each(&destroy_schedule_rule/1) 
+    |> Enum.each(&destroy_schedule_rule/1)
   end
 
   defp delete_rules_for_scope_and_days!(doctor_id, _scope, dows) do
@@ -768,12 +792,10 @@ defmodule Medic.Scheduling do
     attrs = %{
       doctor_id: doctor_id,
       timezone: scope.timezone,
-
       scope_appointment_type_id: scope.appointment_type_id,
       scope_doctor_location_id: scope.doctor_location_id,
       scope_location_room_id: scope.location_room_id,
       scope_consultation_mode: scope.consultation_mode,
-
       day_of_week: dow,
       work_start_local: parse_time!(window["workStartLocal"]),
       work_end_local: parse_time!(window["workEndLocal"]),
@@ -800,7 +822,7 @@ defmodule Medic.Scheduling do
 
     %{"start" => start_s, "end" => end_s} = payload["dateRange"] || %{}
     start_date = Date.from_iso8601!(start_s)
-    end_date   = Date.from_iso8601!(end_s)
+    end_date = Date.from_iso8601!(end_s)
 
     date_list = Date.range(start_date, end_date) |> Enum.to_list()
 
@@ -824,8 +846,8 @@ defmodule Medic.Scheduling do
 
   defp build_preview_for_window(tz, date, window) do
     work_start = parse_time!(window["workStartLocal"])
-    work_end   = parse_time!(window["workEndLocal"])
-    interval   = window["slotIntervalMinutes"] || 10
+    work_end = parse_time!(window["workEndLocal"])
+    interval = window["slotIntervalMinutes"] || 10
 
     {:ok, ws_utc} = local_to_utc(date, work_start, tz)
     {:ok, we_utc} = local_to_utc(date, work_end, tz)
@@ -857,6 +879,7 @@ defmodule Medic.Scheduling do
 
     Stream.unfold(a_utc, fn current ->
       next = DateTime.add(current, step, :second)
+
       if DateTime.compare(next, b_utc) in [:lt, :eq] do
         slot = %{startUtc: current, endUtc: next}
         {slot, next}
@@ -871,16 +894,26 @@ defmodule Medic.Scheduling do
     Enum.reduce(breaks, intervals, fn {bs, be}, acc ->
       Enum.flat_map(acc, fn {a, b} ->
         cond do
-          DateTime.compare(be, a) != :gt -> [{a, b}]   # break ends before interval starts
-          DateTime.compare(bs, b) != :lt -> [{a, b}]   # break starts after interval ends
+          # break ends before interval starts
+          DateTime.compare(be, a) != :gt ->
+            [{a, b}]
+
+          # break starts after interval ends
+          DateTime.compare(bs, b) != :lt ->
+            [{a, b}]
+
           DateTime.compare(bs, a) == :gt and DateTime.compare(be, b) == :lt ->
             [{a, bs}, {be, b}]
+
           DateTime.compare(bs, a) != :gt and DateTime.compare(be, b) == :lt ->
             [{be, b}]
+
           DateTime.compare(bs, a) == :gt and DateTime.compare(be, b) != :lt ->
             [{a, bs}]
+
           true ->
-            [] # break covers whole interval
+            # break covers whole interval
+            []
         end
       end)
     end)

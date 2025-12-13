@@ -20,6 +20,7 @@ defmodule Medic.Scheduling.ScheduleRule do
 
     create :create do
       primary? true
+
       accept [
         :doctor_id,
         :timezone,
@@ -43,18 +44,28 @@ defmodule Medic.Scheduling.ScheduleRule do
 
     create :create_with_breaks do
       accept [
-        :doctor_id, :timezone,
-        :scope_appointment_type_id, :scope_doctor_location_id, :scope_location_room_id, :scope_consultation_mode,
-        :day_of_week, :work_start_local, :work_end_local, :slot_interval_minutes, :priority,
-        :effective_from, :effective_to, :is_active
+        :doctor_id,
+        :timezone,
+        :scope_appointment_type_id,
+        :scope_doctor_location_id,
+        :scope_location_room_id,
+        :scope_consultation_mode,
+        :day_of_week,
+        :work_start_local,
+        :work_end_local,
+        :slot_interval_minutes,
+        :priority,
+        :effective_from,
+        :effective_to,
+        :is_active
       ]
 
       argument :breaks, {:array, :map}, allow_nil?: true, default: []
 
       change manage_relationship(:breaks,
-        type: :create,
-        on_no_match: :create
-      )
+               type: :create,
+               on_no_match: :create
+             )
     end
 
     update :update do
@@ -97,6 +108,7 @@ defmodule Medic.Scheduling.ScheduleRule do
       constraints one_of: [:in_person, :video, :phone]
       allow_nil? true
     end
+
     attribute :effective_from, :date
     attribute :effective_to, :date
     attribute :is_active, :boolean, allow_nil?: false, default: true

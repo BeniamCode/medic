@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Group, Stack, Text, Title } from '@mantine/core'
+import { Card, Space, Typography, Tag, Button } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { router } from '@inertiajs/react'
 
@@ -20,40 +20,44 @@ const NotificationsIndex = ({ app, auth, notifications, unread_count }: PageProp
 
   return (
     <PublicLayout app={app} auth={auth}>
-      <Stack gap="lg" maw={600} mx="auto">
-        <Group justify="space-between">
+      <Space direction="vertical" size="large" style={{ maxWidth: 640, width: '100%', margin: '0 auto' }}>
+        <Space align="start" style={{ width: '100%', justifyContent: 'space-between' }}>
           <div>
-            <Title order={2}>{t('notifications.title', 'Notifications')}</Title>
-            <Text c="dimmed">{t('notifications.subtitle', 'Stay up to date with your practice')}</Text>
+            <Typography.Title level={3}>{t('notifications.title', 'Notifications')}</Typography.Title>
+            <Typography.Text type="secondary">
+              {t('notifications.subtitle', 'Stay up to date with your practice')}
+            </Typography.Text>
           </div>
           {unread_count > 0 && (
-            <Button variant="light" onClick={() => router.post('/notifications/mark_all')}>
+            <Button onClick={() => router.post('/notifications/mark_all')}>
               {t('notifications.mark_all', 'Mark all read')}
             </Button>
           )}
-        </Group>
+        </Space>
 
         {notifications.length === 0 ? (
-          <Card withBorder padding="xl">
-            <Text c="dimmed">{t('notifications.empty', 'No notifications yet')}</Text>
+          <Card bordered>
+            <Typography.Text type="secondary">
+              {t('notifications.empty', 'No notifications yet')}
+            </Typography.Text>
           </Card>
         ) : (
           notifications.map((notification) => (
-            <Card key={notification.id} withBorder padding="lg" radius="md" shadow="sm">
-              <Stack gap="xs">
-                <Group justify="space-between">
-                  <Text fw={600}>{notification.title}</Text>
-                  {!notification.read_at && <Badge color="green">{t('notifications.new', 'New')}</Badge>}
-                </Group>
-                <Text>{notification.message}</Text>
-                <Text size="xs" c="dimmed">
+            <Card key={notification.id} bordered style={{ borderRadius: 12 }}>
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+                  <Typography.Text strong>{notification.title}</Typography.Text>
+                  {!notification.read_at && <Tag color="green">{t('notifications.new', 'New')}</Tag>}
+                </Space>
+                <Typography.Text>{notification.message}</Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                   {new Date(notification.inserted_at).toLocaleString(app.locale)}
-                </Text>
-              </Stack>
+                </Typography.Text>
+              </Space>
             </Card>
           ))
         )}
-      </Stack>
+      </Space>
     </PublicLayout>
   )
 }

@@ -7,12 +7,16 @@ defmodule Medic.Notifications do
 
   resources do
     resource Medic.Notifications.Notification
+    resource Medic.Notifications.NotificationJob
+    resource Medic.Notifications.NotificationDelivery
   end
 
   import Ecto.Query, warn: false
   import Ecto.Changeset, only: [change: 2, add_error: 3]
 
-  alias Medic.Notifications.Notification
+  alias Medic.Notifications.{Notification, NotificationJob}
+  alias Medic.Workers.NotificationDispatch
+  alias Oban
   require Logger
   require Ash.Query
 
@@ -118,6 +122,41 @@ defmodule Medic.Notifications do
     |> Ash.Changeset.for_update(:update, attrs)
     |> Ash.update()
     |> normalize_result()
+  end
+
+  # --- Outbox (notification_jobs) ---
+
+  @doc """
+  Enqueue a notification job; schedules an Oban worker at scheduled_at (or now).
+  attrs: user_id (required), channel, template, payload (map), scheduled_at.
+  """
+  def enqueue_notification_job(attrs) do
+    attrs = Map.new(attrs)
+
+    NotificationJob
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+    |> normalize_result()
+    |> case do
+      {:ok, job} ->
+        schedule_dispatch(job)
+        {:ok, job}
+
+      error ->
+        error
+    end
+  end
+
+  defp schedule_dispatch(%NotificationJob{} = job) do
+    schedule_at = job.scheduled_at || DateTime.utc_now()
+
+    %{"notification_job_id" => job.id}
+    |> NotificationDispatch.new(schedule_at: schedule_at)
+    |> Oban.insert()
+    |> case do
+      {:ok, _oban_job} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   @doc """

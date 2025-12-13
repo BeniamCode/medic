@@ -19,13 +19,20 @@ defmodule Medic.Appointments do
   alias Medic.Appointments.{
     Appointment,
     AppointmentEvent,
+    AppointmentResourceClaim,
     AppointmentType,
     AppointmentTypeLocation
   }
 
   alias Medic.Notifications
+  alias Medic.Workers.{AppointmentHoldExpiry, AppointmentPendingExpiry}
   alias Phoenix.PubSub
+  alias Oban
   require Ash.Query
+
+  @default_hold_seconds 5 * 60
+  @default_pending_seconds 24 * 60 * 60
+  @default_reminder_offsets_seconds [-86_400, -7_200]
 
   @doc """
   Returns the list of appointments.
@@ -155,6 +162,353 @@ defmodule Medic.Appointments do
     |> Ash.create()
   end
 
+  # --- Lifecycle Actions ---
+
+  @doc """
+  Place a temporary hold on a slot. Optionally accepts :hold_expires_at and :bookable_resource_id.
+  """
+  def hold_slot(attrs) when is_map(attrs) do
+    Repo.transaction(fn ->
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      hold_expires_at =
+        Map.get(attrs, :hold_expires_at) ||
+          Map.get(attrs, "hold_expires_at") ||
+          DateTime.add(now, @default_hold_seconds, :second)
+
+      appointment_attrs =
+        attrs
+        |> Map.new()
+        |> Map.put(:status, "held")
+        |> Map.put(:hold_expires_at, hold_expires_at)
+
+      with {:ok, appointment} <- create_appointment_record(appointment_attrs),
+           :ok <- maybe_claim_resource(attrs, appointment),
+           :ok <- schedule_hold_expiry(appointment) do
+        log_event(appointment.id, "held_created", %{hold_expires_at: hold_expires_at})
+        broadcast_doctor_event(appointment.doctor_id, :refresh_dashboard)
+        appointment
+      else
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  @doc """
+  Move held appointment to confirmed (auto-approve path).
+  """
+  def confirm_booking(appointment_or_id) do
+    Repo.transaction(fn ->
+      appointment = load_for_transition(appointment_or_id)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      cond do
+        appointment.status != "held" ->
+          Repo.rollback(:invalid_state)
+
+        appointment.hold_expires_at && DateTime.compare(appointment.hold_expires_at, now) != :gt ->
+          Repo.rollback(:hold_expired)
+
+        true ->
+          {:ok, updated} =
+            appointment
+            |> Ash.Changeset.for_update(:update, %{status: "confirmed", pending_expires_at: nil})
+            |> Ash.update()
+
+          log_event(updated.id, "confirmed")
+          schedule_default_reminders(updated)
+          maybe_enqueue_confirmation_notifications(updated)
+          broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
+          updated
+      end
+    end)
+  end
+
+  @doc """
+  Move held appointment to pending (doctor approval path).
+  """
+  def submit_request(appointment_or_id, opts \\ []) do
+    Repo.transaction(fn ->
+      appointment = load_for_transition(appointment_or_id)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+      pending_ttl_seconds = Keyword.get(opts, :pending_ttl_seconds, @default_pending_seconds)
+
+      pending_expires_at =
+        Keyword.get(opts, :pending_expires_at) || DateTime.add(now, pending_ttl_seconds, :second)
+
+      cond do
+        appointment.status != "held" ->
+          Repo.rollback(:invalid_state)
+
+        appointment.hold_expires_at && DateTime.compare(appointment.hold_expires_at, now) != :gt ->
+          Repo.rollback(:hold_expired)
+
+        true ->
+          {:ok, updated} =
+            appointment
+            |> Ash.Changeset.for_update(:update, %{
+              status: "pending",
+              pending_expires_at: pending_expires_at,
+              approval_required_snapshot: true
+            })
+            |> Ash.update()
+
+          case schedule_pending_expiry(updated) do
+            :ok ->
+              log_event(updated.id, "request_submitted", %{pending_expires_at: pending_expires_at})
+
+              maybe_enqueue_pending_notifications(updated)
+
+              broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
+              updated
+
+            {:error, reason} ->
+              Repo.rollback(reason)
+          end
+      end
+    end)
+  end
+
+  @doc """
+  Doctor approves a pending request.
+  """
+  def approve_request(appointment_or_id, actor \\ %{}) do
+    Repo.transaction(fn ->
+      appointment = load_for_transition(appointment_or_id)
+
+      if appointment.status != "pending" do
+        Repo.rollback(:invalid_state)
+      end
+
+      {:ok, updated} =
+        appointment
+        |> Ash.Changeset.for_update(:update, %{status: "confirmed", pending_expires_at: nil})
+        |> Ash.update()
+
+      log_event(updated.id, "approved", %{}, actor)
+      schedule_default_reminders(updated)
+      maybe_enqueue_confirmation_notifications(updated)
+      broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
+      updated
+    end)
+  end
+
+  @doc """
+  Doctor rejects a pending request.
+  """
+  def reject_request(appointment_or_id, reason \\ nil, actor \\ %{}) do
+    Repo.transaction(fn ->
+      appointment = load_for_transition(appointment_or_id)
+
+      if appointment.status != "pending" do
+        Repo.rollback(:invalid_state)
+      end
+
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      {:ok, updated} =
+        appointment
+        |> Ash.Changeset.for_update(:update, %{
+          status: "cancelled",
+          cancelled_at: now,
+          cancellation_reason: reason,
+          cancelled_by_actor_type: Map.get(actor, :actor_type),
+          cancelled_by_actor_id: Map.get(actor, :actor_id)
+        })
+        |> Ash.update()
+
+      release_claims(updated.id)
+      log_event(updated.id, "rejected", %{reason: reason}, actor)
+      broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
+      updated
+    end)
+  end
+
+  @doc """
+  Mark appointment complete.
+  """
+  def complete_appointment(%Appointment{} = appointment) do
+    appointment
+    |> Appointment.complete_changeset()
+    |> Repo.update(returning: true)
+  end
+
+  @doc """
+  Mark appointment no-show.
+  """
+  def mark_no_show(%Appointment{} = appointment) do
+    appointment
+    |> Appointment.no_show_changeset()
+    |> Repo.update(returning: true)
+  end
+
+  defp load_for_transition(%Appointment{} = appointment), do: appointment
+  defp load_for_transition(id), do: get_appointment!(id)
+
+  defp create_appointment_record(attrs) do
+    Appointment
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+  end
+
+  defp maybe_claim_resource(attrs, appointment) do
+    resource_id = Map.get(attrs, :bookable_resource_id) || Map.get(attrs, "bookable_resource_id")
+
+    if is_nil(resource_id) do
+      :ok
+    else
+      AppointmentResourceClaim
+      |> Ash.Changeset.for_create(:create, %{
+        appointment_id: appointment.id,
+        bookable_resource_id: resource_id,
+        starts_at: appointment.starts_at,
+        ends_at: appointment.ends_at,
+        status: "active"
+      })
+      |> Ash.create()
+      |> case do
+        {:ok, _claim} -> :ok
+        {:error, reason} -> {:error, reason}
+      end
+    end
+  end
+
+  defp schedule_hold_expiry(%Appointment{hold_expires_at: nil}), do: :ok
+
+  defp schedule_hold_expiry(%Appointment{id: id, hold_expires_at: hold_expires_at}) do
+    %{"appointment_id" => id}
+    |> AppointmentHoldExpiry.new(schedule_at: hold_expires_at)
+    |> Oban.insert()
+    |> case do
+      {:ok, _job} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp schedule_pending_expiry(%Appointment{pending_expires_at: nil}), do: :ok
+
+  defp schedule_pending_expiry(%Appointment{id: id, pending_expires_at: pending_expires_at}) do
+    %{"appointment_id" => id}
+    |> AppointmentPendingExpiry.new(schedule_at: pending_expires_at)
+    |> Oban.insert()
+    |> case do
+      {:ok, _job} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp release_claims(appointment_id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    AppointmentResourceClaim
+    |> Ash.Query.filter(appointment_id == ^appointment_id and status == "active")
+    |> Ash.read!()
+    |> Enum.each(fn claim ->
+      claim
+      |> Ash.Changeset.for_update(:update, %{status: "released", released_at: now})
+      |> Ash.update!()
+    end)
+
+    :ok
+  end
+
+  defp schedule_default_reminders(%Appointment{starts_at: nil}), do: :ok
+
+  defp schedule_default_reminders(%Appointment{} = appointment) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+    now = DateTime.utc_now()
+
+    Enum.each(@default_reminder_offsets_seconds, fn offset_seconds ->
+      reminder_at = DateTime.add(appointment.starts_at, offset_seconds, :second)
+
+      if DateTime.compare(reminder_at, now) == :gt do
+        base_payload = %{
+          type: "booking",
+          title: "Appointment reminder",
+          message: "You have an upcoming appointment.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
+
+        if appointment.patient && appointment.patient.user_id do
+          Notifications.enqueue_notification_job(%{
+            user_id: appointment.patient.user_id,
+            template: "appointment_reminder_patient",
+            payload: base_payload,
+            scheduled_at: reminder_at
+          })
+        end
+
+        if appointment.doctor && appointment.doctor.user_id do
+          Notifications.enqueue_notification_job(%{
+            user_id: appointment.doctor.user_id,
+            template: "appointment_reminder_doctor",
+            payload: base_payload,
+            scheduled_at: reminder_at
+          })
+        end
+      end
+    end)
+
+    :ok
+  rescue
+    _ -> :ok
+  end
+
+  defp maybe_enqueue_confirmation_notifications(appointment) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+
+    base_payload = %{
+      type: "booking",
+      title: "Appointment confirmed",
+      message: "Your appointment is confirmed.",
+      resource_id: appointment.id,
+      resource_type: "appointment"
+    }
+
+    if appointment.patient && appointment.patient.user_id do
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.patient.user_id,
+        template: "appointment_confirmed_patient",
+        payload: base_payload
+      })
+    end
+
+    if appointment.doctor && appointment.doctor.user_id do
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.doctor.user_id,
+        template: "appointment_confirmed_doctor",
+        payload: base_payload
+      })
+    end
+
+    :ok
+  rescue
+    _ -> :ok
+  end
+
+  defp maybe_enqueue_pending_notifications(appointment) do
+    appointment = Ash.load!(appointment, [:doctor])
+
+    if appointment.doctor && appointment.doctor.user_id do
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.doctor.user_id,
+        template: "appointment_pending_review",
+        payload: %{
+          type: "booking",
+          title: "New appointment request",
+          message: "A patient submitted a booking request awaiting your approval.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
+      })
+    end
+
+    :ok
+  rescue
+    _ -> :ok
+  end
+
   @doc """
   Creates an appointment.
   The PostgreSQL exclusion constraint will reject double-bookings.
@@ -187,14 +541,17 @@ defmodule Medic.Appointments do
     appointment = Ash.load!(appointment, [:patient, :doctor])
 
     if appointment.doctor do
-      Notifications.create_notification(%{
+      Notifications.enqueue_notification_job(%{
         user_id: appointment.doctor.user_id,
-        type: "booking",
-        title: "New Appointment Request",
-        message:
-          "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
-        resource_id: appointment.id,
-        resource_type: "appointment"
+        template: "appointment_request",
+        payload: %{
+          type: "booking",
+          title: "New Appointment Request",
+          message:
+            "Patient #{appointment.patient.first_name} #{appointment.patient.last_name} has requested an appointment.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
       })
     end
   end
@@ -256,15 +613,6 @@ defmodule Medic.Appointments do
   end
 
   @doc """
-  Completes an appointment.
-  """
-  def complete_appointment(%Appointment{} = appointment) do
-    appointment
-    |> Appointment.complete_changeset()
-    |> Repo.update(returning: true)
-  end
-
-  @doc """
   Cancels an appointment.
 
   Options:
@@ -274,12 +622,20 @@ defmodule Medic.Appointments do
     result =
       appointment
       |> Appointment.cancel_changeset(reason)
+      |> put_cancel_actor(opts)
       |> Repo.update(returning: true)
 
     case result do
       {:ok, updated_appointment} ->
+        release_claims(updated_appointment.id)
         updated_appointment = Ash.load!(updated_appointment, [:patient, :doctor])
         maybe_notify_cancellation(updated_appointment, Keyword.get(opts, :cancelled_by, :patient))
+
+        log_event(updated_appointment.id, "cancelled", %{reason: reason}, %{
+          actor_type: Keyword.get(opts, :cancelled_by_actor_type),
+          actor_id: Keyword.get(opts, :cancelled_by_actor_id)
+        })
+
         broadcast_doctor_event(updated_appointment.doctor_id, :refresh_dashboard)
         {:ok, updated_appointment}
 
@@ -297,6 +653,20 @@ defmodule Medic.Appointments do
   end
 
   defp maybe_notify_cancellation(_appointment, _), do: :ok
+
+  defp put_cancel_actor(changeset, opts) do
+    actor_type = Keyword.get(opts, :cancelled_by_actor_type)
+    actor_id = Keyword.get(opts, :cancelled_by_actor_id)
+
+    changeset
+    |> maybe_put_change(:cancelled_by_actor_type, actor_type)
+    |> maybe_put_change(:cancelled_by_actor_id, actor_id)
+  end
+
+  defp maybe_put_change(changeset, _field, nil), do: changeset
+
+  defp maybe_put_change(changeset, field, value),
+    do: Ecto.Changeset.put_change(changeset, field, value)
 
   defp notify_doctor_cancellation(appointment) do
     if appointment.doctor do
@@ -345,15 +715,6 @@ defmodule Medic.Appointments do
   defp doctor_topic(doctor_id), do: "doctor_events:#{doctor_id}"
 
   @doc """
-  Marks an appointment as no-show.
-  """
-  def mark_no_show(%Appointment{} = appointment) do
-    appointment
-    |> Appointment.no_show_changeset()
-    |> Repo.update(returning: true)
-  end
-
-  @doc """
   Returns an `%Ecto.Changeset{}` for tracking appointment changes.
   """
   def change_appointment(%Appointment{} = appointment, attrs \\ %{}) do
@@ -396,7 +757,7 @@ defmodule Medic.Appointments do
       order_by: a.starts_at
     )
     |> Repo.all()
-    |> Ash.load!([:patient])
+    |> Ash.load!([:patient, :appointment_type_record])
   end
 
   # Handle exclusion constraint violations gracefully

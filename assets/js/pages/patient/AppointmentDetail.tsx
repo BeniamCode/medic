@@ -1,4 +1,4 @@
-import { Badge, Button, Card, Group, Stack, Text, Title } from '@mantine/core'
+import { Card, Space, Typography, Tag, Button, Row, Col } from 'antd'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
 
@@ -33,58 +33,60 @@ const AppointmentDetailPage = ({ app, auth, appointment }: PageProps) => {
 
   return (
     <PublicLayout app={app} auth={auth}>
-      <Stack gap="lg">
-        <Title order={2}>{t('appointment.title', 'Appointment details')}</Title>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Typography.Title level={3}>{t('appointment.title', 'Appointment details')}</Typography.Title>
 
-        <Card padding="xl" radius="lg" withBorder>
-          <Stack gap="md">
-            <Group justify="space-between">
-              <div>
-                <Text fw={600}>
+        <Card bordered style={{ borderRadius: 12 }}>
+          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+            <Row justify="space-between" align="middle">
+              <Col>
+                <Typography.Text strong>
                   Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}
-                </Text>
-                <Text c="dimmed" size="sm">
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ display: 'block' }}>
                   {appointment.doctor.specialty}
-                </Text>
-              </div>
-              <Badge>{appointment.status}</Badge>
-            </Group>
+                </Typography.Text>
+              </Col>
+              <Col>
+                <Tag color="blue">{appointment.status}</Tag>
+              </Col>
+            </Row>
 
-            <Group gap="xl">
-              <div>
-                <Text size="sm" c="dimmed">
+            <Row gutter={24}>
+              <Col xs={24} sm={12}>
+                <Typography.Text type="secondary">
                   {t('appointment.labels.date', 'Date')}
-                </Text>
-                <Text fw={600}>{format(startsAt, 'PPPP')}</Text>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed">
+                </Typography.Text>
+                <Typography.Text strong style={{ display: 'block' }}>
+                  {format(startsAt, 'PPPP')}
+                </Typography.Text>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Typography.Text type="secondary">
                   {t('appointment.labels.time', 'Time')}
-                </Text>
-                <Text fw={600}>
+                </Typography.Text>
+                <Typography.Text strong style={{ display: 'block' }}>
                   {format(startsAt, 'p')} - {format(endsAt, 'p')}
-                </Text>
-              </div>
-            </Group>
+                </Typography.Text>
+              </Col>
+            </Row>
 
             {appointment.notes && (
               <div>
-                <Text size="sm" c="dimmed">
+                <Typography.Text type="secondary">
                   {t('appointment.labels.notes', 'Notes')}
-                </Text>
-                <Text>{appointment.notes}</Text>
+                </Typography.Text>
+                <Typography.Paragraph style={{ marginBottom: 0 }}>{appointment.notes}</Typography.Paragraph>
               </div>
             )}
 
-            <Group gap="sm">
-              <Button>{t('appointment.cta.reschedule', 'Reschedule')}</Button>
-              <Button variant="light" color="red">
-                {t('appointment.cta.cancel', 'Cancel appointment')}
-              </Button>
-            </Group>
-          </Stack>
+            <Space size="small">
+              <Button type="primary">{t('appointment.cta.reschedule', 'Reschedule')}</Button>
+              <Button danger type="default">{t('appointment.cta.cancel', 'Cancel appointment')}</Button>
+            </Space>
+          </Space>
         </Card>
-      </Stack>
+      </Space>
     </PublicLayout>
   )
 }

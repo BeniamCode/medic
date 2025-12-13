@@ -45,6 +45,9 @@ defmodule MedicWeb.DoctorDashboardController do
 
   defp appointment_props(appt) do
     patient = appt.patient || %Patient{}
+    appointment_type_name =
+      appt.service_name_snapshot ||
+        (appt.appointment_type_record && appt.appointment_type_record.name)
 
     %{
       id: appt.id,
@@ -52,7 +55,9 @@ defmodule MedicWeb.DoctorDashboardController do
       duration_minutes: appt.duration_minutes,
       notes: appt.notes,
       status: appt.status,
-      appointment_type: appt.appointment_type,
+      appointment_type_id: appt.appointment_type_id,
+      appointment_type_name: appointment_type_name,
+      consultation_mode: appt.consultation_mode_snapshot,
       patient: %{
         first_name: patient.first_name,
         last_name: patient.last_name

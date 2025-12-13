@@ -44,10 +44,13 @@ defmodule Medic.Appointments.Appointment do
         :service_currency_snapshot,
         :external_reference,
         :hold_expires_at,
+        :pending_expires_at,
         :created_by_actor_type,
         :created_by_actor_id,
         :cancelled_by_actor_type,
-        :cancelled_by_actor_id
+        :cancelled_by_actor_id,
+        :rescheduled_from_appointment_id,
+        :approval_required_snapshot
       ]
     end
 
@@ -75,8 +78,11 @@ defmodule Medic.Appointments.Appointment do
         :service_currency_snapshot,
         :external_reference,
         :hold_expires_at,
+        :pending_expires_at,
         :cancelled_by_actor_type,
-        :cancelled_by_actor_id
+        :cancelled_by_actor_id,
+        :rescheduled_from_appointment_id,
+        :approval_required_snapshot
       ]
     end
   end
@@ -106,10 +112,13 @@ defmodule Medic.Appointments.Appointment do
     attribute :service_currency_snapshot, :string
     attribute :external_reference, :string
     attribute :hold_expires_at, :utc_datetime
+    attribute :pending_expires_at, :utc_datetime
     attribute :created_by_actor_type, :string
     attribute :created_by_actor_id, :uuid
     attribute :cancelled_by_actor_type, :string
     attribute :cancelled_by_actor_id, :uuid
+    attribute :rescheduled_from_appointment_id, :uuid
+    attribute :approval_required_snapshot, :boolean, default: false
 
     timestamps()
   end
@@ -122,6 +131,10 @@ defmodule Medic.Appointments.Appointment do
 
     belongs_to :appointment_type_record, Medic.Appointments.AppointmentType,
       source_attribute: :appointment_type_id,
+      destination_attribute: :id
+
+    belongs_to :rescheduled_from, __MODULE__,
+      source_attribute: :rescheduled_from_appointment_id,
       destination_attribute: :id
 
     has_many :events, Medic.Appointments.AppointmentEvent
