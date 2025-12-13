@@ -50,6 +50,7 @@ type Appointment = {
   appointmentTypeName?: string | null
   pendingExpiresAt?: string | null
   notes?: string | null
+  rescheduledFromAppointmentId?: string | null
   patient?: {
     id: string
     firstName: string
@@ -217,6 +218,11 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
       render: (_: unknown, record: Appointment) => (
         <Space direction="vertical" size={4}>
           <Tag color={statusColor(record.status)}>{record.status}</Tag>
+          {record.status === 'pending' && record.rescheduledFromAppointmentId && (
+            <Tag color="blue" style={{ width: 'fit-content' }}>
+              {t('appointments.waiting_patient', 'Awaiting patient approval')}
+            </Tag>
+          )}
           {record.status === 'pending' && record.pendingExpiresAt && (
             <Text type="secondary" style={{ fontSize: 12 }}>
               {t('appointments.expires', 'Expires')} {dayjs(record.pendingExpiresAt).fromNow()}
@@ -230,11 +236,12 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
       key: 'actions',
       render: (_: unknown, record: Appointment) => {
         const isPending = record.status === 'pending'
+        const isPatientApprovalPending = isPending && Boolean(record.rescheduledFromAppointmentId)
         const isUpcoming = ['pending', 'confirmed', 'held'].includes(record.status)
 
         return (
           <Space>
-            {isPending && (
+            {isPending && !isPatientApprovalPending && (
               <Popconfirm
                 title={t('appointments.approve_confirm', 'Approve this appointment?')}
                 onConfirm={() => handleApprove(record.id)}
@@ -243,7 +250,11 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
               </Popconfirm>
             )}
 
-            {isUpcoming && (
+            {isPatientApprovalPending && (
+              <Text type="secondary">{t('appointments.waiting_patient_actions', 'Awaiting patient decision')}</Text>
+            )}
+
+            {isUpcoming && !isPatientApprovalPending && (
               <Button
                 icon={<IconArrowBackUp size={16} />}
                 onClick={() => setRescheduleModal({ id: record.id, when: dayjs(record.startsAt) })}
@@ -252,7 +263,7 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
               </Button>
             )}
 
-            {isPending && (
+            {isPending && !isPatientApprovalPending && (
               <Button
                 icon={<IconCircleX size={16} />}
                 onClick={() => setReasonModal({ id: record.id, action: 'reject' })}

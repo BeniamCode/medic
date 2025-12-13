@@ -52,15 +52,19 @@ defmodule MedicWeb.DashboardController do
 
     %{
       id: appointment.id,
-      starts_at: DateTime.to_iso8601(appointment.starts_at),
+      startsAt: DateTime.to_iso8601(appointment.starts_at),
+      endsAt: appointment.ends_at && DateTime.to_iso8601(appointment.ends_at),
       status: appointment.status,
-      consultation_mode: appointment.consultation_mode_snapshot,
+      consultationMode: appointment.consultation_mode_snapshot,
+      pendingExpiresAt:
+        appointment.pending_expires_at && DateTime.to_iso8601(appointment.pending_expires_at),
+      rescheduledFromAppointmentId: appointment.rescheduled_from_appointment_id,
       doctor: %{
         id: doctor.id,
-        first_name: doctor.first_name,
-        last_name: doctor.last_name,
+        firstName: doctor.first_name,
+        lastName: doctor.last_name,
         specialty: doctor.specialty && doctor.specialty.name_en,
-        avatar_url: Map.get(doctor, :avatar_url) || Map.get(doctor, :profile_image_url)
+        avatarUrl: Map.get(doctor, :avatar_url) || Map.get(doctor, :profile_image_url)
       }
     }
   end

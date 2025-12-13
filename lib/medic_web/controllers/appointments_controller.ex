@@ -65,9 +65,9 @@ defmodule MedicWeb.AppointmentsController do
       starts_at: DateTime.to_iso8601(appointment.starts_at),
       ends_at: DateTime.to_iso8601(appointment.ends_at),
       status: appointment.status,
-      pending_expires_at:
+      pendingExpiresAt:
         appointment.pending_expires_at && DateTime.to_iso8601(appointment.pending_expires_at),
-      rescheduled_from_appointment_id: appointment.rescheduled_from_appointment_id,
+      rescheduledFromAppointmentId: appointment.rescheduled_from_appointment_id,
       notes: appointment.notes,
       doctor: %{
         id: appointment.doctor.id,
