@@ -33,6 +33,7 @@ export type SearchDoctor = {
   address: string | null
   rating: number | null
   reviewCount: number | null
+  appreciationCount: number | null
   consultationFee: number | null
   verified: boolean
   profileImageUrl: string | null
@@ -228,7 +229,12 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                             </Title>
                             {doctor.verified && <Tag color="cyan" style={{ marginTop: 4, marginRight: 0 }}>Verified</Tag>}
                           </div>
-                          <Rate disabled defaultValue={doctor.rating || 0} style={{ fontSize: 12 }} />
+                          {/* Appreciation Badge */}
+                          {(doctor.appreciationCount || 0) > 0 && (
+                            <Tag color="blue" style={{ border: 'none', backgroundColor: '#e6f7ff', color: '#0050b3', margin: 0 }}>
+                              💙 {doctor.appreciationCount}
+                            </Tag>
+                          )}
                         </div>
 
                         <Text type="secondary" style={{ fontSize: 13 }}>{doctor.specialtyName || 'General Practitioner'}</Text>

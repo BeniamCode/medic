@@ -70,6 +70,7 @@ defmodule MedicWeb.SearchController do
       city: result.city,
       rating: result.rating,
       review_count: result.review_count,
+      appreciation_count: result.appreciation_count,
       consultation_fee: result.consultation_fee,
       verified: result.verified,
       profile_image_url: result.profile_image_url,

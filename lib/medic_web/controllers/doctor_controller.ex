@@ -6,6 +6,7 @@ defmodule MedicWeb.DoctorController do
   alias Medic.Appointments
   alias Medic.Doctors.Specialty
   alias Medic.Doctors.Doctor
+  alias Medic.Appreciate.DoctorAppreciationStat
   alias Medic.Patients
   alias Medic.Repo
   alias Medic.Scheduling
@@ -25,11 +26,13 @@ defmodule MedicWeb.DoctorController do
       {:ok, doctor} ->
         formatted = format_doctor(doctor, locale)
         page_title = formatted.full_name
+        appreciation_stats = Repo.get(DoctorAppreciationStat, doctor.id)
         availability = Scheduling.get_slots_for_range(doctor, start_date, Date.add(start_date, 6))
 
         conn
         |> assign(:page_title, page_title)
         |> assign_prop(:doctor, formatted)
+        |> assign_prop(:appreciation, appreciation_props(appreciation_stats))
         |> assign_prop(:availability, Enum.map(availability, &availability_props/1))
         # Pass current start date to frontend for pagination logic
         |> assign_prop(:startDate, Date.to_iso8601(start_date))
@@ -217,6 +220,23 @@ defmodule MedicWeb.DoctorController do
           do: DateTime.to_iso8601(doctor.next_available_slot),
           else: nil
         )
+    }
+  end
+
+  defp appreciation_props(nil) do
+    %{
+      totalDistinctPatients: 0,
+      last30dDistinctPatients: 0,
+      lastAppreciatedAt: nil
+    }
+  end
+
+  defp appreciation_props(stats) do
+    %{
+      totalDistinctPatients: stats.appreciated_total_distinct_patients,
+      last30dDistinctPatients: stats.appreciated_last_30d_distinct_patients,
+      lastAppreciatedAt:
+        stats.last_appreciated_at && DateTime.to_iso8601(stats.last_appreciated_at)
     }
   end
 

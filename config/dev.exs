@@ -1,5 +1,7 @@
 import Config
 
+import_config "oban.exs"
+
 # Configure your database
 config :medic, Medic.Repo,
   username: "postgres",
@@ -10,11 +12,7 @@ config :medic, Medic.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
-# Oban configuration for development
-config :medic, Oban,
-  repo: Medic.Repo,
-  plugins: [Oban.Plugins.Pruner],
-  queues: [default: 10, mailers: 5, search: 5]
+# Oban configuration is shared in config/oban.exs
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

@@ -13,6 +13,8 @@ defmodule Medic.Search do
 
   alias Medic.Doctors
   alias Medic.Doctors.Doctor
+  alias Medic.Appreciate.DoctorAppreciationStat
+  alias Medic.Repo
 
   require Logger
 
@@ -46,6 +48,7 @@ defmodule Medic.Search do
       %{"name" => "address", "type" => "string", "optional" => true},
       %{"name" => "rating", "type" => "float"},
       %{"name" => "review_count", "type" => "int32", "optional" => true},
+      %{"name" => "appreciation_count", "type" => "int32"},
       %{"name" => "consultation_fee", "type" => "float", "optional" => true},
       %{"name" => "location", "type" => "geopoint", "optional" => true},
       %{"name" => "verified", "type" => "bool"},
@@ -54,7 +57,7 @@ defmodule Medic.Search do
       %{"name" => "next_available_slot", "type" => "int64", "optional" => true},
       %{"name" => "has_cal_com", "type" => "bool"}
     ],
-    "default_sorting_field" => "rating"
+    "default_sorting_field" => "appreciation_count"
   }
 
   @doc """
@@ -234,6 +237,7 @@ defmodule Medic.Search do
       address: doc["address"],
       rating: doc["rating"],
       review_count: doc["review_count"],
+      appreciation_count: doc["appreciation_count"] || 0,
       consultation_fee: doc["consultation_fee"],
       verified: doc["verified"],
       title: doc["title"],
@@ -262,6 +266,11 @@ defmodule Medic.Search do
       "address" => doctor.address || "",
       "rating" => doctor.rating || 0.0,
       "review_count" => doctor.review_count || 0,
+      "appreciation_count" =>
+        case Repo.get(DoctorAppreciationStat, doctor.id) do
+          %DoctorAppreciationStat{appreciated_total_distinct_patients: count} -> count
+          nil -> 0
+        end,
       "consultation_fee" =>
         if(doctor.consultation_fee, do: Decimal.to_float(doctor.consultation_fee), else: 0.0),
       "verified" => doctor.verified_at != nil,
@@ -347,14 +356,17 @@ defmodule Medic.Search do
       "reviews" ->
         "review_count:desc"
 
+      "appreciation" ->
+        "appreciation_count:desc"
+
       _ ->
         # Default or "rating" - check for geo sort
         case {Keyword.get(opts, :lat), Keyword.get(opts, :lng)} do
           {lat, lng} when is_number(lat) and is_number(lng) ->
-            "location(#{lat}, #{lng}):asc,rating:desc"
+            "location(#{lat}, #{lng}):asc,appreciation_count:desc"
 
           _ ->
-            "rating:desc"
+            "appreciation_count:desc"
         end
     end
   end

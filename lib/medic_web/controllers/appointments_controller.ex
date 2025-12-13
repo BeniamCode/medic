@@ -128,6 +128,8 @@ defmodule MedicWeb.AppointmentsController do
   end
 
   defp ajax?(conn) do
-    Enum.any?(get_req_header(conn, "x-requested-with"), fn h -> String.downcase(h) == "xmlhttprequest" end)
+    Enum.any?(get_req_header(conn, "x-requested-with"), fn h ->
+      String.downcase(h) == "xmlhttprequest"
+    end)
   end
 end

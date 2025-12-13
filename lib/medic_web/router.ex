@@ -60,6 +60,7 @@ defmodule MedicWeb.Router do
       ] do
       get "/dashboard", DashboardController, :show
       get "/appointments/:id", AppointmentsController, :show
+      post "/appointments/:id/appreciate", AppreciationController, :create
       post "/appointments/:id/approve_reschedule", AppointmentsController, :approve_reschedule
       post "/appointments/:id/reject_reschedule", AppointmentsController, :reject_reschedule
       post "/appointments/:id/cancel", AppointmentsController, :cancel

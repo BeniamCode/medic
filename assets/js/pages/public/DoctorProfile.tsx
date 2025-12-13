@@ -69,11 +69,20 @@ type AvailabilityDay = {
   slots: { startsAt: string; endsAt: string; status: string }[]
 }
 
-type PageProps = AppPageProps<{ doctor: DoctorProfile; availability: AvailabilityDay[]; startDate: string }>
+type PageProps = AppPageProps<{
+  doctor: DoctorProfile
+  availability: AvailabilityDay[]
+  startDate: string
+  appreciation: {
+    totalDistinctPatients: number
+    last30dDistinctPatients: number
+    lastAppreciatedAt: string | null
+  }
+}>
 
 const APP_LOCALE = 'en-US'
 
-export default function DoctorProfilePage({ doctor, app, auth, availability, startDate }: PageProps) {
+export default function DoctorProfilePage({ doctor, app, auth, availability, startDate, appreciation }: PageProps) {
   const { t } = useTranslation('default')
   const [selectedDateIndex, setSelectedDateIndex] = useState(0)
   const [selectedSlot, setSelectedSlot] = useState<{ startsAt: string; endsAt: string } | null>(null)
@@ -261,6 +270,31 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
           >
             {doctor.firstName?.[0]}
           </Avatar>
+
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <Space direction="vertical" size={6} style={{ width: '100%' }}>
+              <Title level={3} style={{ margin: 0 }}>
+                {doctor.fullName}
+              </Title>
+
+              <Space wrap size={[8, 8]}>
+                {doctor.specialty?.name && <Tag color="geekblue">{doctor.specialty.name}</Tag>}
+                {doctor.verified && (
+                  <Tag icon={<IconShieldCheck size={14} />} color="success">
+                    Verified
+                  </Tag>
+                )}
+                <Tag color="blue">💙 Appreciated by {appreciation.totalDistinctPatients} patients</Tag>
+                {appreciation.last30dDistinctPatients > 0 && (
+                  <Tag color="cyan">+{appreciation.last30dDistinctPatients} in last 30 days</Tag>
+                )}
+              </Space>
+
+              <Text type="secondary">
+                Based on real patient interactions. No public negative ratings.
+              </Text>
+            </Space>
+          </div>
 
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
