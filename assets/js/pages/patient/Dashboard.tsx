@@ -45,6 +45,7 @@ type Appointment = {
   status: string
   consultationMode?: 'in_person' | 'video' | 'telemedicine' | string
   pendingExpiresAt?: string | null
+  rescheduledFromAppointmentId?: string | null
 }
 
 type PageProps = AppPageProps<{
@@ -124,12 +125,43 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
     }
   }
 
+  const handleCancel = async (id: string) => {
+    setLoadingId(id)
+
+    try {
+      const body = new URLSearchParams({
+        reason: t('dashboard.cancel_reason', 'Cancelled by patient')
+      })
+
+      const res = await fetch(`/appointments/${id}/reject_reschedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: body.toString()
+      })
+
+      if (!res.ok) {
+        throw new Error('cancel_failed')
+      }
+
+      messageApi.success(t('dashboard.cancel_success', 'Appointment cancelled'))
+      setUpcoming((prev) => prev.filter((item) => item.id !== id))
+    } catch (err) {
+      messageApi.error(t('dashboard.cancel_error', 'Unable to cancel right now. Please try again.'))
+      setLoadingId(null)
+    }
+  }
+
   const renderAppointment = (appt: Appointment, isUpcoming: boolean) => {
     const mode = appt.consultationMode || 'in_person'
     const isVideo = mode === 'video' || mode === 'telemedicine'
     const doctorSpecialty = appt.doctor.specialty || t('dashboard.general_specialty', 'General practice')
     const isPendingApproval = appt.status === 'pending'
-    const dateColor = isPendingApproval ? token.colorWarningText : token.colorText
+    const isReschedulePending = isPendingApproval && Boolean(appt.rescheduledFromAppointmentId)
+    const dateColor = isReschedulePending ? token.colorWarningText : token.colorText
 
     return (
     <Card
@@ -201,7 +233,7 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
       {isUpcoming && (
         <>
           <Divider style={{ margin: '16px 0' }} />
-          {isPendingApproval && (
+          {isReschedulePending && (
             <Alert
               type="warning"
               showIcon
@@ -217,7 +249,7 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
             />
           )}
           <Flex justify="flex-end" gap="small" wrap>
-            {isPendingApproval ? (
+            {isReschedulePending ? (
               <>
                 <Button type="primary" onClick={() => handleApprove(appt.id)} loading={loadingId === appt.id}>
                   {t('dashboard.approve', 'Approve')}
@@ -228,17 +260,28 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
               </>
             ) : (
               <>
-                {isVideo && (
-                  <Button type="primary" icon={<IconVideo size={16} />}>
-                    {t('dashboard.join_call', 'Join Call')}
-                  </Button>
+                {isPendingApproval ? (
+                  <Flex align="center" gap="small" wrap>
+                    <Text type="secondary">{t('dashboard.awaiting_doctor', 'Waiting for your doctor to confirm')}</Text>
+                    <Button onClick={() => handleCancel(appt.id)} loading={loadingId === appt.id} danger>
+                      {t('dashboard.cancel', 'Cancel')}
+                    </Button>
+                  </Flex>
+                ) : (
+                  <>
+                    {isVideo && (
+                      <Button type="primary" icon={<IconVideo size={16} />}>
+                        {t('dashboard.join_call', 'Join Call')}
+                      </Button>
+                    )}
+                    <Button danger>
+                      {t('dashboard.cancel', 'Cancel')}
+                    </Button>
+                    <Button>
+                      {t('dashboard.reschedule', 'Reschedule')}
+                    </Button>
+                  </>
                 )}
-                <Button danger>
-                  {t('dashboard.cancel', 'Cancel')}
-                </Button>
-                <Button>
-                  {t('dashboard.reschedule', 'Reschedule')}
-                </Button>
               </>
             )}
           </Flex>
