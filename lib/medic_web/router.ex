@@ -62,6 +62,7 @@ defmodule MedicWeb.Router do
       get "/appointments/:id", AppointmentsController, :show
       post "/appointments/:id/approve_reschedule", AppointmentsController, :approve_reschedule
       post "/appointments/:id/reject_reschedule", AppointmentsController, :reject_reschedule
+      post "/appointments/:id/cancel", AppointmentsController, :cancel
       get "/settings", SettingsController, :show
       get "/onboarding/doctor", DoctorOnboardingController, :show
       post "/onboarding/doctor", DoctorOnboardingController, :update

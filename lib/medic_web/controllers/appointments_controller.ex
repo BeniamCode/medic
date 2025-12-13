@@ -20,9 +20,7 @@ defmodule MedicWeb.AppointmentsController do
              actor_type: :patient,
              actor_id: appointment.patient_id
            }) do
-      conn
-      |> put_flash(:success, dgettext("default", "Appointment approved"))
-      |> redirect(to: ~p"/dashboard")
+      respond_ok(conn, dgettext("default", "Appointment approved"))
     else
       {:error, :not_found} -> not_found(conn)
       {:error, _} -> handle_error(conn)
@@ -37,9 +35,24 @@ defmodule MedicWeb.AppointmentsController do
              cancelled_by_actor_type: :patient,
              cancelled_by_actor_id: appointment.patient_id
            ) do
-      conn
-      |> put_flash(:success, dgettext("default", "Appointment rejected"))
-      |> redirect(to: ~p"/dashboard")
+      respond_ok(conn, dgettext("default", "Appointment rejected"))
+    else
+      {:error, :not_found} -> not_found(conn)
+      {:error, _} -> handle_error(conn)
+    end
+  end
+
+  def cancel(conn, %{"id" => id} = params) do
+    reason = Map.get(params, "reason") || dgettext("default", "Cancelled by patient")
+
+    with {:ok, appointment} <- fetch_patient_appointment(conn.assigns.current_user, id),
+         {:ok, _updated} <-
+           Appointments.cancel_appointment(appointment, reason,
+             cancelled_by: :patient,
+             cancelled_by_actor_type: :patient,
+             cancelled_by_actor_id: appointment.patient_id
+           ) do
+      respond_ok(conn, dgettext("default", "Appointment cancelled"))
     else
       {:error, :not_found} -> not_found(conn)
       {:error, _} -> handle_error(conn)
@@ -84,15 +97,37 @@ defmodule MedicWeb.AppointmentsController do
   end
 
   defp not_found(conn) do
-    conn
-    |> put_status(:not_found)
-    |> put_flash(:error, dgettext("default", "Appointment not found"))
-    |> redirect(to: ~p"/dashboard")
+    if ajax?(conn) do
+      send_resp(conn, :not_found, "")
+    else
+      conn
+      |> put_status(:not_found)
+      |> put_flash(:error, dgettext("default", "Appointment not found"))
+      |> redirect(to: ~p"/dashboard")
+    end
   end
 
   defp handle_error(conn) do
-    conn
-    |> put_flash(:error, dgettext("default", "Unable to process appointment"))
-    |> redirect(to: ~p"/dashboard")
+    if ajax?(conn) do
+      send_resp(conn, :unprocessable_entity, "")
+    else
+      conn
+      |> put_flash(:error, dgettext("default", "Unable to process appointment"))
+      |> redirect(to: ~p"/dashboard")
+    end
+  end
+
+  defp respond_ok(conn, message) do
+    if ajax?(conn) do
+      send_resp(conn, :no_content, "")
+    else
+      conn
+      |> put_flash(:success, message)
+      |> redirect(to: ~p"/dashboard")
+    end
+  end
+
+  defp ajax?(conn) do
+    Enum.any?(get_req_header(conn, "x-requested-with"), fn h -> String.downcase(h) == "xmlhttprequest" end)
   end
 end

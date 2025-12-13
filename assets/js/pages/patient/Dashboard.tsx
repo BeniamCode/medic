@@ -13,7 +13,8 @@ import {
   theme,
   Statistic,
   Alert,
-  message
+  message,
+  Popconfirm
 } from 'antd'
 import {
   IconCalendar,
@@ -133,7 +134,7 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
         reason: t('dashboard.cancel_reason', 'Cancelled by patient')
       })
 
-      const res = await fetch(`/appointments/${id}/reject_reschedule`, {
+      const res = await fetch(`/appointments/${id}/cancel`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -263,9 +264,17 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
                 {isPendingApproval ? (
                   <Flex align="center" gap="small" wrap>
                     <Text type="secondary">{t('dashboard.awaiting_doctor', 'Waiting for your doctor to confirm')}</Text>
-                    <Button onClick={() => handleCancel(appt.id)} loading={loadingId === appt.id} danger>
-                      {t('dashboard.cancel', 'Cancel')}
-                    </Button>
+                    <Popconfirm
+                      title={t('dashboard.cancel_confirm_title', 'Cancel this appointment?')}
+                      description={t('dashboard.cancel_confirm_desc', 'This will remove your booking.')}
+                      okText={t('dashboard.yes', 'Yes')}
+                      cancelText={t('dashboard.no', 'No')}
+                      onConfirm={() => handleCancel(appt.id)}
+                    >
+                      <Button loading={loadingId === appt.id} danger>
+                        {t('dashboard.cancel', 'Cancel')}
+                      </Button>
+                    </Popconfirm>
                   </Flex>
                 ) : (
                   <>

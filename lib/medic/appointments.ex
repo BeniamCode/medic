@@ -444,16 +444,22 @@ defmodule Medic.Appointments do
   defp release_claims(appointment_id) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-    AppointmentResourceClaim
-    |> Ash.Query.filter(appointment_id == ^appointment_id and status == "active")
-    |> Ash.read!()
-    |> Enum.each(fn claim ->
-      claim
-      |> Ash.Changeset.for_update(:update, %{status: "released", released_at: now})
-      |> Ash.update!()
-    end)
+    with {:ok, claims} <-
+           AppointmentResourceClaim
+           |> Ash.Query.filter(appointment_id == ^appointment_id and status == "active")
+           |> Ash.read() do
+      Enum.each(claims, fn claim ->
+        claim
+        |> Ash.Changeset.for_update(:update, %{status: "released", released_at: now})
+        |> Ash.update()
+
+        :ok
+      end)
+    end
 
     :ok
+  rescue
+    _ -> :ok
   end
 
   defp schedule_default_reminders(%Appointment{starts_at: nil}), do: :ok
@@ -690,16 +696,20 @@ defmodule Medic.Appointments do
 
   defp maybe_notify_cancellation(appointment, :doctor) do
     notify_patient_cancellation(appointment)
+  rescue
+    _ -> :ok
   end
 
   defp maybe_notify_cancellation(appointment, :patient) do
     notify_doctor_cancellation(appointment)
+  rescue
+    _ -> :ok
   end
 
   defp maybe_notify_cancellation(_appointment, _), do: :ok
 
   defp put_cancel_actor(changeset, opts) do
-    actor_type = Keyword.get(opts, :cancelled_by_actor_type)
+    actor_type = opts |> Keyword.get(:cancelled_by_actor_type) |> normalize_actor_value()
     actor_id = Keyword.get(opts, :cancelled_by_actor_id)
 
     changeset
@@ -707,13 +717,16 @@ defmodule Medic.Appointments do
     |> maybe_put_change(:cancelled_by_actor_id, actor_id)
   end
 
+  defp normalize_actor_value(value) when is_atom(value), do: Atom.to_string(value)
+  defp normalize_actor_value(value), do: value
+
   defp maybe_put_change(changeset, _field, nil), do: changeset
 
   defp maybe_put_change(changeset, field, value),
     do: Ecto.Changeset.put_change(changeset, field, value)
 
   defp notify_doctor_cancellation(appointment) do
-    if appointment.doctor do
+    if appointment.doctor && appointment.doctor.user_id && appointment.patient do
       Notifications.create_notification(%{
         user_id: appointment.doctor.user_id,
         type: "cancellation",
@@ -724,10 +737,12 @@ defmodule Medic.Appointments do
         resource_type: "appointment"
       })
     end
+
+    :ok
   end
 
   defp notify_patient_cancellation(appointment) do
-    if appointment.patient do
+    if appointment.patient && appointment.patient.user_id && appointment.doctor do
       message =
         if appointment.cancellation_reason && appointment.cancellation_reason != "" do
           "Your appointment with Dr. #{appointment.doctor.last_name} was cancelled: #{appointment.cancellation_reason}"
@@ -744,6 +759,8 @@ defmodule Medic.Appointments do
         resource_type: "appointment"
       })
     end
+
+    :ok
   end
 
   def subscribe_doctor_events(doctor_id) when not is_nil(doctor_id) do
