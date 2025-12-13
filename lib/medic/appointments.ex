@@ -195,6 +195,50 @@ defmodule Medic.Appointments do
   end
 
   @doc """
+  Doctor proposes a new time; appointment becomes pending and patient must approve.
+  """
+  def reschedule_request(appointment_or_id, %DateTime{} = new_starts_at, actor \\ %{}) do
+    Repo.transaction(fn ->
+      appointment = load_for_transition(appointment_or_id)
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      duration_minutes =
+        appointment.service_duration_snapshot || appointment.duration_minutes || 30
+
+      new_ends_at = DateTime.add(new_starts_at, duration_minutes * 60, :second)
+      pending_expires_at = DateTime.add(now, @default_pending_seconds, :second)
+
+      {:ok, updated} =
+        appointment
+        |> Ash.Changeset.for_update(:update, %{
+          starts_at: new_starts_at,
+          ends_at: new_ends_at,
+          status: "pending",
+          pending_expires_at: pending_expires_at,
+          approval_required_snapshot: true,
+          rescheduled_from_appointment_id:
+            appointment.rescheduled_from_appointment_id || appointment.id
+        })
+        |> Ash.update()
+
+      log_event(
+        updated.id,
+        "reschedule_requested",
+        %{
+          previous_starts_at: appointment.starts_at,
+          new_starts_at: new_starts_at
+        },
+        actor
+      )
+
+      schedule_pending_expiry(updated)
+      maybe_enqueue_pending_notifications(updated)
+      broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
+      updated
+    end)
+  end
+
+  @doc """
   Move held appointment to confirmed (auto-approve path).
   """
   def confirm_booking(appointment_or_id) do

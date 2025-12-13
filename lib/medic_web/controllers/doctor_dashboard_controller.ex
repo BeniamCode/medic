@@ -45,6 +45,7 @@ defmodule MedicWeb.DoctorDashboardController do
 
   defp appointment_props(appt) do
     patient = appt.patient || %Patient{}
+
     appointment_type_name =
       appt.service_name_snapshot ||
         (appt.appointment_type_record && appt.appointment_type_record.name)

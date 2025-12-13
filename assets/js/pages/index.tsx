@@ -21,6 +21,7 @@ const privatePages: Record<string, Loader> = {
   'Patient/AppointmentDetail': () => import('./patient/AppointmentDetail'),
   'Patient/Settings': () => import('./patient/Settings'),
   'Doctor/Dashboard': () => import('./doctor/Dashboard'),
+  'Doctor/Appointments': () => import('./doctor/Appointments'),
   'Doctor/Profile': () => import('./doctor/Profile'),
   'Doctor/Schedule': () => import('./doctor/Schedule'),
   'Doctor/Onboarding': () => import('./doctor/Onboarding')

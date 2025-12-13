@@ -121,6 +121,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             Dashboard
                         </Button>
                     </Link>
+                    <Link href="/dashboard/doctor/appointments">
+                        <Button
+                            type={path.startsWith('/dashboard/doctor/appointments') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/dashboard/doctor/appointments')}
+                            className={path.startsWith('/dashboard/doctor/appointments') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconCalendarEvent size={20} />}
+                        >
+                            Appointments
+                        </Button>
+                    </Link>
                     <Link href="/doctor/schedule">
                         <Button
                             type={path.startsWith('/doctor/schedule') ? 'primary' : 'text'}

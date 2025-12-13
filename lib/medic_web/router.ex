@@ -60,6 +60,8 @@ defmodule MedicWeb.Router do
       ] do
       get "/dashboard", DashboardController, :show
       get "/appointments/:id", AppointmentsController, :show
+      post "/appointments/:id/approve_reschedule", AppointmentsController, :approve_reschedule
+      post "/appointments/:id/reject_reschedule", AppointmentsController, :reject_reschedule
       get "/settings", SettingsController, :show
       get "/onboarding/doctor", DoctorOnboardingController, :show
       post "/onboarding/doctor", DoctorOnboardingController, :update
@@ -88,6 +90,11 @@ defmodule MedicWeb.Router do
     pipe_through [:browser, :require_authenticated_user]
 
     get "/doctor", DoctorDashboardController, :show
+    get "/doctor/appointments", DoctorAppointmentsController, :index
+    post "/doctor/appointments/:id/approve", DoctorAppointmentsController, :approve
+    post "/doctor/appointments/:id/reject", DoctorAppointmentsController, :reject
+    post "/doctor/appointments/:id/reschedule", DoctorAppointmentsController, :reschedule
+    post "/doctor/appointments/:id/cancel", DoctorAppointmentsController, :cancel
     get "/doctor/profile", DoctorProfileController, :show
     post "/doctor/profile", DoctorProfileController, :update
   end
