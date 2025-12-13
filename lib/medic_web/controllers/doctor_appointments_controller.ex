@@ -163,6 +163,7 @@ defmodule MedicWeb.DoctorAppointmentsController do
             id: patient.id,
             first_name: patient.first_name,
             last_name: patient.last_name,
+            phone: patient.phone,
             avatar_url: Map.get(patient, :profile_image_url)
           }
     }

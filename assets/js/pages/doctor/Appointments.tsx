@@ -54,6 +54,7 @@ type Appointment = {
     id: string
     firstName: string
     lastName: string
+    phone?: string | null
     avatarUrl?: string | null
   }
 }
@@ -129,6 +130,37 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
     setRescheduleModal({ id: null, when: null })
     setReason('')
   }
+
+  const expandedRowRender = (record: Appointment) => (
+    <Card
+      size="small"
+      style={{ margin: '0 12px 12px', background: token.colorBgContainer, borderRadius: 12 }}
+      bodyStyle={{ padding: 16 }}
+    >
+      <Flex vertical gap={10}>
+        <Flex gap={8} align="center">
+          <Avatar size={32} src={record.patient?.avatarUrl} icon={<IconUser size={16} />} />
+          <div>
+            <Text strong>{record.patient ? `${record.patient.firstName} ${record.patient.lastName}` : t('appointments.unknown_patient', 'Unknown')}</Text>
+            {record.patient?.phone && (
+              <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
+                {t('appointments.phone', 'Phone')}: {record.patient.phone}
+              </Text>
+            )}
+          </div>
+        </Flex>
+        <Flex gap={8} align="flex-start">
+          <IconNotes size={16} />
+          <div>
+            <Text strong>{t('appointments.patient_message', 'Patient message')}</Text>
+            <Text style={{ display: 'block', marginTop: 4 }}>
+              {record.notes || t('appointments.no_message', 'No message provided')}
+            </Text>
+          </div>
+        </Flex>
+      </Flex>
+    </Card>
+  )
 
   const columns = [
     {
@@ -313,6 +345,7 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
           columns={columns}
           dataSource={filteredAppointments}
           rowKey={(row) => row.id}
+          expandable={{ expandedRowRender, expandRowByClick: true }}
           pagination={{ pageSize: 8, showSizeChanger: false }}
         />
       </Card>
