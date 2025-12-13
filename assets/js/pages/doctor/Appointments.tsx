@@ -263,7 +263,7 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
               </Button>
             )}
 
-            {isPending && !isPatientApprovalPending && (
+            {isUpcoming && !isPatientApprovalPending && (
               <Button
                 icon={<IconCircleX size={16} />}
                 onClick={() => setReasonModal({ id: record.id, action: 'reject' })}
