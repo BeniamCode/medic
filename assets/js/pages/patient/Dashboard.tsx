@@ -1,3 +1,4 @@
+import React, { useMemo, useState } from 'react'
 import {
   Button,
   Card,
@@ -10,7 +11,9 @@ import {
   Empty,
   Flex,
   theme,
-  Statistic
+  Statistic,
+  Alert,
+  message
 } from 'antd'
 import {
   IconCalendar,
@@ -19,7 +22,8 @@ import {
   IconFileText,
   IconUser,
   IconVideo,
-  IconMapPin
+  IconMapPin,
+  IconInfoCircle
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
@@ -40,6 +44,7 @@ type Appointment = {
   startsAt: string
   status: string
   consultationMode?: 'in_person' | 'video' | 'telemedicine' | string
+  pendingExpiresAt?: string | null
 }
 
 type PageProps = AppPageProps<{
@@ -56,21 +61,88 @@ type PageProps = AppPageProps<{
   }
 }>
 
+const getCsrfToken = () => document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+
 const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], patient, stats }: PageProps) => {
   const { t } = useTranslation('default')
   const { token } = useToken()
+  const [messageApi, contextHolder] = message.useMessage()
+  const [upcoming, setUpcoming] = useState(upcomingAppointments)
+  const [loadingId, setLoadingId] = useState<string | null>(null)
   const patientName = patient?.firstName || t('dashboard.patient_fallback', 'there')
+
+  const handleApprove = async (id: string) => {
+    setLoadingId(id)
+    try {
+      const res = await fetch(`/appointments/${id}/approve_reschedule`, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'x-csrf-token': getCsrfToken()
+        }
+      })
+
+      if (!res.ok) {
+        throw new Error('approve_failed')
+      }
+
+      messageApi.success(t('dashboard.approve_success', 'Reschedule approved'))
+      window.location.reload()
+    } catch (err) {
+      messageApi.error(t('dashboard.approve_error', 'Something went wrong. Please try again.'))
+      setLoadingId(null)
+    }
+  }
+
+  const handleReject = async (id: string) => {
+    setLoadingId(id)
+
+    try {
+      const body = new URLSearchParams({
+        reason: t('dashboard.reject_reason', 'You declined this reschedule')
+      })
+
+      const res = await fetch(`/appointments/${id}/reject_reschedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: body.toString()
+      })
+
+      if (!res.ok) {
+        throw new Error('reject_failed')
+      }
+
+      messageApi.success(t('dashboard.reject_success', 'Reschedule rejected'))
+      setUpcoming((prev) => prev.filter((item) => item.id !== id))
+    } catch (err) {
+      messageApi.error(t('dashboard.reject_error', 'Unable to reject right now. Please try again.'))
+      setLoadingId(null)
+    }
+  }
 
   const renderAppointment = (appt: Appointment, isUpcoming: boolean) => {
     const mode = appt.consultationMode || 'in_person'
     const isVideo = mode === 'video' || mode === 'telemedicine'
     const doctorSpecialty = appt.doctor.specialty || t('dashboard.general_specialty', 'General practice')
+    const isPendingApproval = appt.status === 'pending'
+    const dateColor = isPendingApproval ? token.colorWarningText : token.colorText
 
     return (
     <Card
       key={appt.id}
-      style={{ width: '100%', marginBottom: 16, borderRadius: 12, borderColor: '#e2e8f0' }}
-      bodyStyle={{ padding: 24 }}
+      style={{
+        width: '100%',
+        marginBottom: 16,
+        borderRadius: 14,
+        borderColor: token.colorBorderSecondary,
+        boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)',
+        background: token.colorBgContainer
+      }}
+      bodyStyle={{ padding: 22 }}
     >
       <Row gutter={[16, 16]} align="middle">
         <Col xs={24} sm={16}>
@@ -113,11 +185,11 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
           <Flex vertical align="end" gap="small" style={{ textAlign: 'right' }}>
             <Flex gap="small" align="center">
               <IconCalendarEvent size={16} />
-              <Text strong>{dayjs(appt.startsAt).format('MMM D, YYYY')}</Text>
+              <Text strong style={{ color: dateColor }}>{dayjs(appt.startsAt).format('MMM D, YYYY')}</Text>
             </Flex>
             <Flex gap="small" align="center">
               <IconClock size={16} />
-              <Text>{dayjs(appt.startsAt).format('h:mm A')}</Text>
+              <Text style={{ color: dateColor }}>{dayjs(appt.startsAt).format('h:mm A')}</Text>
             </Flex>
             <Tag color={getStatusColor(appt.status)}>
               {t(`dashboard.status.${appt.status}`, appt.status)}
@@ -129,30 +201,58 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
       {isUpcoming && (
         <>
           <Divider style={{ margin: '16px 0' }} />
-          <Flex justify="flex-end" gap="small">
-            {isVideo && (
-              <Button type="primary" icon={<IconVideo size={16} />}>
-                {t('dashboard.join_call', 'Join Call')}
-              </Button>
+          {isPendingApproval && (
+            <Alert
+              type="warning"
+              showIcon
+              icon={<IconInfoCircle size={16} color={token.colorWarningText} />}
+              message={t('dashboard.pending_title', 'Review this rescheduled time')}
+              description={t('dashboard.pending_tip', 'Confirm if the new time works or choose to reject it.')}
+              style={{
+                marginBottom: 12,
+                background: token.colorWarningBg,
+                borderColor: token.colorWarningBorder,
+                borderRadius: 10
+              }}
+            />
+          )}
+          <Flex justify="flex-end" gap="small" wrap>
+            {isPendingApproval ? (
+              <>
+                <Button type="primary" onClick={() => handleApprove(appt.id)} loading={loadingId === appt.id}>
+                  {t('dashboard.approve', 'Approve')}
+                </Button>
+                <Button onClick={() => handleReject(appt.id)} loading={loadingId === appt.id}>
+                  {t('dashboard.reject', 'Reject')}
+                </Button>
+              </>
+            ) : (
+              <>
+                {isVideo && (
+                  <Button type="primary" icon={<IconVideo size={16} />}>
+                    {t('dashboard.join_call', 'Join Call')}
+                  </Button>
+                )}
+                <Button danger>
+                  {t('dashboard.cancel', 'Cancel')}
+                </Button>
+                <Button>
+                  {t('dashboard.reschedule', 'Reschedule')}
+                </Button>
+              </>
             )}
-            <Button danger>
-              {t('dashboard.cancel', 'Cancel')}
-            </Button>
-            <Button>
-              {t('dashboard.reschedule', 'Reschedule')}
-            </Button>
           </Flex>
         </>
       )}
     </Card>
   )}
 
-  const items = [
+  const items = useMemo(() => ([
     {
       key: 'upcoming',
       label: t('dashboard.tabs.upcoming', 'Upcoming'),
-      children: upcomingAppointments.length > 0 ? (
-        upcomingAppointments.map((appt: Appointment) => renderAppointment(appt, true))
+      children: upcoming.length > 0 ? (
+        upcoming.map((appt: Appointment) => renderAppointment(appt, true))
       ) : (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -173,10 +273,12 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
         <Empty description={t('dashboard.no_history', 'No past appointments')} />
       )
     }
-  ]
+  ]), [upcoming, pastAppointments, renderAppointment, t])
 
   return (
-    <div style={{ minHeight: '100vh', background: token.colorBgLayout }}>
+    <>
+      {contextHolder}
+      <div style={{ minHeight: '100vh', background: token.colorBgLayout }}>
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
         <Card
           bordered={false}
@@ -277,6 +379,7 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
         </Row>
       </div>
     </div>
+    </>
   )
 }
 

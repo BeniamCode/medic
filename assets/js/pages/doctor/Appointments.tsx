@@ -211,21 +211,21 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
               </Popconfirm>
             )}
 
-            {isPending && (
-              <Button
-                icon={<IconCircleX size={16} />}
-                onClick={() => setReasonModal({ id: record.id, action: 'reject' })}
-              >
-                {t('appointments.reject', 'Reject')}
-              </Button>
-            )}
-
             {isUpcoming && (
               <Button
                 icon={<IconArrowBackUp size={16} />}
                 onClick={() => setRescheduleModal({ id: record.id, when: dayjs(record.startsAt) })}
               >
                 {t('appointments.reschedule', 'Reschedule')}
+              </Button>
+            )}
+
+            {isPending && (
+              <Button
+                icon={<IconCircleX size={16} />}
+                onClick={() => setReasonModal({ id: record.id, action: 'reject' })}
+              >
+                {t('appointments.reject', 'Reject')}
               </Button>
             )}
           </Space>

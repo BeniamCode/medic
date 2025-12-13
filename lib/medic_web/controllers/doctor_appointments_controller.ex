@@ -113,7 +113,7 @@ defmodule MedicWeb.DoctorAppointmentsController do
 
     with {:ok, updated} <- Appointments.reschedule_request(appointment, starts_at_dt, actor) do
       if reason && reason != "" do
-        :ok = Appointments.log_event(updated.id, "reschedule_reason", %{reason: reason}, actor)
+        _ = Appointments.log_event(updated.id, "reschedule_reason", %{reason: reason}, actor)
       end
 
       {:ok, updated}
@@ -184,7 +184,7 @@ defmodule MedicWeb.DoctorAppointmentsController do
     |> redirect(to: ~p"/dashboard/doctor/appointments")
   end
 
-  defp handle_error(conn, reason) do
+  defp handle_error(conn, _reason) do
     conn
     |> put_flash(:error, dgettext("default", "Unable to process appointment"))
     |> redirect(to: ~p"/dashboard/doctor/appointments")

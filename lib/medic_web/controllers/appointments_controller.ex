@@ -15,7 +15,11 @@ defmodule MedicWeb.AppointmentsController do
 
   def approve_reschedule(conn, %{"id" => id}) do
     with {:ok, appointment} <- fetch_patient_appointment(conn.assigns.current_user, id),
-         {:ok, _updated} <- Appointments.approve_request(appointment, %{actor_type: :patient, actor_id: appointment.patient_id}) do
+         {:ok, _updated} <-
+           Appointments.approve_request(appointment, %{
+             actor_type: :patient,
+             actor_id: appointment.patient_id
+           }) do
       conn
       |> put_flash(:success, dgettext("default", "Appointment approved"))
       |> redirect(to: ~p"/dashboard")
@@ -50,6 +54,8 @@ defmodule MedicWeb.AppointmentsController do
       status: appointment.status,
       notes: appointment.notes,
       doctor: %{
+        pending_expires_at:
+          appointment.pending_expires_at && DateTime.to_iso8601(appointment.pending_expires_at),
         id: appointment.doctor.id,
         first_name: appointment.doctor.first_name,
         last_name: appointment.doctor.last_name,
@@ -65,7 +71,9 @@ defmodule MedicWeb.AppointmentsController do
 
   defp fetch_patient_appointment(user, id) do
     case Patients.get_patient_by_user_id(user.id) do
-      nil -> {:error, :not_found}
+      nil ->
+        {:error, :not_found}
+
       patient ->
         appt = Appointments.get_appointment_with_details!(id)
         if appt.patient_id == patient.id, do: {:ok, appt}, else: {:error, :not_found}
