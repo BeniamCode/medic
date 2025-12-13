@@ -53,9 +53,7 @@ defmodule Medic.Scheduling.ScheduleRule do
 
       change manage_relationship(:breaks,
         type: :create,
-        on_no_match: :ignore,
-        on_match: :ignore,
-        value_is_key: :breaks
+        on_no_match: :create
       )
     end
 

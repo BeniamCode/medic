@@ -96,6 +96,7 @@ type AvailabilityRule = {
   startTime: string
   endTime: string
   visitType: 'in-person' | 'video'
+  slotDurationMinutes?: number
   breaks?: { breakStartLocal: string; breakEndLocal: string }[]
 }
 
@@ -288,7 +289,7 @@ const DoctorSchedule = ({
       const windows = rulesForDay.map(r => ({
         workStartLocal: r.startTime,
         workEndLocal: r.endTime,
-        slotIntervalMinutes: 30, // Assuming 30 if not present
+        slotIntervalMinutes: r.slotDurationMinutes || 30, // Use actual value from rule
         breaks: r.breaks?.map(b => ({
           breakStartLocal: b.breakStartLocal,
           breakEndLocal: b.breakEndLocal
@@ -322,27 +323,47 @@ const DoctorSchedule = ({
 
   /* Toggle Slot Availability */
   const handleToggleSlot = (rule: AvailabilityRule, slotStart: string, slotEnd: string, isActive: boolean) => {
-    // We need to modify the rules list to add/remove a break
-    const newRules = JSON.parse(JSON.stringify(availabilityRules)) as AvailabilityRule[]
-    const targetRule = newRules.find(r => r.id === rule.id)
-
-    if (!targetRule) return
+    // Clone the rule to modify breaks
+    const updatedRule = JSON.parse(JSON.stringify(rule)) as AvailabilityRule
 
     if (isActive) {
-      // Slot is currently active, so we deactivate it by ADDING a break
-      targetRule.breaks = targetRule.breaks || []
-      targetRule.breaks.push({
+      // Deactivate: Add break for this slot
+      updatedRule.breaks = updatedRule.breaks || []
+      updatedRule.breaks.push({
         breakStartLocal: slotStart,
         breakEndLocal: slotEnd
       })
     } else {
-      // Slot is inactive (break exists), so we activate it by REMOVING the break
-      // We look for a break that exactly matches or covers this slot. 
-      // Simplified: match start time exactly.
-      targetRule.breaks = targetRule.breaks?.filter(b => b.breakStartLocal !== slotStart) || []
+      // Activate: Remove break matching start time
+      updatedRule.breaks = updatedRule.breaks?.filter(b => b.breakStartLocal !== slotStart) || []
     }
 
-    const payload = transformRulesToFormValues(newRules)
+    // Build the payload with the updated breaks
+    const payload: AddSlotFormValues = {
+      scope: {
+        ...INITIAL_FORM_VALUES.scope,
+        consultationMode: rule.visitType === 'video' ? 'video' : 'in_person'
+      },
+      days: [{
+        dayOfWeek: updatedRule.dayOfWeek,
+        enabled: true,
+        windows: [{
+          workStartLocal: updatedRule.startTime,
+          workEndLocal: updatedRule.endTime,
+          slotIntervalMinutes: updatedRule.slotDurationMinutes || 30,
+          breaks: updatedRule.breaks?.map(b => ({
+            breakStartLocal: b.breakStartLocal,
+            breakEndLocal: b.breakEndLocal
+          })) || []
+        }]
+      }],
+      replaceMode: 'replace_selected_days'
+    }
+
+    // Debug: Log the payload being sent
+    console.log('handleToggleSlot - isActive:', isActive, 'slotStart:', slotStart, 'breaks:', updatedRule.breaks)
+    console.log('handleToggleSlot - payload:', JSON.stringify(payload, null, 2))
+
     saveMutation.mutate(payload)
   }
 
@@ -353,13 +374,18 @@ const DoctorSchedule = ({
         {rules.map(rule => {
           // Generate slots
           const slots = []
-          // using today's date just for parsing time
+          const interval = rule.slotDurationMinutes || 30
+
+          // Debug: Log the interval being used
+          console.log('SlotGrid - Rule:', rule.id, 'slotDurationMinutes:', rule.slotDurationMinutes, 'using interval:', interval)
+
+          // using today's date just for parsing time - format must match input string
           let current = dayjs(`2000-01-01 ${rule.startTime}`, 'YYYY-MM-DD HH:mm')
           const end = dayjs(`2000-01-01 ${rule.endTime}`, 'YYYY-MM-DD HH:mm')
 
-          while (current.isBefore(end)) {
+          while (current.isValid() && end.isValid() && current.isBefore(end)) {
             const slotStart = current.format('HH:mm')
-            const next = current.add(30, 'minute') // Assuming 30 min interval
+            const next = current.add(interval, 'minute')
             const slotEnd = next.format('HH:mm')
 
             // Check if blocked by a break
@@ -375,24 +401,31 @@ const DoctorSchedule = ({
           }
 
           return (
-            <Card key={rule.id} size="small" type="inner" title={`${dayjs(rule.startTime, 'HH:mm').format('h:mm A')} - ${dayjs(rule.endTime, 'HH:mm').format('h:mm A')}`}>
-              <Flex wrap="wrap" gap={8}>
+            <Card key={rule.id} size="small" type="inner" title={`${dayjs(rule.startTime, 'HH:mm').format('h:mm A')} - ${dayjs(rule.endTime, 'HH:mm').format('h:mm A')} (${interval}min)`}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                gap: 8,
+                justifyItems: 'start'
+              }}>
                 {slots.map(slot => (
                   <Button
                     key={slot.start}
-                    type={slot.active ? 'primary' : 'default'} // Active=Primary, Inactive=Default(Greyish)
+                    type={slot.active ? 'primary' : 'default'}
                     icon={slot.active ? <IconCheck size={14} /> : <IconMinus size={14} />}
                     onClick={() => handleToggleSlot(rule, slot.start, slot.end, slot.active)}
-                    ghost={!slot.active} // Ghost for inactive looks like an outline/disabled
+                    ghost={!slot.active}
                     style={{
                       opacity: slot.active ? 1 : 0.6,
                       borderColor: slot.active ? undefined : '#d9d9d9',
+                      width: '100%',
+                      justifyContent: 'flex-start'
                     }}
                   >
                     {dayjs(slot.start, 'HH:mm').format('h:mm')}
                   </Button>
                 ))}
-              </Flex>
+              </div>
             </Card>
           )
         })}
@@ -473,7 +506,13 @@ const DoctorSchedule = ({
             {currentDayRules.length > 0 ? (
               <SlotGrid rules={currentDayRules} />
             ) : (
-              <Empty description={t('schedule.no_slots', 'No availability slots for this day.')} />
+              <Empty
+                description={t('schedule.no_slots', 'No availability slots for this day.')}
+              >
+                <Button type="primary" onClick={populateFormWithExistingRules}>
+                  {t('schedule.edit_availability', 'Edit Availability')}
+                </Button>
+              </Empty>
             )}
           </Card>
 
@@ -750,7 +789,7 @@ const DoctorSchedule = ({
                                 name={`days.${index}.windows.0.slotIntervalMinutes`}
                                 control={control}
                                 render={({ field: f }) => (
-                                  <Select {...field} style={{ width: '100%' }}>
+                                  <Select {...f} style={{ width: '100%' }}>
                                     <Option value={15}>15 m</Option>
                                     <Option value={20}>20 m</Option>
                                     <Option value={30}>30 m</Option>

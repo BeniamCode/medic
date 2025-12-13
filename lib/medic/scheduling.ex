@@ -221,6 +221,7 @@ defmodule Medic.Scheduling do
       breaks: rule.breaks || [],
       slot_duration_minutes: rule.slot_interval_minutes,
       is_active: true,
+      visit_type: rule.scope_consultation_mode,
       timezone: rule.timezone
     }
   end
@@ -720,12 +721,12 @@ defmodule Medic.Scheduling do
     |> Enum.each(&destroy_schedule_rule/1) 
   end
 
-  defp delete_rules_for_scope_and_days!(doctor_id, scope, dows) do
-    # Fetch matching rules then destroy via Ash (so breaks cascade properly).
+  defp delete_rules_for_scope_and_days!(doctor_id, _scope, dows) do
+    # Delete ALL rules for the given days regardless of scope.
+    # This ensures toggling a slot doesn't create duplicates when scope fields differ.
     query =
       ScheduleRule
       |> Ash.Query.filter(doctor_id == ^doctor_id and day_of_week in ^dows)
-      |> apply_scope_filter(scope)
 
     rules = Ash.read!(query)
 
@@ -878,14 +879,15 @@ defmodule Medic.Scheduling do
     }
   end
 
-  defp apply_scope_filter(query, scope) do
-    query
-    |> Ash.Query.filter(timezone == ^scope.timezone)
-    |> Ash.Query.filter(scope_appointment_type_id == ^scope.appointment_type_id)
-    |> Ash.Query.filter(scope_doctor_location_id == ^scope.doctor_location_id)
-    |> Ash.Query.filter(scope_location_room_id == ^scope.location_room_id)
-    |> Ash.Query.filter(scope_consultation_mode == ^scope.consultation_mode)
-  end
+  # NOTE: Kept for future use when scope-specific filtering is needed
+  # defp apply_scope_filter(query, scope) do
+  #   query
+  #   |> Ash.Query.filter(timezone == ^scope.timezone)
+  #   |> Ash.Query.filter(scope_appointment_type_id == ^scope.appointment_type_id)
+  #   |> Ash.Query.filter(scope_doctor_location_id == ^scope.doctor_location_id)
+  #   |> Ash.Query.filter(scope_location_room_id == ^scope.location_room_id)
+  #   |> Ash.Query.filter(scope_consultation_mode == ^scope.consultation_mode)
+  # end
 
   defp parse_replace_mode("replace_selected_days"), do: :replace_selected_days
   defp parse_replace_mode("reset_all"), do: :reset_all
