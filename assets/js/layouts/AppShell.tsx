@@ -1,4 +1,5 @@
 import {
+    App as AntdApp,
     Layout,
     Button,
     Avatar,
@@ -29,6 +30,7 @@ import { useTranslation } from 'react-i18next'
 import { SharedAppProps } from '@/types/app'
 import { useEffect, useState } from 'react'
 import { useThemeMode } from '@/app'
+import { ensureNotificationsStream } from '@/lib/notificationsStream'
 
 const { Header, Sider, Content } = Layout
 const { Text } = Typography
@@ -42,6 +44,50 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const { auth, app, flash } = usePage<SharedAppProps>().props
     const { url } = usePage()
     const path = url.split('?')[0]
+
+    const { notification } = AntdApp.useApp()
+
+    const [unreadCount, setUnreadCount] = useState<number>(app.unreadCount || 0)
+
+    useEffect(() => {
+        setUnreadCount(app.unreadCount || 0)
+    }, [app.unreadCount])
+
+    useEffect(() => {
+        if (!auth.authenticated) {
+            ensureNotificationsStream().stop()
+            setUnreadCount(0)
+            return
+        }
+
+        ensureNotificationsStream().start()
+
+        const onUnread = (ev: Event) => {
+            const detail = (ev as CustomEvent).detail as { unreadCount?: number } | undefined
+            if (detail && typeof detail.unreadCount === 'number') {
+                setUnreadCount(detail.unreadCount)
+            }
+        }
+
+        const onNew = (ev: Event) => {
+            const detail = (ev as CustomEvent).detail as { title?: string; message?: string } | undefined
+            if (!detail) return
+
+            notification.info({
+                message: detail.title || 'Notification',
+                description: detail.message || '',
+                placement: 'topRight'
+            })
+        }
+
+        window.addEventListener('medic:notifications:unreadCount', onUnread)
+        window.addEventListener('medic:notifications:new', onNew)
+
+        return () => {
+            window.removeEventListener('medic:notifications:unreadCount', onUnread)
+            window.removeEventListener('medic:notifications:new', onNew)
+        }
+    }, [auth.authenticated, notification])
 
     // Flash Message Handling (using AntD notification is better but for now let's use the hook in a simpler way if needed, or just standard Antd static methods)
     // Actually we need to verify if `App` component provides context for message/notification.
@@ -157,6 +203,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             My Profile
                         </Button>
                     </Link>
+                    <Link href="/notifications">
+                        <Button
+                            type={path.startsWith('/notifications') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/notifications')}
+                            className={path.startsWith('/notifications') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconBell size={20} />}
+                        >
+                            Notifications
+                        </Button>
+                    </Link>
                 </>
             ) : (
                 <>
@@ -184,6 +242,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             icon={<IconUserCircle size={20} />}
                         >
                             My Profile
+                        </Button>
+                    </Link>
+
+                    <Link href="/notifications">
+                        <Button
+                            type={path.startsWith('/notifications') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/notifications')}
+                            className={path.startsWith('/notifications') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconBell size={20} />}
+                        >
+                            Notifications
                         </Button>
                     </Link>
                 </>
@@ -247,7 +318,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                     {user ? (
                         <>
-                            <Button type="text" shape="circle" icon={<IconBell size={20} />} />
+                            <Link href="/notifications">
+                                <Badge count={unreadCount} size="small" overflowCount={9}>
+                                    <Button type="text" shape="circle" icon={<IconBell size={20} />} />
+                                </Badge>
+                            </Link>
                             <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
                                 <Button type="text" style={{ padding: '4px 8px', height: 'auto' }}>
                                     <Flex align="center" gap="small">

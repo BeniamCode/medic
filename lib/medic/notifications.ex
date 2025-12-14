@@ -82,10 +82,47 @@ defmodule Medic.Notifications do
   end
 
   def mark_as_read(notification_id) do
-    get_notification!(notification_id)
+    notification = get_notification!(notification_id)
+
+    notification
     |> Ash.Changeset.for_update(:update, %{read_at: DateTime.utc_now()})
     |> Ash.update()
     |> normalize_result()
+    |> case do
+      {:ok, updated} ->
+        broadcast_unread_count(updated.user_id)
+        {:ok, updated}
+
+      other ->
+        other
+    end
+  end
+
+  def mark_as_read_for_user(user_id, notification_id) do
+    Notification
+    |> Ash.Query.filter(id == ^notification_id and user_id == ^user_id)
+    |> Ash.read_one()
+    |> case do
+      {:ok, nil} ->
+        {:error, :not_found}
+
+      {:ok, notification} ->
+        notification
+        |> Ash.Changeset.for_update(:update, %{read_at: DateTime.utc_now()})
+        |> Ash.update()
+        |> normalize_result()
+        |> case do
+          {:ok, updated} ->
+            broadcast_unread_count(updated.user_id)
+            {:ok, updated}
+
+          other ->
+            other
+        end
+
+      other ->
+        other
+    end
   end
 
   def mark_all_as_read(user_id) do
@@ -95,13 +132,42 @@ defmodule Medic.Notifications do
     # Since this is a simple update, we can use Ash.bulk_update.
     # However, to be safe and simple:
 
-    Notification
-    |> Ash.Query.filter(user_id == ^user_id and is_nil(read_at))
-    |> Ash.bulk_update(:update, %{read_at: DateTime.utc_now()}, strategy: :atomic)
+    result =
+      Notification
+      |> Ash.Query.filter(user_id == ^user_id and is_nil(read_at))
+      |> Ash.bulk_update(:update, %{read_at: DateTime.utc_now()}, strategy: :atomic)
+
+    case result do
+      {:ok, %Ash.BulkResult{} = bulk} ->
+        broadcast_unread_count(user_id)
+        {:ok, bulk}
+
+      %Ash.BulkResult{} = bulk ->
+        broadcast_unread_count(user_id)
+        {:ok, bulk}
+
+      {:error, _} = error ->
+        error
+
+      other ->
+        other
+    end
   end
 
   def subscribe(user_id) do
     Phoenix.PubSub.subscribe(Medic.PubSub, "user_notifications:#{user_id}")
+  end
+
+  def broadcast_unread_count(user_id) do
+    count = list_unread_count(user_id)
+
+    Phoenix.PubSub.broadcast(
+      Medic.PubSub,
+      "user_notifications:#{user_id}",
+      {:unread_count, count}
+    )
+
+    :ok
   end
 
   defp broadcast_notification(notification) do
@@ -151,7 +217,7 @@ defmodule Medic.Notifications do
     schedule_at = job.scheduled_at || DateTime.utc_now()
 
     %{"notification_job_id" => job.id}
-    |> NotificationDispatch.new(schedule_at: schedule_at)
+    |> NotificationDispatch.new(scheduled_at: schedule_at)
     |> Oban.insert()
     |> case do
       {:ok, _oban_job} -> :ok

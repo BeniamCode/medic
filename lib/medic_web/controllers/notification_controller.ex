@@ -15,10 +15,48 @@ defmodule MedicWeb.NotificationController do
 
   def mark_all(conn, _params) do
     user = conn.assigns.current_user
-    Notifications.mark_all_as_read(user.id)
 
-    conn
-    |> put_flash(:success, dgettext("default", "Notifications cleared"))
+    case Notifications.mark_all_as_read(user.id) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, dgettext("default", "Notifications cleared"))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, dgettext("default", "Could not clear notifications"))
+
+      %Ash.BulkResult{status: :success} ->
+        conn
+        |> put_flash(:success, dgettext("default", "Notifications cleared"))
+
+      _ ->
+        conn
+        |> put_flash(:error, dgettext("default", "Could not clear notifications"))
+    end
+
+    |> redirect(to: ~p"/notifications")
+  end
+
+  def mark_read(conn, %{"id" => id}) do
+    user = conn.assigns.current_user
+
+    case Notifications.mark_as_read_for_user(user.id, id) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, dgettext("default", "Notification marked as read"))
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, dgettext("default", "Notification not found"))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, dgettext("default", "Could not update notification"))
+
+      _ ->
+        conn
+        |> put_flash(:error, dgettext("default", "Could not update notification"))
+    end
     |> redirect(to: ~p"/notifications")
   end
 

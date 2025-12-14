@@ -63,7 +63,7 @@ defmodule Medic.Workers.NotificationDispatch do
         |> Changeset.for_create(:create, Map.put(delivery_changeset, :status, "sent"))
         |> Ash.create()
 
-        NotificationJob
+        job
         |> Changeset.for_update(:update, %{
           status: "sent",
           attempts: job.attempts + 1,
@@ -78,7 +78,7 @@ defmodule Medic.Workers.NotificationDispatch do
         |> Changeset.for_create(:create, Map.put(delivery_changeset, :status, "failed"))
         |> Ash.create()
 
-        NotificationJob
+        job
         |> Changeset.for_update(:update, %{
           status: "pending",
           attempts: job.attempts + 1,

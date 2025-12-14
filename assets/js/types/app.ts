@@ -18,6 +18,7 @@ export type SharedAppProps = {
     availableLocales: string[]
     path: string
     method: string
+    unreadCount: number
   }
   auth: {
     authenticated: boolean

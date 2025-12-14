@@ -1,9 +1,10 @@
-import { Layout, Button, Typography, theme, Flex } from 'antd'
+import { App as AntdApp, Layout, Button, Typography, theme, Flex } from 'antd'
 import { Link } from '@inertiajs/react'
-import type { PropsWithChildren } from 'react'
+import { useEffect, type PropsWithChildren } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { SharedAppProps } from '@/types/app'
+import { ensureNotificationsStream } from '@/lib/notificationsStream'
 
 const { Header, Content } = Layout
 const { Text } = Typography
@@ -12,9 +13,33 @@ type Props = PropsWithChildren<{ app: SharedAppProps['app']; auth: SharedAppProp
 
 export const PublicLayout = ({ children, app, auth }: Props) => {
   const { t } = useTranslation('default')
+  const { notification } = AntdApp.useApp()
   const {
     token: { colorBgContainer },
   } = theme.useToken()
+
+  useEffect(() => {
+    if (!auth.authenticated) {
+      ensureNotificationsStream().stop()
+      return
+    }
+
+    ensureNotificationsStream().start()
+
+    const onNew = (ev: Event) => {
+      const detail = (ev as CustomEvent).detail as { title?: string; message?: string } | undefined
+      if (!detail) return
+
+      notification.info({
+        message: detail.title || 'Notification',
+        description: detail.message || '',
+        placement: 'topRight'
+      })
+    }
+
+    window.addEventListener('medic:notifications:new', onNew)
+    return () => window.removeEventListener('medic:notifications:new', onNew)
+  }, [auth.authenticated, notification])
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -53,9 +78,6 @@ export const PublicLayout = ({ children, app, auth }: Props) => {
       </Header>
       <Content style={{ padding: '24px 0', background: '#f5f5f5' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
-          <Text type="secondary" style={{ fontSize: 12, marginBottom: 16, display: 'block' }}>
-            {app.locale.toUpperCase()} · {app.currentScope}
-          </Text>
           {children}
         </div>
       </Content>

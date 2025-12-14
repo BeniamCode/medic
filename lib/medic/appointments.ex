@@ -233,6 +233,13 @@ defmodule Medic.Appointments do
 
       schedule_pending_expiry(updated)
       maybe_enqueue_pending_notifications(updated)
+
+      maybe_enqueue_reschedule_proposed_notifications(
+        updated,
+        appointment.starts_at,
+        new_starts_at
+      )
+
       broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
       updated
     end)
@@ -302,6 +309,7 @@ defmodule Medic.Appointments do
               log_event(updated.id, "request_submitted", %{pending_expires_at: pending_expires_at})
 
               maybe_enqueue_pending_notifications(updated)
+              maybe_enqueue_request_received_notifications(updated)
 
               broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
               updated
@@ -363,6 +371,7 @@ defmodule Medic.Appointments do
 
       release_claims(updated.id)
       log_event(updated.id, "rejected", %{reason: reason}, actor)
+      maybe_enqueue_rejected_notifications(updated, reason)
       broadcast_doctor_event(updated.doctor_id, :refresh_dashboard)
       updated
     end)
@@ -421,7 +430,7 @@ defmodule Medic.Appointments do
 
   defp schedule_hold_expiry(%Appointment{id: id, hold_expires_at: hold_expires_at}) do
     %{"appointment_id" => id}
-    |> AppointmentHoldExpiry.new(schedule_at: hold_expires_at)
+    |> AppointmentHoldExpiry.new(scheduled_at: hold_expires_at)
     |> Oban.insert()
     |> case do
       {:ok, _job} -> :ok
@@ -433,7 +442,7 @@ defmodule Medic.Appointments do
 
   defp schedule_pending_expiry(%Appointment{id: id, pending_expires_at: pending_expires_at}) do
     %{"appointment_id" => id}
-    |> AppointmentPendingExpiry.new(schedule_at: pending_expires_at)
+    |> AppointmentPendingExpiry.new(scheduled_at: pending_expires_at)
     |> Oban.insert()
     |> case do
       {:ok, _job} -> :ok
@@ -578,6 +587,7 @@ defmodule Medic.Appointments do
     case result do
       {:ok, appointment} ->
         notify_doctor_booking(appointment)
+        notify_patient_booking_requested(appointment)
         broadcast_doctor_event(appointment.doctor_id, :refresh_dashboard)
         {:ok, appointment}
 
@@ -594,6 +604,7 @@ defmodule Medic.Appointments do
       Notifications.enqueue_notification_job(%{
         user_id: appointment.doctor.user_id,
         template: "appointment_request",
+        idempotency_key: "booking.requested:doctor:#{appointment.id}",
         payload: %{
           type: "booking",
           title: "New Appointment Request",
@@ -604,6 +615,31 @@ defmodule Medic.Appointments do
         }
       })
     end
+  end
+
+  defp notify_patient_booking_requested(appointment) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+
+    if appointment.patient && appointment.patient.user_id && appointment.doctor do
+      doctor_name = format_doctor_name(appointment.doctor)
+
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.patient.user_id,
+        template: "appointment_request_received",
+        idempotency_key: "booking.requested:patient:#{appointment.id}",
+        payload: %{
+          type: "booking",
+          title: "Appointment requested",
+          message: "Your request has been sent to #{doctor_name}.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
+      })
+    end
+
+    :ok
+  rescue
+    _ -> :ok
   end
 
   @doc """
@@ -679,7 +715,9 @@ defmodule Medic.Appointments do
       {:ok, updated_appointment} ->
         release_claims(updated_appointment.id)
         updated_appointment = Ash.load!(updated_appointment, [:patient, :doctor])
-        maybe_notify_cancellation(updated_appointment, Keyword.get(opts, :cancelled_by, :patient))
+
+        cancelled_by = Keyword.get(opts, :cancelled_by, :patient)
+        maybe_enqueue_cancellation_notifications(updated_appointment, cancelled_by)
 
         log_event(updated_appointment.id, "cancelled", %{reason: reason}, %{
           actor_type: Keyword.get(opts, :cancelled_by_actor_type),
@@ -694,19 +732,67 @@ defmodule Medic.Appointments do
     end
   end
 
-  defp maybe_notify_cancellation(appointment, :doctor) do
-    notify_patient_cancellation(appointment)
+  defp maybe_enqueue_cancellation_notifications(appointment, cancelled_by) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+    doctor_name = appointment.doctor && format_doctor_name(appointment.doctor)
+    patient_name = appointment.patient && format_patient_name(appointment.patient)
+
+    base_payload = %{
+      type: "booking",
+      resource_id: appointment.id,
+      resource_type: "appointment"
+    }
+
+    if appointment.patient && appointment.patient.user_id do
+      title = "Appointment cancelled"
+
+      message =
+        cond do
+          cancelled_by == :patient and is_binary(doctor_name) ->
+            "You cancelled your appointment with #{doctor_name}."
+
+          cancelled_by == :doctor and is_binary(doctor_name) ->
+            "Your appointment with #{doctor_name} was cancelled."
+
+          true ->
+            "Your appointment was cancelled."
+        end
+
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.patient.user_id,
+        template: "appointment_cancelled_patient",
+        idempotency_key: "booking.cancelled:patient:#{appointment.id}",
+        payload: Map.merge(base_payload, %{title: title, message: message})
+      })
+    end
+
+    if appointment.doctor && appointment.doctor.user_id do
+      title = "Appointment cancelled"
+
+      message =
+        cond do
+          cancelled_by == :doctor and is_binary(patient_name) ->
+            "You cancelled the appointment with #{patient_name}."
+
+          cancelled_by == :patient and is_binary(patient_name) ->
+            "The appointment with #{patient_name} was cancelled by the patient."
+
+          true ->
+            "An appointment was cancelled."
+        end
+
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.doctor.user_id,
+        template: "appointment_cancelled_doctor",
+        idempotency_key: "booking.cancelled:doctor:#{appointment.id}",
+        payload: Map.merge(base_payload, %{title: title, message: message})
+      })
+    end
+
+    :ok
   rescue
     _ -> :ok
   end
-
-  defp maybe_notify_cancellation(appointment, :patient) do
-    notify_doctor_cancellation(appointment)
-  rescue
-    _ -> :ok
-  end
-
-  defp maybe_notify_cancellation(_appointment, _), do: :ok
 
   defp put_cancel_actor(changeset, opts) do
     actor_type = opts |> Keyword.get(:cancelled_by_actor_type) |> normalize_actor_value()
@@ -725,42 +811,115 @@ defmodule Medic.Appointments do
   defp maybe_put_change(changeset, field, value),
     do: Ecto.Changeset.put_change(changeset, field, value)
 
-  defp notify_doctor_cancellation(appointment) do
-    if appointment.doctor && appointment.doctor.user_id && appointment.patient do
-      Notifications.create_notification(%{
-        user_id: appointment.doctor.user_id,
-        type: "cancellation",
-        title: "Appointment Cancelled",
-        message:
-          "Appointment with #{appointment.patient.first_name} #{appointment.patient.last_name} has been cancelled.",
-        resource_id: appointment.id,
-        resource_type: "appointment"
+  defp maybe_enqueue_request_received_notifications(appointment) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+
+    if appointment.patient && appointment.patient.user_id && appointment.doctor do
+      doctor_name = format_doctor_name(appointment.doctor)
+
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.patient.user_id,
+        template: "appointment_request_received",
+        idempotency_key: "booking.pending:patient:#{appointment.id}",
+        payload: %{
+          type: "booking",
+          title: "Request submitted",
+          message: "Your booking request was sent to #{doctor_name} and is awaiting approval.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
       })
     end
 
     :ok
+  rescue
+    _ -> :ok
   end
 
-  defp notify_patient_cancellation(appointment) do
-    if appointment.patient && appointment.patient.user_id && appointment.doctor do
-      message =
-        if appointment.cancellation_reason && appointment.cancellation_reason != "" do
-          "Your appointment with Dr. #{appointment.doctor.last_name} was cancelled: #{appointment.cancellation_reason}"
-        else
-          "Your appointment with Dr. #{appointment.doctor.last_name} was cancelled."
-        end
+  defp maybe_enqueue_reschedule_proposed_notifications(
+         appointment,
+         previous_starts_at,
+         new_starts_at
+       ) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
 
-      Notifications.create_notification(%{
+    if appointment.patient && appointment.patient.user_id && appointment.doctor do
+      doctor_name = format_doctor_name(appointment.doctor)
+
+      Notifications.enqueue_notification_job(%{
         user_id: appointment.patient.user_id,
-        type: "cancellation",
-        title: "Appointment Cancelled",
-        message: message,
-        resource_id: appointment.id,
-        resource_type: "appointment"
+        template: "appointment_reschedule_proposed",
+        idempotency_key: "booking.reschedule_requested:patient:#{appointment.id}",
+        payload: %{
+          type: "booking",
+          title: "Reschedule proposed",
+          message: "#{doctor_name} proposed a new time for your appointment.",
+          resource_id: appointment.id,
+          resource_type: "appointment",
+          previous_starts_at: DateTime.to_iso8601(previous_starts_at),
+          new_starts_at: DateTime.to_iso8601(new_starts_at)
+        }
       })
     end
 
     :ok
+  rescue
+    _ -> :ok
+  end
+
+  defp maybe_enqueue_rejected_notifications(appointment, reason) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+
+    if appointment.patient && appointment.patient.user_id && appointment.doctor do
+      doctor_name = format_doctor_name(appointment.doctor)
+
+      message =
+        if is_binary(reason) and reason != "" do
+          "Your request with #{doctor_name} was declined: #{reason}"
+        else
+          "Your request with #{doctor_name} was declined."
+        end
+
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.patient.user_id,
+        template: "appointment_declined",
+        idempotency_key: "booking.declined:patient:#{appointment.id}",
+        payload: %{
+          type: "booking",
+          title: "Request declined",
+          message: message,
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
+      })
+    end
+
+    :ok
+  rescue
+    _ -> :ok
+  end
+
+  defp format_doctor_name(doctor) do
+    last = Map.get(doctor, :last_name)
+
+    if is_binary(last) and last != "" do
+      "Dr. #{last}"
+    else
+      "your doctor"
+    end
+  end
+
+  defp format_patient_name(patient) do
+    first = Map.get(patient, :first_name)
+    last = Map.get(patient, :last_name)
+
+    [first, last]
+    |> Enum.filter(&(is_binary(&1) and &1 != ""))
+    |> Enum.join(" ")
+    |> case do
+      "" -> "the patient"
+      name -> name
+    end
   end
 
   def subscribe_doctor_events(doctor_id) when not is_nil(doctor_id) do

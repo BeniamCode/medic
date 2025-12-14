@@ -44,6 +44,7 @@ defmodule MedicWeb.Plugs.RequireDoctorOnboarding do
     # Assuming standard paths.
 
     String.starts_with?(path, "/onboarding/doctor") ||
+      String.starts_with?(path, "/notifications") ||
       path == "/logout" ||
       String.starts_with?(path, "/assets")
   end

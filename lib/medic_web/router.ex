@@ -71,7 +71,9 @@ defmodule MedicWeb.Router do
       post "/doctor/schedule", DoctorScheduleController, :update
       delete "/doctor/schedule/:id", DoctorScheduleController, :delete
       post "/doctor/schedule/day_off", DoctorScheduleController, :block_day
+      get "/notifications/stream", NotificationStreamController, :stream
       post "/notifications/mark_all", NotificationController, :mark_all
+      post "/notifications/:id/read", NotificationController, :mark_read
       get "/notifications", NotificationController, :index
     end
 
