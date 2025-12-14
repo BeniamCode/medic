@@ -99,6 +99,7 @@ defmodule MedicWeb.Router do
     post "/doctor/appointments/:id/cancel", DoctorAppointmentsController, :cancel
     get "/doctor/profile", DoctorProfileController, :show
     post "/doctor/profile", DoctorProfileController, :update
+    post "/doctor/profile/image", DoctorProfileController, :upload_image
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

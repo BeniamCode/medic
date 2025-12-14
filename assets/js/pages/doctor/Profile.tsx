@@ -14,7 +14,11 @@ import {
   Space,
   Flex,
   Tag,
-  Tooltip
+  Tooltip,
+  theme,
+  message,
+  Upload,
+  Avatar
 } from 'antd'
 import {
   IconCheck,
@@ -25,7 +29,7 @@ import {
 import { router } from '@inertiajs/react'
 import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { AppPageProps } from '@/types/app'
@@ -45,7 +49,7 @@ type Profile = {
   first_name: string
   last_name: string
   title: string | null
-  pronouns: string | null
+  profile_image_url: string | null
   academic_title: string | null
   hospital_affiliation: string | null
   registration_number: string | null
@@ -71,15 +75,20 @@ type PageProps = AppPageProps<{
   errors?: Record<string, string[]>
 }>
 
-const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
+const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PageProps) => {
   const { t } = useTranslation('default')
-  const normalizedDoctor = normalizeDoctor(doctor)
+  const { token } = theme.useToken()
+  const normalizedDoctor = useMemo(() => normalizeDoctor(doctor), [doctor])
+
+  const [messageApi, contextHolder] = message.useMessage()
 
   const {
     control,
     register,
     handleSubmit,
     reset,
+    setError,
+    setValue,
     formState: { errors: formErrors }
   } = useForm<Profile>({
     defaultValues: normalizedDoctor
@@ -89,13 +98,31 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
     reset(normalizedDoctor)
   }, [normalizedDoctor, reset])
 
+  useEffect(() => {
+    if (!serverErrors) return
+
+    Object.entries(serverErrors).forEach(([field, messages]) => {
+      const firstMessage = Array.isArray(messages) ? messages[0] : undefined
+      if (!firstMessage) return
+
+      setError(field as keyof Profile, { type: 'server', message: firstMessage })
+    })
+  }, [serverErrors, setError])
+
   const mutation = useMutation({
     mutationFn: async (values: Profile) =>
       await new Promise<void>((resolve, reject) => {
         router.post('/dashboard/doctor/profile', { doctor: values }, {
           preserveScroll: true,
-          onSuccess: () => resolve(),
-          onError: () => reject(new Error('Failed to save doctor profile'))
+          onSuccess: () => {
+            messageApi.success(t('doctor.profile.saved', 'Profile saved'))
+            resolve()
+          },
+          onError: () => {
+            // Server-side field errors arrive via props; this prevents a generic UX.
+            messageApi.error(t('doctor.profile.save_failed', 'Unable to save. Please review the highlighted fields.'))
+            resolve()
+          }
         })
       })
   })
@@ -106,14 +133,15 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      {contextHolder}
       <Flex vertical gap="large">
         <Card
-          bordered
+          variant="outlined"
           style={{
             borderRadius: 16,
-            background: 'linear-gradient(to right, #f0f9ff, #e6fffa)' // sky-50 to teal-50
+            background: `linear-gradient(to right, ${token.colorBgContainer}, ${token.colorFillQuaternary})`
           }}
-          bodyStyle={{ padding: 32 }}
+          styles={{ body: { padding: 32 } }}
         >
           <Flex justify="space-between" align="flex-start" wrap="wrap" gap="large">
             <div>
@@ -144,9 +172,17 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                     {completion}%
                   </Text>
                 </Flex>
-                <Progress percent={completion} strokeColor="#0d9488" showInfo={false} />
+                <Progress percent={completion} strokeColor={token.colorPrimary} showInfo={false} />
                 <Flex gap="small" align="center">
-                  <div style={{ padding: 4, borderRadius: '50%', background: '#e6fffa', color: '#0d9488', display: 'flex' }}>
+                  <div
+                    style={{
+                      padding: 4,
+                      borderRadius: '50%',
+                      background: token.colorFillQuaternary,
+                      color: token.colorPrimary,
+                      display: 'flex'
+                    }}
+                  >
                     <IconClipboardText size={14} />
                   </div>
                   <Text type="secondary" style={{ fontSize: 12 }}>
@@ -158,10 +194,18 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
           </Flex>
         </Card>
 
-        <Card bordered style={{ borderRadius: 16 }} bodyStyle={{ padding: 24 }}>
+        <Card variant="outlined" style={{ borderRadius: 16 }} styles={{ body: { padding: 24 } }}>
           <Flex vertical gap="middle">
             <Flex gap="small" align="center">
-              <div style={{ padding: 8, borderRadius: '50%', background: '#e6fffa', color: '#0d9488', display: 'flex' }}>
+              <div
+                style={{
+                  padding: 8,
+                  borderRadius: '50%',
+                  background: token.colorFillQuaternary,
+                  color: token.colorPrimary,
+                  display: 'flex'
+                }}
+              >
                 <IconMapPin size={20} />
               </div>
               <div>
@@ -184,7 +228,7 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                     e.preventDefault();
                     document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  style={{ color: '#0d9488', borderColor: '#0d9488', backgroundColor: '#f0fdfa' }}
+                  style={{ color: token.colorPrimary, borderColor: token.colorPrimary, backgroundColor: token.colorFillQuaternary }}
                 >
                   {t(`doctor.profile.jump_${section}`, section)}
                 </Button>
@@ -195,9 +239,103 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Flex vertical gap="large">
-            <Card bordered style={{ borderRadius: 16 }} id="basic">
+            <Card variant="outlined" style={{ borderRadius: 16 }} id="basic">
               <Flex vertical gap="middle">
                 <Title level={4}>{t('doctor.profile.basic', 'Basic info')}</Title>
+
+                <Controller
+                  name="profile_image_url"
+                  control={control}
+                  render={({ field }) => (
+                    <div>
+                      <div style={{ marginBottom: 8 }}><Text strong>{t('doctor.profile.photo', 'Professional photo')}</Text></div>
+                      <Flex gap="middle" align="center" wrap="wrap">
+                        <Avatar
+                          size={72}
+                          src={field.value || undefined}
+                          style={{ background: token.colorFillQuaternary, color: token.colorTextSecondary }}
+                        >
+                          {normalizedDoctor.first_name?.charAt(0) || 'D'}
+                        </Avatar>
+
+                        <Upload
+                          accept="image/png,image/jpeg,image/webp"
+                          showUploadList={false}
+                          beforeUpload={(file) => {
+                            const okType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
+                            if (!okType) {
+                              messageApi.error(t('doctor.profile.photo_type', 'Please upload a JPG, PNG, or WebP image'))
+                              return Upload.LIST_IGNORE
+                            }
+                            const okSize = file.size <= 5 * 1024 * 1024
+                            if (!okSize) {
+                              messageApi.error(t('doctor.profile.photo_size', 'Max file size is 5MB'))
+                              return Upload.LIST_IGNORE
+                            }
+                            return true
+                          }}
+                          customRequest={async (options) => {
+                            try {
+                              const formData = new FormData()
+                              formData.append('image', options.file as File)
+
+                              const csrf = document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+
+                              const res = await fetch('/dashboard/doctor/profile/image', {
+                                method: 'POST',
+                                headers: {
+                                  'X-Requested-With': 'XMLHttpRequest',
+                                  'x-csrf-token': csrf
+                                },
+                                body: formData
+                              })
+
+                              const data = await res.json().catch(() => null)
+
+                              if (!res.ok) {
+                                const code = data?.error
+                                const msg =
+                                  code === 'missing_file'
+                                    ? t('doctor.profile.photo_missing', 'No file received. Please try again.')
+                                    : code === 'doctor_profile_missing'
+                                      ? t('doctor.profile.photo_profile_missing', 'Save your profile first, then upload a photo.')
+                                    : code === 'unsupported_type'
+                                      ? t('doctor.profile.photo_type', 'Please upload a JPG, PNG, or WebP image')
+                                      : code === 'too_large'
+                                        ? t('doctor.profile.photo_size', 'Max file size is 5MB')
+                                        : code === 'storage_not_configured'
+                                          ? t('doctor.profile.photo_storage', 'Storage is not configured. Set Backblaze B2 env vars and restart the server.')
+                                          : t('doctor.profile.photo_failed', 'Unable to upload photo. Please try again.')
+
+                                messageApi.error(msg)
+                                throw new Error('upload_failed')
+                              }
+
+                              if (!data?.profile_image_url) {
+                                throw new Error('upload_failed')
+                              }
+
+                              setValue('profile_image_url', data.profile_image_url, { shouldDirty: true })
+                              messageApi.success(t('doctor.profile.photo_uploaded', 'Photo updated'))
+                              options.onSuccess?.(data, options.file as any)
+                            } catch (e) {
+                              messageApi.error(t('doctor.profile.photo_failed', 'Unable to upload photo. Please try again.'))
+                              options.onError?.(e as any)
+                            }
+                          }}
+                        >
+                          <Button type="default">
+                            {t('doctor.profile.photo_upload', 'Upload photo')}
+                          </Button>
+                        </Upload>
+
+                        <Text type="secondary" style={{ fontSize: 12, maxWidth: 520 }}>
+                          {t('doctor.profile.photo_help', 'Use a clear, front-facing headshot on a neutral background. JPG/PNG/WebP up to 5MB.')}
+                        </Text>
+                      </Flex>
+                    </div>
+                  )}
+                />
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
                     <div style={{ marginBottom: 8 }}><Text strong>First name</Text></div>
@@ -209,6 +347,9 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                         <Input {...field} status={formErrors.first_name ? 'error' : ''} />
                       )}
                     />
+                    {formErrors.first_name?.message && (
+                      <Text type="danger">{formErrors.first_name.message}</Text>
+                    )}
                   </Col>
                   <Col xs={24} md={12}>
                     <div style={{ marginBottom: 8 }}><Text strong>Last name</Text></div>
@@ -220,6 +361,9 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                         <Input {...field} status={formErrors.last_name ? 'error' : ''} />
                       )}
                     />
+                    {formErrors.last_name?.message && (
+                      <Text type="danger">{formErrors.last_name.message}</Text>
+                    )}
                   </Col>
                 </Row>
 
@@ -233,6 +377,11 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                     <Controller name="academic_title" control={control} render={({ field }) => <Input {...field} />} />
                   </Col>
                 </Row>
+
+                <div>
+                  <div style={{ marginBottom: 8 }}><Text strong>Profile image URL</Text></div>
+                  <Controller name="profile_image_url" control={control} render={({ field }) => <Input {...field} readOnly />} />
+                </div>
 
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
@@ -263,13 +412,17 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                     control={control}
                     render={({ field }) => (
                       <Select
-                        {...field}
+                        value={field.value || undefined}
+                        onChange={(value) => field.onChange(value || null)}
                         style={{ width: '100%' }}
                         placeholder={t('doctor.profile.select_specialty', 'Select specialty')}
                         options={specialties.map(opt => ({ value: opt.id, label: opt.name }))}
                       />
                     )}
                   />
+                  {formErrors.specialty_id?.message && (
+                    <Text type="danger">{formErrors.specialty_id.message}</Text>
+                  )}
                 </div>
 
                 <div>
@@ -283,7 +436,7 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
               </Flex>
             </Card>
 
-            <Card bordered style={{ borderRadius: 16 }} id="professional">
+            <Card variant="outlined" style={{ borderRadius: 16 }} id="professional">
               <Flex vertical gap="middle">
                 <Title level={4}>{t('doctor.profile.professional', 'Professional')}</Title>
 
@@ -331,7 +484,7 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
               </Flex>
             </Card>
 
-            <Card bordered style={{ borderRadius: 16 }} id="location">
+            <Card variant="outlined" style={{ borderRadius: 16 }} id="location">
               <Flex vertical gap="middle">
                 <Title level={4}>{t('doctor.profile.location', 'Location & services')}</Title>
 
@@ -346,7 +499,7 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
                   </Col>
                 </Row>
 
-                <Card size="small" bordered>
+                <Card size="small" variant="outlined">
                   <Flex justify="space-between" align="center">
                     <Text>{t('doctor.profile.telemedicine', 'Telemedicine available')}</Text>
                     <Controller
@@ -372,7 +525,7 @@ const DoctorProfilePage = ({ doctor, specialties }: PageProps) => {
               </Flex>
             </Card>
 
-            <Card bordered style={{ borderRadius: 16 }} id="expertise">
+            <Card variant="outlined" style={{ borderRadius: 16 }} id="expertise">
               <Flex vertical gap="middle">
                 <Title level={4}>{t('doctor.profile.expertise', 'Expertise')}</Title>
 
@@ -475,28 +628,42 @@ const calculateCompletion = (doctor: Profile) => {
   return Math.min(100, Math.round((filled / requiredKeys.length) * 100)) || 20
 }
 
-const normalizeDoctor = (doctor: Profile): Profile => ({
-  ...doctor,
-  first_name: doctor.first_name || '',
-  last_name: doctor.last_name || '',
-  title: doctor.title || '',
-  pronouns: doctor.pronouns || '',
-  academic_title: doctor.academic_title || '',
-  hospital_affiliation: doctor.hospital_affiliation || '',
-  registration_number: doctor.registration_number || '',
-  years_of_experience: doctor.years_of_experience ?? null,
-  specialty_id: doctor.specialty_id || '',
-  bio: doctor.bio || '',
-  bio_el: doctor.bio_el || '',
-  address: doctor.address || '',
-  city: doctor.city || '',
-  telemedicine_available: doctor.telemedicine_available ?? false,
-  consultation_fee: doctor.consultation_fee ?? null,
-  board_certifications: doctor.board_certifications || [],
-  languages: doctor.languages || [],
-  insurance_networks: doctor.insurance_networks || [],
-  sub_specialties: doctor.sub_specialties || [],
-  clinical_procedures: doctor.clinical_procedures || [],
-  conditions_treated: doctor.conditions_treated || []
-})
+const normalizeDoctor = (doctor: any): Profile => {
+  // Inertia may camelize keys; accept both and emit ONLY snake_case keys
+  // so react-hook-form doesn't keep/submit duplicate camelCase fields.
+  const get = <T,>(snakeKey: string, camelKey: string, fallback: T): T => {
+    const snakeVal = doctor?.[snakeKey]
+    if (snakeVal !== undefined && snakeVal !== null) return snakeVal as T
+
+    const camelVal = doctor?.[camelKey]
+    if (camelVal !== undefined && camelVal !== null) return camelVal as T
+
+    return fallback
+  }
+
+  return {
+    id: get('id', 'id', ''),
+    first_name: get('first_name', 'firstName', ''),
+    last_name: get('last_name', 'lastName', ''),
+    title: get('title', 'title', ''),
+    profile_image_url: get('profile_image_url', 'profileImageUrl', ''),
+    academic_title: get('academic_title', 'academicTitle', ''),
+    hospital_affiliation: get('hospital_affiliation', 'hospitalAffiliation', ''),
+    registration_number: get('registration_number', 'registrationNumber', ''),
+    years_of_experience: get('years_of_experience', 'yearsOfExperience', null),
+    specialty_id: get('specialty_id', 'specialtyId', null),
+    bio: get('bio', 'bio', ''),
+    bio_el: get('bio_el', 'bioEl', ''),
+    address: get('address', 'address', ''),
+    city: get('city', 'city', ''),
+    telemedicine_available: get('telemedicine_available', 'telemedicineAvailable', false),
+    consultation_fee: get('consultation_fee', 'consultationFee', null),
+    board_certifications: get('board_certifications', 'boardCertifications', []),
+    languages: get('languages', 'languages', []),
+    insurance_networks: get('insurance_networks', 'insuranceNetworks', []),
+    sub_specialties: get('sub_specialties', 'subSpecialties', []),
+    clinical_procedures: get('clinical_procedures', 'clinicalProcedures', []),
+    conditions_treated: get('conditions_treated', 'conditionsTreated', [])
+  }
+}
 

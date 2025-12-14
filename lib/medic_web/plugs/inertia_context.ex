@@ -49,13 +49,18 @@ defmodule MedicWeb.Plugs.InertiaContext do
   defp unread_count(_), do: 0
 
   defp auth_payload(%{assigns: %{current_user: %User{} = user}}) do
+    profile = profile_for(user)
+
     %{
       authenticated: true,
       user: %{
         id: user.id,
         email: user.email,
         role: user.role,
-        confirmed_at: user.confirmed_at
+        confirmed_at: user.confirmed_at,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        profile_image_url: profile.profile_image_url
       },
       permissions: permissions_for(user)
     }
@@ -72,6 +77,41 @@ defmodule MedicWeb.Plugs.InertiaContext do
       can_manage_profile: role in ["doctor", "admin"],
       can_book: role in ["patient", "doctor", "admin"]
     }
+  end
+
+  defp profile_for(%User{role: role} = user) do
+    user =
+      case role do
+        "doctor" -> maybe_load(user, [:doctor])
+        "patient" -> maybe_load(user, [:patient])
+        _ -> user
+      end
+
+    cond do
+      role == "doctor" and is_map(user.doctor) ->
+        %{
+          first_name: user.doctor.first_name,
+          last_name: user.doctor.last_name,
+          profile_image_url: user.doctor.profile_image_url
+        }
+
+      role == "patient" and is_map(user.patient) ->
+        %{
+          first_name: user.patient.first_name,
+          last_name: user.patient.last_name,
+          profile_image_url: user.patient.profile_image_url
+        }
+
+      true ->
+        %{first_name: nil, last_name: nil, profile_image_url: nil}
+    end
+  end
+
+  defp maybe_load(user, relationships) do
+    case Ash.load(user, relationships) do
+      {:ok, loaded} -> loaded
+      _ -> user
+    end
   end
 
   defp flash_payload(conn) do

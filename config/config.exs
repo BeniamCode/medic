@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :medic, :env, config_env()
+
 config :medic,
   ecto_repos: [Medic.Repo],
   generators: [timestamp_type: :utc_datetime],
@@ -21,6 +23,10 @@ config :medic,
     Medic.CalendarSync,
     Medic.Appreciate
   ]
+
+config :medic, Medic.Storage,
+  # :auto uses B2 when configured, otherwise local disk in non-prod
+  adapter: :auto
 
 config :ash, :use_all_identities_in_manage_relationship?, false
 

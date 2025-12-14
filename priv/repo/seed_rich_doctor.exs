@@ -10,7 +10,6 @@ if doctor do
 
   Doctors.update_doctor(doctor, %{
     title: "Prof. Dr.",
-    pronouns: "She/Her",
     registration_number: "GMC-12345678",
     years_of_experience: 15,
     hospital_affiliation: "St. Luke's Leading Heart Center",

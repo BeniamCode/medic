@@ -34,7 +34,6 @@ defmodule Medic.Doctors.Doctor do
         :specialty_id,
         :user_id,
         :title,
-        :pronouns,
         :registration_number,
         :years_of_experience,
         :hospital_affiliation,
@@ -68,7 +67,6 @@ defmodule Medic.Doctors.Doctor do
         :consultation_fee,
         :specialty_id,
         :title,
-        :pronouns,
         :registration_number,
         :years_of_experience,
         :hospital_affiliation,
@@ -135,7 +133,6 @@ defmodule Medic.Doctors.Doctor do
     attribute :verified_at, :utc_datetime
 
     attribute :title, :string
-    attribute :pronouns, :string
     attribute :registration_number, :string
     attribute :years_of_experience, :integer
     attribute :hospital_affiliation, :string
@@ -201,7 +198,6 @@ defmodule Medic.Doctors.Doctor do
       :consultation_fee,
       :specialty_id,
       :title,
-      :pronouns,
       :registration_number,
       :years_of_experience,
       :hospital_affiliation,

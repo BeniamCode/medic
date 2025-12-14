@@ -866,7 +866,6 @@ defmodule MedicWeb.SearchLive do
           first_name: d.first_name,
           last_name: d.last_name,
           title: d.title || "Dr.",
-          pronouns: d.pronouns,
           specialty_name: d.specialty && d.specialty.name_en,
           city: d.city,
           rating: d.rating || 0.0,

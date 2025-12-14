@@ -211,13 +211,30 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                       }}
                       styles={{ body: { padding: 16 } }}
                       cover={
-                        <div style={{ height: 200, backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Avatar
-                            src={doctor.profileImageUrl}
-                            size={120}
-                          >
-                            {doctor.firstName?.charAt(0) || 'D'}
-                          </Avatar>
+                        <div style={{ height: 200, backgroundColor: '#f0f0f0' }}>
+                          {doctor.profileImageUrl ? (
+                            <img
+                              src={doctor.profileImageUrl}
+                              alt={`${doctor.firstName ?? ''} ${doctor.lastName ?? ''}`.trim() || 'Doctor'}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 64,
+                                lineHeight: 1,
+                                fontWeight: 600,
+                                color: 'rgba(0,0,0,0.35)'
+                              }}
+                            >
+                              {doctor.firstName?.charAt(0) || 'D'}
+                            </div>
+                          )}
                         </div>
                       }
                       onClick={() => handleDoctorClick(doctor.id)}

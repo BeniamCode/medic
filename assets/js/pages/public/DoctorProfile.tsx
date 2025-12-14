@@ -42,7 +42,6 @@ export type DoctorProfile = {
   firstName: string
   lastName: string
   title: string | null
-  pronouns: string | null
   verified: boolean
   profileImageUrl: string | null
   specialty: { name: string; slug: string } | null

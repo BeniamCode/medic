@@ -25,7 +25,7 @@ defmodule MedicWeb.DoctorController do
     case fetch_doctor(id) do
       {:ok, doctor} ->
         formatted = format_doctor(doctor, locale)
-        page_title = formatted.full_name
+        page_title = formatted.full_name || dgettext("default", "Doctor")
         appreciation_stats = Repo.get(DoctorAppreciationStat, doctor.id)
         availability = Scheduling.get_slots_for_range(doctor, start_date, Date.add(start_date, 6))
 
@@ -193,7 +193,6 @@ defmodule MedicWeb.DoctorController do
       first_name: doctor.first_name,
       last_name: doctor.last_name,
       title: doctor.title,
-      pronouns: doctor.pronouns,
       rating: doctor.rating,
       review_count: doctor.review_count,
       verified: not is_nil(doctor.verified_at),

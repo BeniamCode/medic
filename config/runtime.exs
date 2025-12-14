@@ -28,6 +28,12 @@ end
 
 config :medic, MedicWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+config :medic, Medic.Storage.B2,
+  key_id: System.get_env("B2_KEY_ID"),
+  application_key: System.get_env("B2_APPLICATION_KEY"),
+  bucket_id: System.get_env("B2_BUCKET_ID"),
+  bucket_name: System.get_env("B2_BUCKET_NAME")
+
 if config_env() == :prod do
   database_path =
     System.get_env("DATABASE_PATH") ||

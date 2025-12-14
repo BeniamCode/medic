@@ -2,44 +2,99 @@ defmodule MedicWeb.DoctorProfileController do
   use MedicWeb, :controller
 
   alias Medic.Doctors
+  alias Medic.Doctors.Doctor
   alias Medic.Doctors.Specialty
+  alias Medic.Storage
+
+  @max_image_bytes 5_000_000
+  @allowed_content_types ~w(image/jpeg image/png image/webp)
 
   def show(conn, _params) do
-    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user) do
-      render_profile(conn, doctor, %{})
-    else
-      _ -> redirect(conn, to: ~p"/dashboard/doctor")
-    end
+    user = conn.assigns.current_user
+    {:ok, doctor, _mode} = fetch_or_build_doctor(user)
+
+    render_profile(conn, doctor, %{})
   end
 
   def update(conn, %{"doctor" => doctor_params}) do
-    with {:ok, doctor} <- fetch_doctor(conn.assigns.current_user),
-         result <- Doctors.update_doctor(doctor, map_input_arrays(doctor_params)) do
-      case result do
-        {:ok, updated} ->
-          conn
-          |> put_flash(:success, dgettext("default", "Profile updated"))
-          |> render_profile(updated, %{})
+    user = conn.assigns.current_user
 
-        {:error, changeset} ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> render_profile(doctor, errors_from_changeset(changeset))
+    {:ok, doctor, mode} = fetch_or_build_doctor(user)
+    input = map_input_arrays(doctor_params)
+
+    result =
+      case mode do
+        :new -> Doctors.create_doctor(user, input)
+        :existing -> Doctors.update_doctor(doctor, input)
       end
-    else
-      _ -> redirect(conn, to: ~p"/dashboard/doctor/profile")
+
+    case result do
+      {:ok, updated} ->
+        updated = if updated.id, do: Ash.load!(updated, [:specialty]), else: updated
+
+        conn
+        |> put_flash(:success, dgettext("default", "Profile updated"))
+        |> render_profile(updated, %{})
+
+      {:error, changeset} ->
+        doctor_for_render = Ecto.Changeset.apply_changes(changeset)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render_profile(doctor_for_render, errors_from_changeset(changeset))
     end
   end
 
-  defp fetch_doctor(user) do
+  def upload_image(conn, params) do
+    upload = Map.get(params, "image") || Map.get(params, "file")
+
+    with {:ok, doctor} <- fetch_doctor_for_upload(conn.assigns.current_user),
+         %Plug.Upload{} = upload <- upload,
+         :ok <- validate_upload(upload),
+         {:ok, url} <- persist_upload(doctor.id, upload),
+         {:ok, _updated} <- Doctors.update_doctor(doctor, %{profile_image_url: url}) do
+      json(conn, %{profile_image_url: url})
+    else
+      nil ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "missing_file"})
+
+      {:error, reason} when is_binary(reason) ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: reason})
+
+      {:error, _} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "unable_to_upload"})
+
+      :error ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "unable_to_upload"})
+    end
+  end
+
+  defp fetch_or_build_doctor(user) do
     case Doctors.get_doctor_by_user_id(user.id) do
-      nil -> {:error, :not_found}
+      nil -> {:ok, %Doctor{user_id: user.id}, :new}
+      doctor -> {:ok, Ash.load!(doctor, [:specialty]), :existing}
+    end
+  end
+
+  defp fetch_doctor_for_upload(user) do
+    case Doctors.get_doctor_by_user_id(user.id) do
+      nil -> {:error, "doctor_profile_missing"}
       doctor -> {:ok, Ash.load!(doctor, [:specialty])}
     end
   end
 
   defp render_profile(conn, doctor, errors) do
     specialties = Doctors.list_specialties()
+
+    doctor = if doctor.id, do: Ash.load!(doctor, [:specialty]), else: doctor
 
     conn
     |> assign(:page_title, dgettext("default", "Doctor Profile"))
@@ -50,18 +105,24 @@ defmodule MedicWeb.DoctorProfileController do
   end
 
   defp doctor_props(doctor) do
+    specialty_name =
+      case doctor.specialty do
+        %Specialty{name_en: name_en} -> name_en
+        _ -> nil
+      end
+
     %{
-      id: doctor.id,
+      id: doctor.id || "",
       first_name: doctor.first_name,
       last_name: doctor.last_name,
       title: doctor.title,
-      pronouns: doctor.pronouns,
+      profile_image_url: doctor.profile_image_url,
       academic_title: doctor.academic_title,
       hospital_affiliation: doctor.hospital_affiliation,
       registration_number: doctor.registration_number,
       years_of_experience: doctor.years_of_experience,
       specialty_id: doctor.specialty_id,
-      specialty_name: doctor.specialty && doctor.specialty.name_en,
+      specialty_name: specialty_name,
       bio: doctor.bio,
       bio_el: doctor.bio_el,
       address: doctor.address,
@@ -90,6 +151,42 @@ defmodule MedicWeb.DoctorProfileController do
     |> Map.update("clinical_procedures", [], &comma_split/1)
     |> Map.update("conditions_treated", [], &comma_split/1)
     |> update_decimal("consultation_fee")
+  end
+
+  defp validate_upload(%Plug.Upload{content_type: content_type, path: path}) do
+    cond do
+      content_type not in @allowed_content_types ->
+        {:error, "unsupported_type"}
+
+      not File.exists?(path) ->
+        {:error, "missing_tempfile"}
+
+      true ->
+        case File.stat(path) do
+          {:ok, %{size: size}} when size <= @max_image_bytes -> :ok
+          {:ok, _} -> {:error, "too_large"}
+          {:error, _} -> {:error, "missing_tempfile"}
+        end
+    end
+  end
+
+  defp persist_upload(doctor_id, %Plug.Upload{content_type: content_type, path: path}) do
+    ext =
+      case content_type do
+        "image/jpeg" -> ".jpg"
+        "image/png" -> ".png"
+        "image/webp" -> ".webp"
+        _ -> ".img"
+      end
+
+    with {:ok, file_binary} <- File.read(path),
+         {:ok, url} <-
+           Storage.upload_doctor_profile_image(doctor_id, file_binary, content_type, ext) do
+      {:ok, url}
+    else
+      {:error, :storage_not_configured} -> {:error, "storage_not_configured"}
+      {:error, _} -> {:error, "unable_to_store"}
+    end
   end
 
   defp comma_split(value) when is_binary(value) do
