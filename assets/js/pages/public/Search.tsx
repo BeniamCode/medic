@@ -16,6 +16,7 @@ import {
   Space,
   Empty
 } from 'antd'
+import { HeartOutlined } from '@ant-design/icons'
 import { IconFilter, IconMapPin, IconSearch } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import type { AppPageProps } from '@/types/app'
@@ -231,8 +232,8 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                           </div>
                           {/* Appreciation Badge */}
                           {(doctor.appreciationCount || 0) > 0 && (
-                            <Tag color="blue" style={{ border: 'none', backgroundColor: '#e6f7ff', color: '#0050b3', margin: 0 }}>
-                              💙 {doctor.appreciationCount}
+                            <Tag color="magenta" icon={<HeartOutlined />} style={{ margin: 0 }}>
+                              {doctor.appreciationCount}
                             </Tag>
                           )}
                         </div>

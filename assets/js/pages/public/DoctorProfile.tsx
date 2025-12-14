@@ -11,9 +11,9 @@ import {
   Input,
   Typography,
   Avatar,
-  Rate,
   Segmented
 } from 'antd'
+import { HeartOutlined } from '@ant-design/icons'
 import {
   IconCalendar,
   IconClock,
@@ -262,77 +262,66 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
     <div style={{ padding: '40px 24px', maxWidth: 1200, margin: '0 auto' }}>
       {/* Profile Header */}
       <Card bordered style={{ borderRadius: 12, marginBottom: 40 }} bodyStyle={{ padding: 30 }}>
-        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start' }}>
           <Avatar
             src={doctor.profileImageUrl}
-            size={120}
-            style={{ borderRadius: 8, backgroundColor: '#0d9488', fontSize: 48 }}
+            size={140}
+            style={{ borderRadius: 12, backgroundColor: '#0d9488', fontSize: 56, flexShrink: 0 }}
           >
             {doctor.firstName?.[0]}
           </Avatar>
 
-          <div style={{ flex: 1, minWidth: 260 }}>
-            <Space direction="vertical" size={6} style={{ width: '100%' }}>
-              <Title level={3} style={{ margin: 0 }}>
-                {doctor.fullName}
-              </Title>
+          <div style={{ flex: 1 }}>
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              <div>
+                <Title level={2} style={{ margin: 0, marginBottom: 4 }}>
+                  {doctor.title || 'Dr.'} {doctor.fullName}
+                </Title>
+                <Text type="secondary" style={{ fontSize: 18, fontWeight: 500 }}>
+                  {doctor.specialty?.name || 'Medical Specialist'}
+                </Text>
+              </div>
 
-              <Space wrap size={[8, 8]}>
-                {doctor.specialty?.name && <Tag color="geekblue">{doctor.specialty.name}</Tag>}
+              <Space wrap size={[8, 8]} style={{ marginTop: 4 }}>
                 {doctor.verified && (
-                  <Tag icon={<IconShieldCheck size={14} />} color="success">
+                  <Tag icon={<IconShieldCheck size={14} />} color="success" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     Verified
                   </Tag>
                 )}
-                <Tag color="blue">💙 Appreciated by {appreciation.totalDistinctPatients} patients</Tag>
+                <Tag color="magenta" icon={<HeartOutlined />} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  Appreciated by {appreciation.totalDistinctPatients} patients
+                </Tag>
                 {appreciation.last30dDistinctPatients > 0 && (
                   <Tag color="cyan">+{appreciation.last30dDistinctPatients} in last 30 days</Tag>
                 )}
               </Space>
 
-              <Text type="secondary">
-                Based on real patient interactions. No public negative ratings.
-              </Text>
+              <Space size="large" style={{ marginTop: 16, color: 'rgba(0,0,0,0.65)' }}>
+                <Space size={6}>
+                  <IconMapPin size={18} style={{ opacity: 0.6 }} />
+                  <Text>{doctor.city}</Text>
+                </Space>
+                <Space size={6}>
+                  <Text strong>{doctor.rating?.toFixed(1)}</Text>
+                  <Text type="secondary">({doctor.reviewCount} reviews)</Text>
+                </Space>
+                {doctor.yearsOfExperience && (
+                  <Space size={6}>
+                    <IconStethoscope size={18} style={{ opacity: 0.6 }} />
+                    <Text>{doctor.yearsOfExperience}+ Years Exp.</Text>
+                  </Space>
+                )}
+              </Space>
             </Space>
           </div>
 
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
-              <div>
-                <Space align="center" style={{ marginBottom: 4 }}>
-                  <Title level={2} style={{ margin: 0 }}>{doctor.title || 'Dr.'} {doctor.fullName}</Title>
-                  {doctor.verified && (
-                    <Tag color="cyan" icon={<IconShieldCheck size={12} />}>Verified</Tag>
-                  )}
-                </Space>
-                <Text type="secondary" style={{ fontSize: 18, fontWeight: 500 }}>{doctor.specialty?.name || 'Medical Specialist'}</Text>
-              </div>
-
-              <div style={{ textAlign: 'right' }}>
-                <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, display: 'block' }}>Consultation</Text>
-                <Text strong style={{ fontSize: 24, color: '#0d9488' }}>
-                  {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
-                </Text>
-              </div>
-            </div>
-
-            <Space size="large" style={{ marginTop: 16 }}>
-              <Space size={6}>
-                <IconMapPin size={18} style={{ opacity: 0.5 }} />
-                <Text>{doctor.city}</Text>
-              </Space>
-              <Space size={6}>
-                <Rate disabled allowHalf defaultValue={doctor.rating || 0} style={{ fontSize: 14 }} />
-                <Text strong>{doctor.rating?.toFixed(1)}</Text>
-                <Text type="secondary">({doctor.reviewCount} reviews)</Text>
-              </Space>
-              {doctor.yearsOfExperience && (
-                <Space size={6}>
-                  <IconStethoscope size={18} style={{ opacity: 0.5 }} />
-                  <Text>{doctor.yearsOfExperience}+ Years Exp.</Text>
-                </Space>
-              )}
-            </Space>
+          <div style={{ textAlign: 'right', minWidth: 120 }}>
+            <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', fontWeight: 700, display: 'block', marginBottom: 4 }}>
+              Consultation
+            </Text>
+            <Text strong style={{ fontSize: 28, color: '#0d9488' }}>
+              {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
+            </Text>
           </div>
         </div>
       </Card>
