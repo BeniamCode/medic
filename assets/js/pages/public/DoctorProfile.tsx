@@ -24,7 +24,6 @@ import {
   IconInfoCircle,
   IconStethoscope,
   IconUser,
-  IconMessageCircle,
   IconChevronLeft,
   IconChevronRight
 } from '@tabler/icons-react'
@@ -44,8 +43,6 @@ export type DoctorProfile = {
   lastName: string
   title: string | null
   pronouns: string | null
-  rating: number | null
-  reviewCount: number
   verified: boolean
   profileImageUrl: string | null
   specialty: { name: string; slug: string } | null
@@ -165,7 +162,7 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
                 <Row gutter={24}>
                   <Col span={12}>
                     <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase' }}>Procedures</Text>
-                    <List
+                    <List<string>
                       size="small"
                       dataSource={doctor.clinicalProcedures.slice(0, 5)}
                       renderItem={(item) => (
@@ -181,7 +178,7 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
                   </Col>
                   <Col span={12}>
                     <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'rgba(0,0,0,0.45)', textTransform: 'uppercase' }}>Conditions Treated</Text>
-                    <List
+                    <List<string>
                       size="small"
                       dataSource={doctor.conditionsTreated.slice(0, 5)}
                       renderItem={(item) => (
@@ -205,7 +202,7 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
               <Card bordered style={{ borderRadius: 8 }}>
                 <Text strong style={{ display: 'block', marginBottom: 16 }}>Special Interests</Text>
                 <Space size={[0, 8]} wrap>
-                  {doctor.subSpecialties.map(s => <Tag key={s} style={{ margin: 0, marginRight: 8 }}>{s}</Tag>)}
+                  {doctor.subSpecialties.map((s: string) => <Tag key={s} style={{ margin: 0, marginRight: 8 }}>{s}</Tag>)}
                 </Space>
               </Card>
             )}
@@ -221,7 +218,7 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
           <Col xs={24} md={8}>
             <div style={{ marginBottom: 20 }}>
               <Title level={4} style={{ marginBottom: 8 }}>Practice Address</Title>
-              <Text size="lg" style={{ fontSize: 18, fontWeight: 500, display: 'block' }}>{doctor.address}</Text>
+              <Text style={{ fontSize: 18, fontWeight: 500, display: 'block' }}>{doctor.address}</Text>
               <Text type="secondary">{doctor.city}</Text>
             </div>
 
@@ -240,20 +237,6 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
             </div>
           </Col>
         </Row>
-      )
-    },
-    {
-      key: 'reviews',
-      label: <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><IconMessageCircle size={16} /> Reviews ({doctor.reviewCount})</span>,
-      children: (
-        <div style={{ maxWidth: 600 }}>
-          <Card style={{ backgroundColor: '#fafafa', borderRadius: 8 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-              <Text strong style={{ fontSize: 20 }}>Patient Reviews</Text>
-              <Text type="secondary">Verified patient feedback for Dr. {doctor.lastName} will appear here.</Text>
-            </div>
-          </Card>
-        </div>
       )
     }
   ]
@@ -301,10 +284,6 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
                   <IconMapPin size={18} style={{ opacity: 0.6 }} />
                   <Text>{doctor.city}</Text>
                 </Space>
-                <Space size={6}>
-                  <Text strong>{doctor.rating?.toFixed(1)}</Text>
-                  <Text type="secondary">({doctor.reviewCount} reviews)</Text>
-                </Space>
                 {doctor.yearsOfExperience && (
                   <Space size={6}>
                     <IconStethoscope size={18} style={{ opacity: 0.6 }} />
@@ -330,7 +309,7 @@ export default function DoctorProfilePage({ doctor, app, auth, availability, sta
         <Col span={24}>
 
           {/* Centralized Booking Section */}
-          <Card bordered style={{ borderRadius: 12, marginBottom: 50 }} id="book-appointment" shadow="always" bodyStyle={{ padding: 32 }}>
+          <Card bordered style={{ borderRadius: 12, marginBottom: 50 }} id="book-appointment" bodyStyle={{ padding: 32 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Title level={3} style={{ margin: 0 }}>Book Appointment</Title>

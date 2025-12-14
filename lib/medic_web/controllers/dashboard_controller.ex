@@ -19,7 +19,7 @@ defmodule MedicWeb.DashboardController do
         Appointments.list_appointments(
           patient_id: patient.id,
           status: ["completed", "cancelled", "no_show"],
-          preload: [doctor: [:specialty]]
+          preload: [doctor: [:specialty], appreciation: []]
         )
 
       stats = patient_stats(patient)
@@ -59,6 +59,7 @@ defmodule MedicWeb.DashboardController do
       pendingExpiresAt:
         appointment.pending_expires_at && DateTime.to_iso8601(appointment.pending_expires_at),
       rescheduledFromAppointmentId: appointment.rescheduled_from_appointment_id,
+      appreciated: not is_nil(appointment.appreciation),
       doctor: %{
         id: doctor.id,
         firstName: doctor.first_name,

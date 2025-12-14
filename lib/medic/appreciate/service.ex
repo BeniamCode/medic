@@ -10,53 +10,21 @@ defmodule Medic.Appreciate.Service do
 
   alias Medic.Appreciate.{
     DoctorAppreciation,
-    DoctorAppreciationNote,
-    DoctorAppreciationStat,
-    Helpers
+    DoctorAppreciationStat
   }
 
   def appreciate_appointment(%{appointment_id: appointment_id, patient_id: patient_id} = attrs) do
-    Repo.transaction(fn ->
-      with {:ok, appreciation} <-
-             DoctorAppreciation
-             |> Ash.Changeset.for_create(
-               :appreciate_appointment,
-               %{
-                 appointment_id: appointment_id,
-                 kind: Map.get(attrs, :kind, "appreciated"),
-                 actor_patient_id: patient_id
-               }
-             )
-             |> Ash.create(),
-           {:ok, _maybe_note} <- maybe_create_note(appreciation, Map.get(attrs, :note_text)) do
-        {:ok, appreciation}
-      else
-        {:error, error} -> Repo.rollback(error)
-      end
-    end)
-  end
-
-  defp maybe_create_note(_appreciation, nil), do: {:ok, nil}
-
-  defp maybe_create_note(appreciation, note_text) when is_binary(note_text) do
-    note_text = Helpers.normalize_note_text(note_text)
-
-    cond do
-      is_nil(note_text) or note_text == "" ->
-        {:ok, nil}
-
-      Helpers.maybe_block_note?(note_text) ->
-        {:ok, nil}
-
-      true ->
-        DoctorAppreciationNote
-        |> Ash.Changeset.for_create(:create, %{
-          appreciation_id: appreciation.id,
-          note_text: note_text,
-          visibility: "private"
-        })
-        |> Ash.create()
-    end
+    DoctorAppreciation
+    |> Ash.Changeset.for_create(
+      :appreciate_appointment,
+      %{
+        appointment_id: appointment_id,
+        kind: Map.get(attrs, :kind, "appreciated"),
+        actor_patient_id: patient_id,
+        note_text: Map.get(attrs, :note_text)
+      }
+    )
+    |> Ash.create()
   end
 
   def refresh_doctor_appreciation_stats(doctor_id) do

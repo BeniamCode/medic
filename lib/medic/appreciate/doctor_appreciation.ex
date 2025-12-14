@@ -23,6 +23,7 @@ defmodule Medic.Appreciate.DoctorAppreciation do
       accept [:appointment_id, :kind]
 
       argument :actor_patient_id, :uuid, allow_nil?: false
+      argument :note_text, :string, allow_nil?: true
 
       change set_attribute(:patient_id, arg(:actor_patient_id))
 
@@ -58,8 +59,24 @@ defmodule Medic.Appreciate.DoctorAppreciation do
         end
       end
 
-      after_action(fn _changeset, appreciation, _context ->
+      after_action(fn _changeset, appreciation, context ->
+        note_text = context.arguments[:note_text]
+        normalized_text = Medic.Appreciate.Helpers.normalize_note_text(note_text)
+
+        if is_binary(normalized_text) and normalized_text != "" and
+             not Medic.Appreciate.Helpers.maybe_block_note?(normalized_text) do
+          _ =
+            Medic.Appreciate.DoctorAppreciationNote
+            |> Ash.Changeset.for_create(:create, %{
+              appreciation_id: appreciation.id,
+              note_text: normalized_text,
+              visibility: "private"
+            })
+            |> Ash.create()
+        end
+
         Medic.Appreciate.Service.refresh_doctor_appreciation_stats(appreciation.doctor_id)
+        {:ok, appreciation}
       end)
     end
   end

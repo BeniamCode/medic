@@ -139,6 +139,10 @@ defmodule Medic.Appointments.Appointment do
 
     has_many :events, Medic.Appointments.AppointmentEvent
     has_many :resource_claims, Medic.Appointments.AppointmentResourceClaim
+
+    has_one :appreciation, Medic.Appreciate.DoctorAppreciation do
+      destination_attribute :appointment_id
+    end
   end
 
   # --- Legacy Logic ---

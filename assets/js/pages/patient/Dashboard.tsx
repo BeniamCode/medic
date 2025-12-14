@@ -14,8 +14,11 @@ import {
   Statistic,
   Alert,
   message,
-  Popconfirm
+  Popconfirm,
+  Modal,
+  Input
 } from 'antd'
+import { HeartOutlined } from '@ant-design/icons'
 import {
   IconCalendar,
   IconCalendarEvent,
@@ -28,6 +31,7 @@ import {
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
+import { router } from '@inertiajs/react'
 
 import type { AppPageProps } from '@/types/app'
 
@@ -47,6 +51,7 @@ type Appointment = {
   consultationMode?: 'in_person' | 'video' | 'telemedicine' | string
   pendingExpiresAt?: string | null
   rescheduledFromAppointmentId?: string | null
+  appreciated?: boolean
 }
 
 type PageProps = AppPageProps<{
@@ -70,8 +75,36 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
   const { token } = useToken()
   const [messageApi, contextHolder] = message.useMessage()
   const [upcoming, setUpcoming] = useState(upcomingAppointments)
+  const [past, setPast] = useState(pastAppointments)
   const [loadingKey, setLoadingKey] = useState<string | null>(null)
   const patientName = patient?.firstName || t('dashboard.patient_fallback', 'there')
+
+  // Appreciation State
+  const [appreciationModalOpen, setAppreciationModalOpen] = useState(false)
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
+  const [appreciationNote, setAppreciationNote] = useState('')
+
+  const openAppreciationModal = (id: string) => {
+    setSelectedAppointmentId(id)
+    setAppreciationModalOpen(true)
+  }
+
+  const handleAppreciateSubmit = () => {
+    if (!selectedAppointmentId) return
+    router.post(`/appointments/${selectedAppointmentId}/appreciate`, {
+      note_text: appreciationNote
+    }, {
+      onSuccess: () => {
+        setPast((prev) =>
+          prev.map((appt) => (appt.id === selectedAppointmentId ? { ...appt, appreciated: true } : appt))
+        )
+        setAppreciationModalOpen(false)
+        setAppreciationNote('')
+        setSelectedAppointmentId(null)
+        messageApi.success("Appreciation sent!")
+      }
+    })
+  }
 
   const handleApprove = async (id: string) => {
     setLoadingKey(`approve:${id}`)
@@ -304,6 +337,22 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
           </Flex>
         </>
       )}
+
+      {!isUpcoming && appt.status === 'completed' && !appt.appreciated && (
+        <>
+          <Divider style={{ margin: '16px 0' }} />
+          <Flex justify="flex-end">
+            <Button
+              type="primary"
+              icon={<HeartOutlined />}
+              style={{ backgroundColor: token.colorError, borderColor: token.colorError }}
+              onClick={() => openAppreciationModal(appt.id)}
+            >
+              Appreciate Doctor
+            </Button>
+          </Flex>
+        </>
+      )}
     </Card>
   )}
 
@@ -327,13 +376,13 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
     {
       key: 'past',
       label: t('dashboard.tabs.past', 'Past'),
-      children: pastAppointments.length > 0 ? (
-        pastAppointments.map((appt: Appointment) => renderAppointment(appt, false))
+      children: past.length > 0 ? (
+        past.map((appt: Appointment) => renderAppointment(appt, false))
       ) : (
         <Empty description={t('dashboard.no_history', 'No past appointments')} />
       )
     }
-  ]), [upcoming, pastAppointments, renderAppointment, t])
+  ]), [upcoming, past, renderAppointment, t])
 
   return (
     <>
@@ -439,6 +488,30 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
         </Row>
       </div>
     </div>
+
+    <Modal
+      title={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <HeartOutlined style={{ color: token.colorError }} />
+          <span>Appreciate Doctor</span>
+        </div>
+      }
+      open={appreciationModalOpen}
+      onOk={handleAppreciateSubmit}
+      onCancel={() => setAppreciationModalOpen(false)}
+      okText="Send Appreciation"
+      okButtonProps={{ style: { backgroundColor: token.colorError, borderColor: token.colorError } }}
+    >
+      <p>Would you like to leave a short thank-you note? (Optional)</p>
+      <Input.TextArea
+        rows={4}
+        value={appreciationNote}
+        onChange={(e) => setAppreciationNote(e.target.value)}
+        placeholder="e.g. Very kind and caring..."
+        maxLength={80}
+        showCount
+      />
+    </Modal>
     </>
   )
 }
