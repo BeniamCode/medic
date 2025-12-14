@@ -36,6 +36,34 @@ defmodule Medic.Storage do
     end
   end
 
+  @spec upload_patient_profile_image(
+          patient_id :: binary(),
+          file_binary :: binary(),
+          content_type :: binary(),
+          ext :: binary()
+        ) :: {:ok, url :: binary()} | {:error, term()}
+  def upload_patient_profile_image(patient_id, file_binary, content_type, ext)
+      when is_binary(patient_id) and is_binary(file_binary) and is_binary(content_type) and
+             is_binary(ext) do
+    file_name = "patient_profiles/#{patient_id}/profile_#{unique_token()}#{ext}"
+    adapter = storage_adapter()
+
+    case adapter do
+      :b2 ->
+        if B2.configured?() do
+          B2.upload(file_binary, content_type, file_name)
+        else
+          {:error, :storage_not_configured}
+        end
+
+      :local ->
+        Local.upload(file_binary, content_type, file_name)
+
+      _ ->
+        {:error, :storage_not_configured}
+    end
+  end
+
   defp storage_adapter do
     adapter =
       Application.get_env(:medic, __MODULE__, [])

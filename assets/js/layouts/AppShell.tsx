@@ -173,6 +173,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             Appointments
                         </Button>
                     </Link>
+
+                    <Link href="/dashboard/patient/profile">
+                        <Button
+                            type={path.startsWith('/dashboard/patient/profile') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/dashboard/patient/profile')}
+                            className={path.startsWith('/dashboard/patient/profile') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: 'flex-start' }}
+                            icon={<IconUserCircle size={20} />}
+                        >
+                            My Profile
+                        </Button>
+                    </Link>
                 </>
             )}
 

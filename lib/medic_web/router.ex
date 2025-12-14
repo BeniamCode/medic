@@ -100,6 +100,10 @@ defmodule MedicWeb.Router do
     get "/doctor/profile", DoctorProfileController, :show
     post "/doctor/profile", DoctorProfileController, :update
     post "/doctor/profile/image", DoctorProfileController, :upload_image
+
+    get "/patient/profile", PatientProfileController, :show
+    post "/patient/profile", PatientProfileController, :update
+    post "/patient/profile/image", PatientProfileController, :upload_image
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
