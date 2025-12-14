@@ -82,7 +82,7 @@ defmodule Medic.Appointments do
     now = DateTime.utc_now()
 
     from a in query,
-      where: a.starts_at > ^now,
+      where: a.ends_at > ^now,
       where: a.status in ["pending", "confirmed"]
   end
 

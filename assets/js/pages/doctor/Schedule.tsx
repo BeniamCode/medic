@@ -790,6 +790,8 @@ const DoctorSchedule = ({
                                 control={control}
                                 render={({ field: f }) => (
                                   <Select {...f} style={{ width: '100%' }}>
+                                    <Option value={1}>1 m</Option>
+                                    <Option value={5}>5 m</Option>
                                     <Option value={15}>15 m</Option>
                                     <Option value={20}>20 m</Option>
                                     <Option value={30}>30 m</Option>

@@ -3,7 +3,11 @@ defmodule MedicWeb.SearchController do
 
   alias Medic.Doctors
   alias Medic.Search
+  alias Medic.Appreciate.DoctorAppreciationStat
   alias Decimal
+
+  import Ecto.Query
+  alias Medic.Repo
 
   def index(conn, params) do
     query = params["q"] |> to_string() |> String.trim()
@@ -42,12 +46,26 @@ defmodule MedicWeb.SearchController do
         IO.inspect(List.first(results), label: "First Result")
         IO.puts("=== SEARCH DEBUG END ===\n")
 
-        {Enum.map(results, &search_result_to_props/1), %{total: total, source: "search"}}
+        appreciation_counts = appreciation_counts_by_doctor_id(results)
+
+        {Enum.map(results, &search_result_to_props(&1, appreciation_counts)),
+         %{total: total, source: "search"}}
 
       {:error, reason} ->
         IO.inspect(reason, label: "Search Error")
         {[], %{total: 0, source: "search"}}
     end
+  end
+
+  defp appreciation_counts_by_doctor_id(results) do
+    doctor_ids = Enum.map(results, & &1.id)
+
+    Repo.all(
+      from s in DoctorAppreciationStat,
+        where: s.doctor_id in ^doctor_ids,
+        select: {s.doctor_id, s.appreciated_total_distinct_patients}
+    )
+    |> Map.new()
   end
 
   defp format_specialties do
@@ -61,7 +79,7 @@ defmodule MedicWeb.SearchController do
     end)
   end
 
-  defp search_result_to_props(result) do
+  defp search_result_to_props(result, appreciation_counts) do
     %{
       id: result.id,
       first_name: result.first_name,
@@ -70,7 +88,7 @@ defmodule MedicWeb.SearchController do
       city: result.city,
       rating: result.rating,
       review_count: result.review_count,
-      appreciation_count: result.appreciation_count,
+      appreciation_count: Map.get(appreciation_counts, result.id, result.appreciation_count),
       consultation_fee: result.consultation_fee,
       verified: result.verified,
       profile_image_url: result.profile_image_url,

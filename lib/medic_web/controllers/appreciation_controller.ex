@@ -41,16 +41,37 @@ defmodule MedicWeb.AppreciationController do
             |> redirect(to: ~p"/appointments/#{appointment_id}")
           end
 
-        {:error, _} ->
+        {:error, error} ->
+          status =
+            if already_appreciated_error?(error), do: :conflict, else: :unprocessable_entity
+
+          body = if status == :conflict, do: "already_appreciated", else: "unable_to_submit"
+
           if ajax?(conn) do
-            send_resp(conn, :unprocessable_entity, "")
+            send_resp(conn, status, body)
           else
+            message =
+              if status == :conflict do
+                "You already appreciated this appointment."
+              else
+                "Unable to submit appreciation."
+              end
+
             conn
-            |> put_flash(:error, "Unable to submit appreciation.")
+            |> put_flash(:error, message)
             |> redirect(to: ~p"/appointments/#{appointment_id}")
           end
       end
     end
+  end
+
+  defp already_appreciated_error?(error) do
+    error_text = Exception.format(:error, error, [])
+
+    String.contains?(error_text, "doctor_appreciations_appointment_id_index") or
+      String.contains?(error_text, "unique_appointment")
+  rescue
+    _ -> false
   end
 
   defp ajax?(conn) do

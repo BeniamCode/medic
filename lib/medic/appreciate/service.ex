@@ -8,6 +8,9 @@ defmodule Medic.Appreciate.Service do
   import Ecto.Query
   alias Medic.Repo
 
+  alias Medic.Doctors
+  alias Medic.Doctors.Doctor
+
   alias Medic.Appreciate.{
     DoctorAppreciation,
     DoctorAppreciationStat
@@ -63,16 +66,25 @@ defmodule Medic.Appreciate.Service do
       updated_at: now
     }
 
-    case stat do
-      nil ->
-        DoctorAppreciationStat
-        |> Ash.Changeset.for_create(:create, Map.put(attrs, :doctor_id, doctor_id))
-        |> Ash.create()
+    result =
+      case stat do
+        nil ->
+          DoctorAppreciationStat
+          |> Ash.Changeset.for_create(:create, Map.put(attrs, :doctor_id, doctor_id))
+          |> Ash.create()
 
-      %DoctorAppreciationStat{} = stat ->
-        stat
-        |> Ash.Changeset.for_update(:update, attrs)
-        |> Ash.update()
-    end
+        %DoctorAppreciationStat{} = stat ->
+          stat
+          |> Ash.Changeset.for_update(:update, attrs)
+          |> Ash.update()
+      end
+
+    _ =
+      case result do
+        {:ok, _} -> Doctors.enqueue_index_job(%Doctor{id: doctor_id})
+        _ -> :ok
+      end
+
+    result
   end
 end

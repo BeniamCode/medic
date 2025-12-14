@@ -23,7 +23,6 @@ import type { AppPageProps } from '@/types/app'
 import DoctorMap from '@/components/Map'
 
 const { Title, Text } = Typography
-const { Search: AntSearch } = Input
 
 export type SearchDoctor = {
   id: string
@@ -118,28 +117,30 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
           position: 'relative',
           overflow: 'hidden'
         }}
-        onMouseEnter={() => setMapHeight(500)}
-        onMouseLeave={() => setMapHeight(250)}
       >
         <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} focusedDoctorId={focusedDoctorId} />
       </div>
 
       {/* 2. Google-Style Search Bar - Centered */}
       <div style={{ maxWidth: 960, margin: '-24px auto 0', padding: '0 24px', position: 'relative', zIndex: 20 }}>
-        <Card style={{ borderRadius: 24, padding: 8 }} bodyStyle={{ padding: 0 }} bordered shadow="always">
-          <AntSearch
-            placeholder={t('search.placeholder', 'Search doctors, clinics, specialties, etc.')}
-            size="large"
-            bordered={false}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onSearch={submit}
-            enterButton={
-              <Button type="primary" shape="round" icon={<IconSearch size={18} />}>
-                Search
-              </Button>
-            }
-          />
+        <Card
+          style={{ borderRadius: 24, padding: 8 }}
+          styles={{ body: { padding: 0 } }}
+          variant="outlined"
+        >
+          <Space.Compact style={{ width: '100%' }}>
+            <Input
+              placeholder={t('search.placeholder', 'Search doctors, clinics, specialties, etc.')}
+              size="large"
+              variant="borderless"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onPressEnter={() => submit(query)}
+            />
+            <Button type="primary" size="large" onClick={() => submit(query)} icon={<IconSearch size={18} />}>
+              Search
+            </Button>
+          </Space.Compact>
         </Card>
       </div>
 
@@ -149,7 +150,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
           {/* Sidebar Filters */}
           <Col xs={24} md={6}>
             <div style={{ position: 'sticky', top: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <Card bordered style={{ borderRadius: 12 }}>
+              <Card variant="outlined" style={{ borderRadius: 12 }}>
                 <Space align="center" style={{ marginBottom: 16 }}>
                   <div style={{ padding: 6, borderRadius: 6, backgroundColor: '#e6fffa', color: '#0d9488' }}>
                     <IconFilter size={16} />
@@ -208,7 +209,7 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                         transition: 'all 0.2s',
                         overflow: 'hidden'
                       }}
-                      bodyStyle={{ padding: 16 }}
+                      styles={{ body: { padding: 16 } }}
                       cover={
                         <div style={{ height: 200, backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Avatar

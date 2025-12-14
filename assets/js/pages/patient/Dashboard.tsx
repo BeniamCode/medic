@@ -89,21 +89,52 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
     setAppreciationModalOpen(true)
   }
 
-  const handleAppreciateSubmit = () => {
+  const handleAppreciateSubmit = async () => {
     if (!selectedAppointmentId) return
-    router.post(`/appointments/${selectedAppointmentId}/appreciate`, {
-      note_text: appreciationNote
-    }, {
-      onSuccess: () => {
+    setLoadingKey(`appreciate:${selectedAppointmentId}`)
+
+    try {
+      const body = new URLSearchParams({
+        note_text: appreciationNote
+      })
+
+      const res = await fetch(`/appointments/${selectedAppointmentId}/appreciate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest',
+          'x-csrf-token': getCsrfToken()
+        },
+        body: body.toString()
+      })
+
+      if (res.status === 409) {
         setPast((prev) =>
           prev.map((appt) => (appt.id === selectedAppointmentId ? { ...appt, appreciated: true } : appt))
         )
         setAppreciationModalOpen(false)
         setAppreciationNote('')
         setSelectedAppointmentId(null)
-        messageApi.success("Appreciation sent!")
+        messageApi.info(t('dashboard.already_appreciated', 'You already appreciated this appointment'))
+        return
       }
-    })
+
+      if (!res.ok) {
+        throw new Error('appreciation_failed')
+      }
+
+      setPast((prev) =>
+        prev.map((appt) => (appt.id === selectedAppointmentId ? { ...appt, appreciated: true } : appt))
+      )
+      setAppreciationModalOpen(false)
+      setAppreciationNote('')
+      setSelectedAppointmentId(null)
+      messageApi.success(t('dashboard.appreciation_sent', 'Appreciation sent!'))
+    } catch (err) {
+      messageApi.error(t('dashboard.appreciation_error', 'Unable to submit appreciation. Please try again.'))
+    } finally {
+      setLoadingKey(null)
+    }
   }
 
   const handleApprove = async (id: string) => {
@@ -500,7 +531,10 @@ const PatientDashboard = ({ upcomingAppointments = [], pastAppointments = [], pa
       onOk={handleAppreciateSubmit}
       onCancel={() => setAppreciationModalOpen(false)}
       okText="Send Appreciation"
-      okButtonProps={{ style: { backgroundColor: token.colorError, borderColor: token.colorError } }}
+      okButtonProps={{
+        loading: loadingKey === (selectedAppointmentId ? `appreciate:${selectedAppointmentId}` : null),
+        style: { backgroundColor: token.colorError, borderColor: token.colorError }
+      }}
     >
       <p>Would you like to leave a short thank-you note? (Optional)</p>
       <Input.TextArea
