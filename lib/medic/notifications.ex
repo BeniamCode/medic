@@ -81,6 +81,14 @@ defmodule Medic.Notifications do
     |> Ash.count!()
   end
 
+  def list_recent_unread(user_id, limit \\ 5) do
+    Notification
+    |> Ash.Query.filter(user_id == ^user_id and is_nil(read_at))
+    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.Query.limit(limit)
+    |> Ash.read!()
+  end
+
   def mark_as_read(notification_id) do
     notification = get_notification!(notification_id)
 

@@ -32,8 +32,9 @@ import { useEffect, useState } from 'react'
 import { useThemeMode } from '@/app'
 import { ensureNotificationsStream } from '@/lib/notificationsStream'
 import { useIsMobile } from '@/lib/device'
+import { NotificationBell } from '@/components/NotificationBell'
 
-// Mobile antd-mobile imports
+//Mobile antd-mobile imports
 import { TabBar, NavBar, Popup, List, SafeArea } from 'antd-mobile'
 import {
     AppOutline,
@@ -549,11 +550,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
                     {user ? (
                         <>
-                            <Link href="/notifications">
-                                <Badge count={unreadCount} size="small" overflowCount={9}>
-                                    <Button type="text" shape="circle" icon={<IconBell size={20} />} />
-                                </Badge>
-                            </Link>
+                            <NotificationBell />
                             <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
                                 <Button type="text" style={{ padding: '4px 8px', height: 'auto' }}>
                                     <Flex align="center" gap="small">
