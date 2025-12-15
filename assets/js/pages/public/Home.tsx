@@ -197,7 +197,7 @@ function DesktopHomePage() {
               </div>
 
               <Title level={1} style={{ fontSize: 52, lineHeight: 1.1, margin: 0 }}>
-                Modern healthcare for <Text style={{ color: '#0d9488' }} strong>everyone</Text>
+                Modern healthcare for <Text style={{ fontSize: 52, lineHeight: 1.1, color: '#0d9488' }} strong>everyone</Text>
               </Title>
 
               <Text type="secondary" style={{ fontSize: 20 }}>
