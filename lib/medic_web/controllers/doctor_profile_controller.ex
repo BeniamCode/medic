@@ -126,6 +126,7 @@ defmodule MedicWeb.DoctorProfileController do
       bio: doctor.bio,
       bio_el: doctor.bio_el,
       address: doctor.address,
+      zip_code: doctor.zip_code,
       city: doctor.city,
       telemedicine_available: doctor.telemedicine_available,
       consultation_fee: doctor.consultation_fee && Decimal.to_float(doctor.consultation_fee),

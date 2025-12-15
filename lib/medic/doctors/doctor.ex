@@ -29,6 +29,8 @@ defmodule Medic.Doctors.Doctor do
         :location_lat,
         :location_lng,
         :address,
+        :neighborhood,
+        :zip_code,
         :city,
         :consultation_fee,
         :specialty_id,
@@ -50,6 +52,7 @@ defmodule Medic.Doctors.Doctor do
         :publications
       ]
 
+      change Medic.Doctors.Changes.GeocodeAddress
       after_action(&__MODULE__.enqueue_typesense_job/3)
     end
 
@@ -63,6 +66,8 @@ defmodule Medic.Doctors.Doctor do
         :location_lat,
         :location_lng,
         :address,
+        :neighborhood,
+        :zip_code,
         :city,
         :consultation_fee,
         :specialty_id,
@@ -83,6 +88,7 @@ defmodule Medic.Doctors.Doctor do
         :publications
       ]
 
+      change Medic.Doctors.Changes.GeocodeAddress
       after_action(&__MODULE__.enqueue_typesense_job/3)
     end
 
@@ -125,6 +131,8 @@ defmodule Medic.Doctors.Doctor do
     attribute :location_lat, :float
     attribute :location_lng, :float
     attribute :address, :string
+    attribute :zip_code, :string
+    attribute :neighborhood, :string
     attribute :city, :string
     attribute :rating, :float, default: 0.0
     attribute :review_count, :integer, default: 0
@@ -194,6 +202,8 @@ defmodule Medic.Doctors.Doctor do
       :location_lat,
       :location_lng,
       :address,
+      :neighborhood,
+      :zip_code,
       :city,
       :consultation_fee,
       :specialty_id,

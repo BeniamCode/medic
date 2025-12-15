@@ -197,6 +197,8 @@ defmodule Medic.Doctors do
   Creates a doctor profile for a user.
   """
   def create_doctor(user, attrs \\ %{}) do
+    attrs = maybe_geocode(attrs)
+
     %Doctor{}
     |> Doctor.changeset(attrs)
     |> Changeset.put_change(:user_id, user.id)
@@ -211,6 +213,8 @@ defmodule Medic.Doctors do
   Updates a doctor.
   """
   def update_doctor(%Doctor{} = doctor, attrs) do
+    attrs = maybe_geocode(attrs, doctor)
+
     doctor
     |> Doctor.changeset(attrs)
     |> Repo.update(returning: true)
@@ -218,6 +222,45 @@ defmodule Medic.Doctors do
       {:ok, updated} -> enqueue_index_job(updated)
       _ -> :ok
     end)
+  end
+
+  defp maybe_geocode(attrs, doctor \\ nil) do
+    # Normalize keys to strings
+    attrs = Map.new(attrs, fn {k, v} -> {to_string(k), v} end)
+    
+    # Determine full address
+    address = attrs["address"] || (doctor && doctor.address)
+    zip_code = attrs["zip_code"] || (doctor && doctor.zip_code)
+    city = attrs["city"] || (doctor && doctor.city)
+    neighborhood = attrs["neighborhood"] || (doctor && doctor.neighborhood)
+
+    # Check if we should run geocoding
+    # 1. New doctor (doctor == nil) and has address
+    # 2. Existing doctor and address/city/zip/neighborhood changing
+    # 3. Existing doctor has address but no coords (backfill)
+    should_run? = 
+      if doctor do
+        (attrs["address"] && attrs["address"] != doctor.address) ||
+        (attrs["zip_code"] && attrs["zip_code"] != doctor.zip_code) ||
+        (attrs["city"] && attrs["city"] != doctor.city) ||
+        (attrs["neighborhood"] && attrs["neighborhood"] != doctor.neighborhood) ||
+        (address && (is_nil(doctor.location_lat) || is_nil(doctor.location_lng)))
+      else
+        address && city
+      end
+
+    if should_run? && address do
+      case Medic.Geocoding.geocode_address(address, city || "", zip_code, neighborhood) do
+        {:ok, {lat, lng}} ->
+          require Logger
+          Logger.info("Geocoding success: #{lat}, #{lng}")
+          Map.merge(attrs, %{"location_lat" => lat, "location_lng" => lng})
+        _ ->
+          attrs
+      end
+    else
+      attrs
+    end
   end
 
   @doc """

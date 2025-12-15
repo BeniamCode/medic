@@ -27,12 +27,13 @@ defmodule MedicWeb.SearchLive do
               Enum.map(@doctors, fn d ->
                 %{
                   id: d.id,
-                  first_name: d.first_name,
-                  last_name: d.last_name,
-                  location_lat: Map.get(d, :location_lat),
-                  location_lng: Map.get(d, :location_lng),
-                  consultation_fee: Map.get(d, :consultation_fee),
-                  specialty_name:
+                  firstName: d.first_name,
+                  lastName: d.last_name,
+                  locationLat: Map.get(d, :location_lat),
+                  locationLng: Map.get(d, :location_lng),
+                  address: Map.get(d, :address),
+                  consultationFee: Map.get(d, :consultation_fee),
+                  specialtyName:
                     Map.get(d, :specialty_name) ||
                       (Map.get(d, :specialty) && Map.get(d.specialty, :name_en)) || "Doctor"
                 }

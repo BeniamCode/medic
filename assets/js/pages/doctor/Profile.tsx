@@ -58,6 +58,8 @@ type Profile = {
   bio: string | null
   bio_el: string | null
   address: string | null
+  neighborhood: string | null
+  zip_code: string | null
   city: string | null
   telemedicine_available: boolean
   consultation_fee: number | null
@@ -299,13 +301,13 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                                     ? t('doctor.profile.photo_missing', 'No file received. Please try again.')
                                     : code === 'doctor_profile_missing'
                                       ? t('doctor.profile.photo_profile_missing', 'Save your profile first, then upload a photo.')
-                                    : code === 'unsupported_type'
-                                      ? t('doctor.profile.photo_type', 'Please upload a JPG, PNG, or WebP image')
-                                      : code === 'too_large'
-                                        ? t('doctor.profile.photo_size', 'Max file size is 5MB')
-                                        : code === 'storage_not_configured'
-                                          ? t('doctor.profile.photo_storage', 'Storage is not configured. Set Backblaze B2 env vars and restart the server.')
-                                          : t('doctor.profile.photo_failed', 'Unable to upload photo. Please try again.')
+                                      : code === 'unsupported_type'
+                                        ? t('doctor.profile.photo_type', 'Please upload a JPG, PNG, or WebP image')
+                                        : code === 'too_large'
+                                          ? t('doctor.profile.photo_size', 'Max file size is 5MB')
+                                          : code === 'storage_not_configured'
+                                            ? t('doctor.profile.photo_storage', 'Storage is not configured. Set Backblaze B2 env vars and restart the server.')
+                                            : t('doctor.profile.photo_failed', 'Unable to upload photo. Please try again.')
 
                                 messageApi.error(msg)
                                 throw new Error('upload_failed')
@@ -489,13 +491,21 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                 <Title level={4}>{t('doctor.profile.location', 'Location & services')}</Title>
 
                 <Row gutter={16}>
-                  <Col xs={24} md={12}>
+                  <Col xs={24} md={6}>
                     <div style={{ marginBottom: 8 }}><Text strong>Address</Text></div>
                     <Controller name="address" control={control} render={({ field }) => <Input {...field} />} />
                   </Col>
-                  <Col xs={24} md={12}>
+                  <Col xs={24} md={6}>
                     <div style={{ marginBottom: 8 }}><Text strong>City</Text></div>
                     <Controller name="city" control={control} render={({ field }) => <Input {...field} />} />
+                  </Col>
+                  <Col xs={24} md={8}>
+                    <div style={{ marginBottom: 8 }}><Text strong>Area</Text></div>
+                    <Controller name="neighborhood" control={control} render={({ field }) => <Input {...field} />} />
+                  </Col>
+                  <Col xs={24} md={4}>
+                    <div style={{ marginBottom: 8 }}><Text strong>Zip Code</Text></div>
+                    <Controller name="zip_code" control={control} render={({ field }) => <Input {...field} />} />
                   </Col>
                 </Row>
 
@@ -655,6 +665,8 @@ const normalizeDoctor = (doctor: any): Profile => {
     bio: get('bio', 'bio', ''),
     bio_el: get('bio_el', 'bioEl', ''),
     address: get('address', 'address', ''),
+    neighborhood: get('neighborhood', 'neighborhood', ''),
+    zip_code: get('zip_code', 'zipCode', ''),
     city: get('city', 'city', ''),
     telemedicine_available: get('telemedicine_available', 'telemedicineAvailable', false),
     consultation_fee: get('consultation_fee', 'consultationFee', null),
