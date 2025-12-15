@@ -4,7 +4,6 @@ defmodule MedicWeb.SearchController do
   alias Medic.Doctors
   alias Medic.Search
   alias Medic.Appreciate.DoctorAppreciationStat
-  alias Decimal
 
   import Ecto.Query
   alias Medic.Repo
@@ -12,16 +11,30 @@ defmodule MedicWeb.SearchController do
   def index(conn, params) do
     query = params["q"] |> to_string() |> String.trim()
     specialty_slug = params["specialty"] |> normalize_blank()
+    city = params["city"] |> normalize_blank()
+    max_price = parse_int(params["max_price"])
+    telemedicine_only = params["telemedicine"] == "true" or params["online"] == "true"
+    insurance = params["insurance"] |> normalize_blank()
 
-    {doctors, meta} = fetch_doctors(query, specialty_slug)
+    {doctors, meta} =
+      fetch_doctors(query, specialty_slug, city, max_price, telemedicine_only, insurance)
 
     page_title = dgettext("default", "Find a doctor")
 
     conn
     |> assign(:page_title, page_title)
     |> assign_prop(:page_title, page_title)
-    |> assign_prop(:filters, %{query: query, specialty: specialty_slug})
+    |> assign_prop(:filters, %{
+      query: query,
+      specialty: specialty_slug,
+      city: city,
+      max_price: max_price,
+      telemedicine: telemedicine_only,
+      insurance: insurance
+    })
     |> assign_prop(:specialties, format_specialties())
+    |> assign_prop(:cities, cities())
+    |> assign_prop(:insurances, insurances())
     |> assign_prop(:doctors, doctors)
     |> assign_prop(:meta, meta)
     |> render_inertia("Public/Search")
@@ -30,29 +43,33 @@ defmodule MedicWeb.SearchController do
   defp normalize_blank(value) when value in [nil, ""], do: nil
   defp normalize_blank(value), do: value
 
-  defp fetch_doctors("", specialty_slug), do: fetch_doctors("*", specialty_slug)
+  defp fetch_doctors("", specialty_slug, city, max_price, telemedicine_only, insurance),
+    do: fetch_doctors("*", specialty_slug, city, max_price, telemedicine_only, insurance)
 
-  defp fetch_doctors(nil, specialty_slug), do: fetch_doctors("*", specialty_slug)
+  defp fetch_doctors(nil, specialty_slug, city, max_price, telemedicine_only, insurance),
+    do: fetch_doctors("*", specialty_slug, city, max_price, telemedicine_only, insurance)
 
-  defp fetch_doctors(query, specialty_slug) do
-    opts = [query: query, specialty: specialty_slug, per_page: 24]
-
-    IO.puts("\n=== SEARCH DEBUG START ===")
-    IO.inspect(opts, label: "Search Opts")
+  defp fetch_doctors(query, specialty_slug, city, max_price, telemedicine_only, insurance) do
+    opts =
+      [
+        query: query,
+        specialty: specialty_slug,
+        city: city,
+        max_price: max_price,
+        telemedicine_only: telemedicine_only,
+        insurance: insurance,
+        verified_only: true,
+        per_page: 24
+      ]
 
     case Search.search_doctors(opts) do
       {:ok, %{results: results, total: total}} ->
-        IO.inspect(total, label: "Total Found")
-        IO.inspect(List.first(results), label: "First Result")
-        IO.puts("=== SEARCH DEBUG END ===\n")
-
         appreciation_counts = appreciation_counts_by_doctor_id(results)
 
         {Enum.map(results, &search_result_to_props(&1, appreciation_counts)),
          %{total: total, source: "search"}}
 
-      {:error, reason} ->
-        IO.inspect(reason, label: "Search Error")
+      {:error, _reason} ->
         {[], %{total: 0, source: "search"}}
     end
   end
@@ -97,4 +114,46 @@ defmodule MedicWeb.SearchController do
       address: result.address
     }
   end
+
+  defp cities do
+    [
+      "Athens",
+      "Thessaloniki",
+      "Patras",
+      "Heraklion",
+      "Larissa",
+      "Volos",
+      "Ioannina",
+      "Chania",
+      "Rhodes",
+      "Alexandroupoli",
+      "Kalamata",
+      "Kavala",
+      "Serres",
+      "Corfu"
+    ]
+  end
+
+  defp insurances do
+    [
+      "ΕΟΠΥΥ",
+      "Interamerican",
+      "Eurolife",
+      "Ethniki",
+      "Generali",
+      "Other"
+    ]
+  end
+
+  defp parse_int(nil), do: nil
+  defp parse_int(""), do: nil
+
+  defp parse_int(val) when is_binary(val) do
+    case Integer.parse(val) do
+      {i, _} -> i
+      :error -> nil
+    end
+  end
+
+  defp parse_int(val) when is_integer(val), do: val
 end

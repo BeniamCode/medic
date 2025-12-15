@@ -45,6 +45,18 @@ defmodule Medic.Search do
       %{"name" => "specialty_slug", "type" => "string", "optional" => true, "facet" => true},
       %{"name" => "bio", "type" => "string", "optional" => true},
       %{"name" => "city", "type" => "string", "optional" => true, "facet" => true},
+      %{
+        "name" => "insurance_networks",
+        "type" => "string[]",
+        "optional" => true,
+        "facet" => true
+      },
+      %{
+        "name" => "telemedicine_available",
+        "type" => "bool",
+        "optional" => true,
+        "facet" => true
+      },
       %{"name" => "address", "type" => "string", "optional" => true},
       %{"name" => "rating", "type" => "float"},
       %{"name" => "review_count", "type" => "int32", "optional" => true},
@@ -261,6 +273,8 @@ defmodule Medic.Search do
       "profile_image_url" => doctor.profile_image_url || "",
       "bio" => doctor.bio || "",
       "city" => doctor.city || "",
+      "insurance_networks" => doctor.insurance_networks || [],
+      "telemedicine_available" => doctor.telemedicine_available || false,
       "address" => doctor.address || "",
       "rating" => doctor.rating || 0.0,
       "review_count" => doctor.review_count || 0,
@@ -333,6 +347,21 @@ defmodule Medic.Search do
         )
 
     filters =
+      case Keyword.get(opts, :insurance),
+        do: (
+          nil -> filters
+          "" -> filters
+          insurance -> ["insurance_networks:=[#{typesense_quote(insurance)}]" | filters]
+        )
+
+    filters =
+      case Keyword.get(opts, :telemedicine_only),
+        do: (
+          true -> ["telemedicine_available:=true" | filters]
+          _ -> filters
+        )
+
+    filters =
       case Keyword.get(opts, :has_cal_com),
         do: (
           true -> ["has_cal_com:=true" | filters]
@@ -340,6 +369,11 @@ defmodule Medic.Search do
         )
 
     Enum.join(filters, " && ")
+  end
+
+  defp typesense_quote(value) when is_binary(value) do
+    escaped = String.replace(value, "`", "\\`")
+    "`" <> escaped <> "`"
   end
 
   defp build_sort_by(opts) do

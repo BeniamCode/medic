@@ -33,7 +33,6 @@ defmodule MedicWeb.NotificationController do
         conn
         |> put_flash(:error, dgettext("default", "Could not clear notifications"))
     end
-
     |> redirect(to: ~p"/notifications")
   end
 

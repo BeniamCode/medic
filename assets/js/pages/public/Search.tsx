@@ -14,7 +14,9 @@ import {
   Avatar,
   Rate,
   Space,
-  Empty
+  Empty,
+  Switch,
+  Divider
 } from 'antd'
 import { HeartOutlined } from '@ant-design/icons'
 import { IconFilter, IconMapPin, IconSearch } from '@tabler/icons-react'
@@ -44,24 +46,49 @@ export type SearchDoctor = {
 type SearchProps = AppPageProps<{
   doctors: SearchDoctor[]
   specialties: { id: string; name: string; slug: string }[]
-  filters: { query: string; specialty: string | null }
+  cities: string[]
+  insurances: string[]
+  filters: {
+    query: string
+    specialty: string | null
+    city: string | null
+    max_price: number | null
+    telemedicine: boolean
+    insurance: string | null
+  }
   meta: { total: number; source: string }
 }>
 
-const createParams = (query: string, specialty: string) => {
+const createParams = (
+  query: string,
+  specialty: string,
+  city: string,
+  maxPrice: number | null,
+  telemedicine: boolean,
+  insurance: string
+) => {
   const params = new URLSearchParams()
   if (query) params.set('q', query)
   if (specialty) params.set('specialty', specialty)
+  if (city) params.set('city', city)
+  if (typeof maxPrice === 'number') params.set('max_price', String(maxPrice))
+  if (telemedicine) params.set('telemedicine', 'true')
+  if (insurance) params.set('insurance', insurance)
   return params
 }
 
-export default function SearchPage({ app, auth, doctors = [], specialties = [], filters = { query: '', specialty: '' }, meta }: SearchProps) {
+export default function SearchPage({ app, auth, doctors = [], specialties = [], cities = [], insurances = [], filters, meta }: SearchProps) {
   const { t } = useTranslation('default')
 
   // Initialize state
   const [query, setQuery] = useState(filters?.query || '')
   const [debouncedQuery] = useDebouncedValue(query, 300)
   const [specialty, setSpecialty] = useState(filters?.specialty ?? '')
+  const [city, setCity] = useState(filters?.city ?? '')
+  const [insurance, setInsurance] = useState(filters?.insurance ?? '')
+  const [telemedicineOnly, setTelemedicineOnly] = useState(Boolean(filters?.telemedicine))
+  const [maxPrice, setMaxPrice] = useState<number | null>(typeof filters?.max_price === 'number' ? filters.max_price : null)
+  const [showMoreFilters, setShowMoreFilters] = useState(false)
   const [mapHeight, setMapHeight] = useState(250)
   const [focusedDoctorId, setFocusedDoctorId] = useState<string | null>(null)
 
@@ -74,12 +101,16 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
       return
     }
 
-    router.get(`/search?${createParams(debouncedQuery, specialty).toString()}`, undefined, {
+    router.get(
+      `/search?${createParams(debouncedQuery, specialty, city, maxPrice, telemedicineOnly, insurance).toString()}`,
+      undefined,
+      {
       preserveScroll: true,
       preserveState: true,
       replace: true
-    })
-  }, [debouncedQuery, specialty])
+      }
+    )
+  }, [debouncedQuery, specialty, city, maxPrice, telemedicineOnly, insurance])
 
   const specialtyOptions = useMemo(
     () =>
@@ -90,9 +121,27 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
     [specialties]
   )
 
+  const cityOptions = useMemo(
+    () =>
+      cities.map((name) => ({
+        value: name,
+        label: name
+      })),
+    [cities]
+  )
+
+  const insuranceOptions = useMemo(
+    () =>
+      insurances.map((name) => ({
+        value: name,
+        label: name
+      })),
+    [insurances]
+  )
+
   const submit = (value: string) => {
     // Instant trigger (ignores debounce)
-    router.get(`/search?${createParams(value, specialty).toString()}`, undefined, {
+    router.get(`/search?${createParams(value, specialty, city, maxPrice, telemedicineOnly, insurance).toString()}`, undefined, {
       preserveScroll: true,
       preserveState: true
     })
@@ -162,9 +211,9 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                   <div>
                     <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Specialty</Text>
                     <Select
-                      placeholder="Any specialty"
+                      placeholder="Select specialty"
                       options={specialtyOptions}
-                      value={specialty}
+                      value={specialty || undefined}
                       onChange={(value) => setSpecialty(value || '')}
                       allowClear
                       showSearch
@@ -172,18 +221,86 @@ export default function SearchPage({ app, auth, doctors = [], specialties = [], 
                     />
                   </div>
 
-                  {/* RangeSlider */}
                   <div>
-                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Price Range</Text>
-                    <Slider
-                      range
-                      min={0}
-                      max={300}
-                      step={10}
-                      defaultValue={[0, 300]}
-                      tooltip={{ formatter: (val) => `€${val}`, open: false }}
+                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>City</Text>
+                    <Select
+                      placeholder="Select city"
+                      options={cityOptions}
+                      value={city || undefined}
+                      onChange={(value) => setCity(value || '')}
+                      allowClear
+                      showSearch
+                      style={{ width: '100%' }}
                     />
                   </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <Text strong style={{ display: 'block', fontSize: 13 }}>Telemedicine available</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>Only show doctors offering telehealth</Text>
+                    </div>
+                    <Switch checked={telemedicineOnly} onChange={(checked) => setTelemedicineOnly(checked)} />
+                  </div>
+
+                  <Divider style={{ margin: '4px 0' }} />
+
+                  <Button
+                    type="default"
+                    onClick={() => setShowMoreFilters((v) => !v)}
+                    style={{ width: '100%' }}
+                  >
+                    {showMoreFilters ? 'Less filters' : 'More filters'}
+                  </Button>
+
+                  {showMoreFilters && (
+                    <>
+                      <div>
+                        <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Insurance</Text>
+                        <Select
+                          placeholder="Select insurance"
+                          options={insuranceOptions}
+                          value={insurance || undefined}
+                          onChange={(value) => setInsurance(value || '')}
+                          allowClear
+                          showSearch
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+
+                      <div>
+                        <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Max price</Text>
+                        <Slider
+                          min={30}
+                          max={300}
+                          step={10}
+                          value={maxPrice ?? 300}
+                          onChange={(value) => {
+                            const v = Array.isArray(value) ? value[0] : value
+                            // Treat max as “Any”
+                            setMaxPrice(v >= 300 ? null : v)
+                          }}
+                          tooltip={{ formatter: (val) => `€${val}`, open: false }}
+                        />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {typeof maxPrice === 'number' ? `≤ €${maxPrice}` : 'Any price'}
+                        </Text>
+                      </div>
+
+                      <Button
+                        type="default"
+                        onClick={() => {
+                          setSpecialty('')
+                          setCity('')
+                          setInsurance('')
+                          setTelemedicineOnly(false)
+                          setMaxPrice(null)
+                        }}
+                        style={{ width: '100%' }}
+                      >
+                        Clear filters
+                      </Button>
+                    </>
+                  )}
                 </div>
               </Card>
             </div>
