@@ -24,13 +24,16 @@ import {
   IconCheck,
   IconClipboardText,
   IconMapPin,
-  IconInfoCircle
+  IconInfoCircle,
+  IconCurrentLocation
 } from '@tabler/icons-react'
 import { router } from '@inertiajs/react'
 import { useMutation } from '@tanstack/react-query'
-import { Controller, useForm } from 'react-hook-form'
-import { useEffect, useMemo } from 'react'
+import { Controller, useForm, useWatch } from 'react-hook-form'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import mapboxgl from 'mapbox-gl'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 import type { AppPageProps } from '@/types/app'
 
@@ -61,6 +64,8 @@ type Profile = {
   neighborhood: string | null
   zip_code: string | null
   city: string | null
+  location_lat: number | null
+  location_lng: number | null
   telemedicine_available: boolean
   consultation_fee: number | null
   board_certifications: string[]
@@ -509,7 +514,68 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                   </Col>
                 </Row>
 
-                <Card size="small" variant="outlined">
+                <Flex gap="small" align="center" style={{ marginTop: 16 }}>
+                  <Button
+                    icon={<IconCurrentLocation size={16} />}
+                    onClick={async () => {
+                      const addr = [
+                        control._formValues.address,
+                        control._formValues.neighborhood,
+                        control._formValues.zip_code,
+                        control._formValues.city,
+                        'Greece'
+                      ].filter(Boolean).join(', ');
+
+                      if (!addr) return;
+
+                      try {
+                        const token = 'pk.eyJ1IjoibWVkaWNnciIsImEiOiJjbWl6bnpubDcwMTk2M2VzaWZlNDlkeDh1In0.DFR6nJ1SOlC2HE5jSKaAHg';
+                        const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(addr)}&access_token=${token}&limit=1`);
+                        const data = await res.json();
+                        if (data.features?.[0]?.geometry?.coordinates) {
+                          const [lng, lat] = data.features[0].geometry.coordinates;
+                          setValue('location_lat', lat, { shouldDirty: true });
+                          setValue('location_lng', lng, { shouldDirty: true });
+                          messageApi.success(t('doctor.profile.location_found', 'Location found! You can adjust the pin.'));
+                        } else {
+                          messageApi.warning(t('doctor.profile.location_not_found', 'Address not found.'));
+                        }
+                      } catch (e) {
+                        messageApi.error(t('doctor.profile.location_error', 'Could not fetch location.'));
+                      }
+                    }}
+                  >
+                    {t('doctor.profile.locate', 'Locate on Map')}
+                  </Button>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {t('doctor.profile.locate_hint', 'Click to preview, then drag the pin to correct precise location.')}
+                  </Text>
+                </Flex>
+
+                <Controller
+                  name="location_lat"
+                  control={control}
+                  render={({ field: { value: lat } }) => (
+                    <Controller
+                      name="location_lng"
+                      control={control}
+                      render={({ field: { value: lng } }) => (
+                        (lat && lng) ? (
+                          <DraggableMap
+                            initialLat={lat}
+                            initialLng={lng}
+                            onDragEnd={(newLat, newLng) => {
+                              setValue('location_lat', newLat, { shouldDirty: true });
+                              setValue('location_lng', newLng, { shouldDirty: true });
+                            }}
+                          />
+                        ) : null
+                      )}
+                    />
+                  )}
+                />
+
+                <Card size="small" variant="outlined" style={{ marginTop: 16 }}>
                   <Flex justify="space-between" align="center">
                     <Text>{t('doctor.profile.telemedicine', 'Telemedicine available')}</Text>
                     <Controller
@@ -626,28 +692,13 @@ const TagInput = ({
   )
 }
 
-export default DoctorProfilePage
-
-const calculateCompletion = (doctor: Profile) => {
-  const requiredKeys: (keyof Profile)[] = ['first_name', 'last_name', 'bio', 'specialty_id', 'city']
-  const filled = requiredKeys.filter((key) => {
-    const value = doctor[key]
-    return Array.isArray(value) ? value.length > 0 : Boolean(value)
-  }).length
-
-  return Math.min(100, Math.round((filled / requiredKeys.length) * 100)) || 20
-}
 
 const normalizeDoctor = (doctor: any): Profile => {
-  // Inertia may camelize keys; accept both and emit ONLY snake_case keys
-  // so react-hook-form doesn't keep/submit duplicate camelCase fields.
   const get = <T,>(snakeKey: string, camelKey: string, fallback: T): T => {
     const snakeVal = doctor?.[snakeKey]
     if (snakeVal !== undefined && snakeVal !== null) return snakeVal as T
-
     const camelVal = doctor?.[camelKey]
     if (camelVal !== undefined && camelVal !== null) return camelVal as T
-
     return fallback
   }
 
@@ -668,6 +719,8 @@ const normalizeDoctor = (doctor: any): Profile => {
     neighborhood: get('neighborhood', 'neighborhood', ''),
     zip_code: get('zip_code', 'zipCode', ''),
     city: get('city', 'city', ''),
+    location_lat: get('location_lat', 'locationLat', null),
+    location_lng: get('location_lng', 'locationLng', null),
     telemedicine_available: get('telemedicine_available', 'telemedicineAvailable', false),
     consultation_fee: get('consultation_fee', 'consultationFee', null),
     board_certifications: get('board_certifications', 'boardCertifications', []),
@@ -678,4 +731,71 @@ const normalizeDoctor = (doctor: any): Profile => {
     conditions_treated: get('conditions_treated', 'conditionsTreated', [])
   }
 }
+
+export default DoctorProfilePage
+
+
+const calculateCompletion = (doctor: Profile) => {
+  const requiredKeys: (keyof Profile)[] = ['first_name', 'last_name', 'bio', 'specialty_id', 'city']
+  const filled = requiredKeys.filter((key) => {
+    const value = doctor[key]
+    return Array.isArray(value) ? value.length > 0 : Boolean(value)
+  }).length
+
+  return Math.min(100, Math.round((filled / requiredKeys.length) * 100)) || 20
+}
+
+interface DraggableMapProps {
+  initialLat: number
+  initialLng: number
+  onDragEnd: (lat: number, lng: number) => void
+}
+
+const DraggableMap = ({ initialLat, initialLng, onDragEnd }: DraggableMapProps) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const marker = useRef<mapboxgl.Marker | null>(null);
+
+  useEffect(() => {
+    if (map.current || !mapContainer.current) return;
+
+    mapboxgl.accessToken = 'pk.eyJ1IjoibWVkaWNnciIsImEiOiJjbWl6bnpubDcwMTk2M2VzaWZlNDlkeDh1In0.DFR6nJ1SOlC2HE5jSKaAHg';
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [initialLng || 23.7275, initialLat || 37.9838],
+      zoom: 14,
+      attributionControl: false
+    });
+
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    const newMarker = new mapboxgl.Marker({ draggable: true, color: '#14B8A6' })
+      .setLngLat([initialLng || 23.7275, initialLat || 37.9838])
+      .addTo(map.current);
+
+    newMarker.on('dragend', () => {
+      const lngLat = newMarker.getLngLat();
+      onDragEnd(lngLat.lat, lngLat.lng);
+    });
+
+    marker.current = newMarker;
+  }, []);
+
+  // Update map and marker when initial coords change (e.g. from Locate button)
+  useEffect(() => {
+    if (!map.current || !marker.current) return;
+
+    // Only update if significantly different to avoid fighting with drag
+    const currentLngLat = marker.current.getLngLat();
+    if (Math.abs(currentLngLat.lat - initialLat) > 0.0001 || Math.abs(currentLngLat.lng - initialLng) > 0.0001) {
+      marker.current.setLngLat([initialLng, initialLat]);
+      map.current.flyTo({ center: [initialLng, initialLat], zoom: 15 });
+    }
+  }, [initialLat, initialLng]);
+
+  return <div ref={mapContainer} style={{ width: '100%', height: 300, borderRadius: 8, marginTop: 16 }} />;
+};
+
 

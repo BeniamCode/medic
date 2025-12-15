@@ -234,19 +234,28 @@ defmodule Medic.Doctors do
     city = attrs["city"] || (doctor && doctor.city)
     neighborhood = attrs["neighborhood"] || (doctor && doctor.neighborhood)
 
+    # Check if manual coordinates provided
+    manual_coords? = 
+      (attrs["location_lat"] && attrs["location_lng"]) || 
+      (is_float(attrs["location_lat"]) && is_float(attrs["location_lng"]))
+
     # Check if we should run geocoding
     # 1. New doctor (doctor == nil) and has address
-    # 2. Existing doctor and address/city/zip/neighborhood changing
-    # 3. Existing doctor has address but no coords (backfill)
+    # 2. Existing doctor and address/city/zip/neighborhood changing AND manual coords NOT provided
+    # 3. Existing doctor has address but no coords (backfill) AND manual coords NOT provided
     should_run? = 
-      if doctor do
-        (attrs["address"] && attrs["address"] != doctor.address) ||
-        (attrs["zip_code"] && attrs["zip_code"] != doctor.zip_code) ||
-        (attrs["city"] && attrs["city"] != doctor.city) ||
-        (attrs["neighborhood"] && attrs["neighborhood"] != doctor.neighborhood) ||
-        (address && (is_nil(doctor.location_lat) || is_nil(doctor.location_lng)))
+      if manual_coords? do
+        false
       else
-        address && city
+        if doctor do
+          (attrs["address"] && attrs["address"] != doctor.address) ||
+          (attrs["zip_code"] && attrs["zip_code"] != doctor.zip_code) ||
+          (attrs["city"] && attrs["city"] != doctor.city) ||
+          (attrs["neighborhood"] && attrs["neighborhood"] != doctor.neighborhood) ||
+          (address && (is_nil(doctor.location_lat) || is_nil(doctor.location_lng)))
+        else
+          address && city
+        end
       end
 
     if should_run? && address do
