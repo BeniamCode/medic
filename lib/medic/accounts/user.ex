@@ -83,6 +83,7 @@ defmodule Medic.Accounts.User do
     |> validate_required([:email])
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/, message: "must have the @ sign and no spaces")
     |> validate_length(:email, max: 160)
+    |> update_change(:email, &String.downcase/1)
     |> maybe_validate_unique_email(opts)
   end
 
