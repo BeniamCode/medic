@@ -56,7 +56,7 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
     const isMobile = useIsMobile()
-    const [mobileOpen, setMobileOpen] = useState(false)
+    const [collapsed, setCollapsed] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { auth, app, flash } = usePage<SharedAppProps>().props
     const { url } = usePage()
@@ -368,7 +368,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         ]
     }
 
-    const NavContent = () => (
+    const NavContent = ({ collapsed = false }: { collapsed?: boolean }) => (
         <Flex vertical gap="small" className="h-full">
             <Link href="/">
                 <Button
@@ -376,26 +376,26 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     ghost={path === '/'}
                     className={path === '/' ? 'bg-teal-50 text-teal-700' : ''}
                     block
-                    style={{ justifyContent: 'flex-start' }}
+                    style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                     icon={<IconHome size={20} />}
                 >
-                    Home
+                    {!collapsed && 'Home'}
                 </Button>
             </Link>
 
             {isDoctor ? (
                 <>
-                    <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Practice</Text>
+                    {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Practice</Text>}
                     <Link href="/dashboard/doctor">
                         <Button
                             type={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'primary' : 'text'}
                             ghost={path.startsWith('/dashboard/doctor') && !path.includes('profile')}
                             className={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconHome size={20} />}
                         >
-                            Dashboard
+                            {!collapsed && 'Dashboard'}
                         </Button>
                     </Link>
                     <Link href="/dashboard/doctor/appointments">
@@ -404,10 +404,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             ghost={path.startsWith('/dashboard/doctor/appointments')}
                             className={path.startsWith('/dashboard/doctor/appointments') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconCalendarEvent size={20} />}
                         >
-                            Appointments
+                            {!collapsed && 'Appointments'}
                         </Button>
                     </Link>
                     <Link href="/doctor/schedule">
@@ -416,10 +416,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             ghost={path.startsWith('/doctor/schedule')}
                             className={path.startsWith('/doctor/schedule') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconCalendarEvent size={20} />}
                         >
-                            My Schedule
+                            {!collapsed && 'My Schedule'}
                         </Button>
                     </Link>
                     <Link href="/dashboard/doctor/profile">
@@ -428,10 +428,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             ghost={path.includes('/doctor/profile')}
                             className={path.includes('/doctor/profile') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconUserCircle size={20} />}
                         >
-                            My Profile
+                            {!collapsed && 'My Profile'}
                         </Button>
                     </Link>
                     <Link href="/notifications">
@@ -440,26 +440,26 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             ghost={path.startsWith('/notifications')}
                             className={path.startsWith('/notifications') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconBell size={20} />}
                         >
-                            Notifications
+                            {!collapsed && 'Notifications'}
                         </Button>
                     </Link>
                 </>
             ) : (
                 <>
-                    <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Patient</Text>
+                    {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Patient</Text>}
                     <Link href="/dashboard">
                         <Button
                             type={path === '/dashboard' ? 'primary' : 'text'}
                             ghost={path === '/dashboard'}
                             className={path === '/dashboard' ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconCalendar size={20} />}
                         >
-                            Appointments
+                            {!collapsed && 'Appointments'}
                         </Button>
                     </Link>
 
@@ -469,10 +469,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             ghost={path.startsWith('/dashboard/patient/profile')}
                             className={path.startsWith('/dashboard/patient/profile') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconUserCircle size={20} />}
                         >
-                            My Profile
+                            {!collapsed && 'My Profile'}
                         </Button>
                     </Link>
 
@@ -482,25 +482,25 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             ghost={path.startsWith('/notifications')}
                             className={path.startsWith('/notifications') ? 'bg-teal-50 text-teal-700' : ''}
                             block
-                            style={{ justifyContent: 'flex-start' }}
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconBell size={20} />}
                         >
-                            Notifications
+                            {!collapsed && 'Notifications'}
                         </Button>
                     </Link>
                 </>
             )}
 
-            <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Discover</Text>
+            {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Discover</Text>}
             <Link href="/search">
                 <Button
                     type={path === '/search' ? 'text' : 'text'}
                     className={path === '/search' ? 'bg-gray-100' : ''}
                     block
-                    style={{ justifyContent: 'flex-start' }}
+                    style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                     icon={<IconSearch size={20} />}
                 >
-                    Find Doctors
+                    {!collapsed && 'Find Doctors'}
                 </Button>
             </Link>
         </Flex>
@@ -525,8 +525,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         <Button
                             type="text"
                             icon={<IconMenu2 size={20} />}
-                            onClick={() => setMobileOpen(true)}
-                            className="md:hidden"
+                            onClick={() => {
+                                if (isMobile) {
+                                    // On mobile, the drawer is still needed
+                                } else {
+                                    // On desktop, toggle sidebar
+                                    setCollapsed(!collapsed)
+                                }
+                            }}
                         />
                     )}
                     <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -583,10 +589,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     <>
                         {/* Desktop Sidebar */}
                         <Sider
-                            width={300}
+                            width={240}
                             theme="light"
-                            breakpoint="sm"
-                            collapsedWidth="0"
+                            breakpoint="md"
+                            collapsed={collapsed}
+                            collapsedWidth={64}
                             trigger={null}
                             style={{
                                 background: colorBgContainer,
@@ -599,20 +606,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             className="hidden md:block"
                         >
                             <div style={{ padding: 16 }}>
-                                <NavContent />
+                                <NavContent collapsed={collapsed} />
                             </div>
                         </Sider>
-
-                        {/* Mobile Drawer */}
-                        <Drawer
-                            placement="left"
-                            onClose={() => setMobileOpen(false)}
-                            open={mobileOpen}
-                            width={300}
-                            styles={{ body: { padding: 16 } }}
-                        >
-                            <NavContent />
-                        </Drawer>
                     </>
                 )}
 
