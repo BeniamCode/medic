@@ -2,7 +2,7 @@
 <html lang="el" data-theme="medic">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <title suffix=" · Medic">
       <%= assigns[:page_title] || "Medic" %>
@@ -10,6 +10,9 @@
     <!-- Inertia Head Removed for Debugging -->
     <!-- CSS bundle output to /assets/app.css by esbuild -->
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
     <link
       href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css"
       rel="stylesheet"

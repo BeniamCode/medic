@@ -111,12 +111,13 @@ const DoctorOnboardingPage = ({ step, steps, doctor, specialties }: PageProps) =
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 24px' }}>
         <Flex vertical gap="large">
           <Flex justify="space-between" align="center">
-            <Space align="center">
-              <img src="/images/logo-medic.svg" alt="Medic" style={{ height: 32 }} />
-              <Text strong style={{ color: 'white', fontSize: 20 }}>
-                Medic
-              </Text>
-            </Space>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img src="/images/logo-medic.svg" alt="Medic" style={{ height: 32 }} />
+                <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, fontSize: 24, color: 'white', lineHeight: 1 }}>medic</span>
+              </div>
+              <div style={{ fontSize: 14, opacity: 0.8, marginTop: 4 }}>Doctor Portal</div>
+            </div>
             <Button type="text" href="/logout" onClick={(e) => { e.preventDefault(); router.visit('/logout', { method: 'delete' }) }} style={{ color: 'white' }}>
               {t('onboarding.sign_out', 'Sign out')}
             </Button>

@@ -259,8 +259,9 @@ function MobileSearchPage({
           style={{
             '--border-radius': '8px',
             '--background': '#f5f5f5',
-            '--height': '40px'
-          }}
+            '--height': '40px',
+            '--font-size': '16px'
+          } as React.CSSProperties}
         />
 
         {/* Tabs for List/Map */}

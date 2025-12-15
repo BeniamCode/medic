@@ -205,7 +205,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                 alt="Medic"
                                 style={{ height: 28, width: 'auto', filter: colorScheme === 'dark' ? 'brightness(0) invert(1)' : undefined }}
                             />
-                            <Badge count="Beta" color="blue" size="small" />
+                            <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, fontSize: 20, color: colorScheme === 'dark' ? '#fff' : '#000', lineHeight: 1 }}>medic</span>
+                            <Badge count="Beta" color="blue" size="small" style={{ marginLeft: 4 }} />
                         </Link>
                     }
                     right={
@@ -533,6 +534,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             alt="Medic"
                             style={{ height: 32, width: 'auto', filter: colorScheme === 'dark' ? 'brightness(0) invert(1)' : undefined }}
                         />
+                        <span style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 700, fontSize: 24, color: colorScheme === 'dark' ? '#fff' : '#000', lineHeight: 1 }}>medic</span>
                         <Badge count="Beta" color="blue" />
                     </Link>
                 </Flex>
