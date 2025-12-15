@@ -84,12 +84,26 @@ export const NotificationBell = () => {
   }
 
   const dropdownContent = (
-    <div style={{ width: 360, maxHeight: 400, overflow: 'auto' }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-        <Typography.Text strong style={{ fontSize: 14 }}>
-          Notifications
-        </Typography.Text>
-      </div>
+    <div style={{
+      width: 360,
+      maxHeight: 400,
+      overflow: 'auto',
+      borderRadius: 12,
+      boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+      position: 'relative'
+    }}>
+      {/* Speech bubble arrow */}
+      <div style={{
+        position: 'absolute',
+        top: -6,
+        right: 16,
+        width: 12,
+        height: 12,
+        backgroundColor: '#fff',
+        transform: 'rotate(45deg)',
+        borderTop: '1px solid #f0f0f0',
+        borderLeft: '1px solid #f0f0f0'
+      }} />
 
       {loading ? (
         <div style={{ padding: 24, textAlign: 'center' }}>
@@ -172,10 +186,12 @@ export const NotificationBell = () => {
 
       <div
         style={{
-          padding: '8px 16px',
+          padding: '10px 16px',
           borderTop: '1px solid #f0f0f0',
           textAlign: 'center',
           backgroundColor: '#fafafa',
+          borderBottomLeftRadius: 12,
+          borderBottomRightRadius: 12,
         }}
       >
         <Button
@@ -205,6 +221,7 @@ export const NotificationBell = () => {
       dropdownRender={() => dropdownContent}
       trigger={['click']}
       placement="bottomRight"
+      overlayStyle={{ paddingTop: 8 }}
     >
       <Button
         type="text"
