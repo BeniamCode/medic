@@ -18,6 +18,7 @@ import {
     IconCalendar,
     IconCalendarEvent,
     IconHome,
+    IconLayoutDashboard,
     IconLogout,
     IconMoon,
     IconSearch,
@@ -393,7 +394,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             className={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'bg-teal-50 text-teal-700' : ''}
                             block
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
-                            icon={<IconHome size={20} />}
+                            icon={<IconLayoutDashboard size={20} />}
                         >
                             {!collapsed && 'Dashboard'}
                         </Button>
