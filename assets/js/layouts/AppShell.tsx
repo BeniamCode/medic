@@ -12,7 +12,7 @@ import {
     MenuProps,
     Drawer
 } from 'antd'
-import { Link, usePage } from '@inertiajs/react'
+import { Link, usePage, router } from '@inertiajs/react'
 import {
     IconBell,
     IconCalendar,
@@ -31,6 +31,20 @@ import { SharedAppProps } from '@/types/app'
 import { useEffect, useState } from 'react'
 import { useThemeMode } from '@/app'
 import { ensureNotificationsStream } from '@/lib/notificationsStream'
+import { useIsMobile } from '@/lib/device'
+
+// Mobile antd-mobile imports
+import { TabBar, NavBar, Popup, List, SafeArea } from 'antd-mobile'
+import {
+    AppOutline,
+    MessageOutline,
+    UnorderedListOutline,
+    UserOutline,
+    SearchOutline,
+    CalendarOutline,
+    BellOutline,
+    SetOutline
+} from 'antd-mobile-icons'
 
 const { Header, Sider, Content } = Layout
 const { Text } = Typography
@@ -40,7 +54,9 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
+    const isMobile = useIsMobile()
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { auth, app, flash } = usePage<SharedAppProps>().props
     const { url } = usePage()
     const path = url.split('?')[0]
@@ -89,22 +105,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
         }
     }, [auth.authenticated, notification])
 
-    // Flash Message Handling (using AntD notification is better but for now let's use the hook in a simpler way if needed, or just standard Antd static methods)
-    // Actually we need to verify if `App` component provides context for message/notification.
-    // In `app.tsx` we wrapped with `AntApp`, so we can use `App.useApp()` to get message/notification api.
-    // However, since we are inside `AppLayout` which is inside `App`, we can use the static methods or hooks.
-    // Let's use `App.useApp()` if possible or just `notification` static.
-    // But `AntApp` (from 'antd') provides context.
-
-    // NOTE: In AntD v5, using static methods (notification.open) works outside context but inside App is better to use hook.
-    // But to use hook we need to be deeper. `AppLayout` IS deep enough.
-    // Let's try to stick to standard static if easier, or use `App.useApp()`.
-    // Actually, let's keep it simple.
-
     const user = auth.user
     const isDoctor = user?.role === 'doctor'
-    // Theme mode handling might need adjustment as AntD handles it differently, but we have our own context.
-    // We might need to update the actual AntD theme config in `app.tsx` based on this context.
     const { colorScheme, toggleColorScheme } = useThemeMode()
 
     const showNavbar = !!user
@@ -113,6 +115,233 @@ export default function AppLayout({ children }: AppLayoutProps) {
     const {
         token: { colorBgContainer, colorBorderSecondary },
     } = theme.useToken()
+
+    // Determine active tab for mobile
+    const getActiveTab = () => {
+        if (path === '/' || path === '/search') return 'search'
+        if (path.includes('/dashboard') || path.includes('/appointments')) return 'home'
+        if (path.includes('/schedule')) return 'schedule'
+        if (path.includes('/notifications')) return 'notifications'
+        if (path.includes('/profile') || path.includes('/settings')) return 'profile'
+        return 'home'
+    }
+
+    const handleTabChange = (key: string) => {
+        switch (key) {
+            case 'home':
+                router.visit(isDoctor ? '/dashboard/doctor' : '/dashboard')
+                break
+            case 'search':
+                router.visit('/search')
+                break
+            case 'schedule':
+                router.visit(isDoctor ? '/doctor/schedule' : '/dashboard')
+                break
+            case 'notifications':
+                router.visit('/notifications')
+                break
+            case 'profile':
+                router.visit(isDoctor ? '/dashboard/doctor/profile' : '/dashboard/patient/profile')
+                break
+        }
+    }
+
+    // ==========================================================================
+    // MOBILE LAYOUT
+    // ==========================================================================
+    if (isMobile) {
+        const doctorTabs = [
+            { key: 'home', title: 'Home', icon: <AppOutline /> },
+            { key: 'schedule', title: 'Schedule', icon: <CalendarOutline /> },
+            { key: 'search', title: 'Search', icon: <SearchOutline /> },
+            { key: 'notifications', title: 'Alerts', icon: unreadCount > 0 ? <Badge count={unreadCount} size="small"><BellOutline /></Badge> : <BellOutline /> },
+            { key: 'profile', title: 'Profile', icon: <UserOutline /> }
+        ]
+
+        const patientTabs = [
+            { key: 'home', title: 'Home', icon: <AppOutline /> },
+            { key: 'search', title: 'Search', icon: <SearchOutline /> },
+            { key: 'notifications', title: 'Alerts', icon: unreadCount > 0 ? <Badge count={unreadCount} size="small"><BellOutline /></Badge> : <BellOutline /> },
+            { key: 'profile', title: 'Profile', icon: <UserOutline /> }
+        ]
+
+        const guestTabs = [
+            { key: 'search', title: 'Search', icon: <SearchOutline /> },
+            { key: 'profile', title: 'Sign In', icon: <UserOutline /> }
+        ]
+
+        const tabs = user ? (isDoctor ? doctorTabs : patientTabs) : guestTabs
+
+        const handleGuestTabChange = (key: string) => {
+            if (key === 'search') {
+                router.visit('/search')
+            } else if (key === 'profile') {
+                router.visit('/login')
+            }
+        }
+
+        return (
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: colorScheme === 'dark' ? '#141414' : '#f5f5f5'
+            }}>
+                {/* Mobile Header */}
+                <NavBar
+                    back={null}
+                    style={{
+                        '--height': '52px',
+                        '--border-bottom': `1px solid ${colorScheme === 'dark' ? '#303030' : '#f0f0f0'}`,
+                        backgroundColor: colorScheme === 'dark' ? '#1f1f1f' : '#fff',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 100
+                    }}
+                    left={
+                        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <img
+                                src="/images/logo-medic-sun.svg"
+                                alt="Medic"
+                                style={{ height: 28, width: 'auto', filter: colorScheme === 'dark' ? 'brightness(0) invert(1)' : undefined }}
+                            />
+                            <Badge count="Beta" color="blue" size="small" />
+                        </Link>
+                    }
+                    right={
+                        <Space>
+                            <Button
+                                type="text"
+                                shape="circle"
+                                size="small"
+                                icon={colorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+                                onClick={toggleColorScheme}
+                            />
+                            {user && (
+                                <Avatar
+                                    src={user.profileImageUrl}
+                                    size="small"
+                                    style={{ backgroundColor: '#0D9488' }}
+                                    onClick={() => setMobileMenuOpen(true)}
+                                >
+                                    {user.firstName?.[0]}
+                                </Avatar>
+                            )}
+                        </Space>
+                    }
+                />
+
+                {/* Content Area */}
+                <div style={{ flex: 1, overflow: 'auto', paddingBottom: showNavbar ? 60 : 0 }}>
+                    {children}
+                </div>
+
+                {/* Bottom TabBar */}
+                {showNavbar ? (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: colorScheme === 'dark' ? '#1f1f1f' : '#fff',
+                            borderTop: `1px solid ${colorScheme === 'dark' ? '#303030' : '#f0f0f0'}`,
+                            zIndex: 100,
+                            paddingBottom: 'env(safe-area-inset-bottom)'
+                        }}
+                    >
+                        <TabBar
+                            activeKey={getActiveTab()}
+                            onChange={handleTabChange}
+                            style={{
+                                '--adm-color-primary': '#0d9488'
+                            }}
+                        >
+                            {tabs.map(tab => (
+                                <TabBar.Item key={tab.key} icon={tab.icon} title={tab.title} />
+                            ))}
+                        </TabBar>
+                    </div>
+                ) : (
+                    <div
+                        style={{
+                            position: 'fixed',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: colorScheme === 'dark' ? '#1f1f1f' : '#fff',
+                            borderTop: `1px solid ${colorScheme === 'dark' ? '#303030' : '#f0f0f0'}`,
+                            zIndex: 100,
+                            paddingBottom: 'env(safe-area-inset-bottom)'
+                        }}
+                    >
+                        <TabBar
+                            activeKey={getActiveTab()}
+                            onChange={handleGuestTabChange}
+                            style={{
+                                '--adm-color-primary': '#0d9488'
+                            }}
+                        >
+                            {guestTabs.map(tab => (
+                                <TabBar.Item key={tab.key} icon={tab.icon} title={tab.title} />
+                            ))}
+                        </TabBar>
+                    </div>
+                )}
+
+                {/* User Menu Popup */}
+                <Popup
+                    visible={mobileMenuOpen}
+                    onMaskClick={() => setMobileMenuOpen(false)}
+                    position="bottom"
+                    bodyStyle={{
+                        borderTopLeftRadius: 16,
+                        borderTopRightRadius: 16,
+                        paddingBottom: 'env(safe-area-inset-bottom)'
+                    }}
+                >
+                    <div style={{ padding: 20 }}>
+                        {user && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #f0f0f0' }}>
+                                <Avatar src={user.profileImageUrl} size={48} style={{ backgroundColor: '#0D9488' }}>
+                                    {user.firstName?.[0]}
+                                </Avatar>
+                                <div>
+                                    <div style={{ fontWeight: 600, fontSize: 16 }}>{user.firstName} {user.lastName}</div>
+                                    <div style={{ color: '#666', fontSize: 13 }}>{user.email}</div>
+                                </div>
+                            </div>
+                        )}
+                        <List>
+                            <List.Item
+                                prefix={<SetOutline />}
+                                onClick={() => {
+                                    setMobileMenuOpen(false)
+                                    router.visit('/settings')
+                                }}
+                            >
+                                Settings
+                            </List.Item>
+                            <List.Item
+                                prefix={<IconLogout size={20} />}
+                                onClick={() => {
+                                    setMobileMenuOpen(false)
+                                    router.delete('/logout')
+                                }}
+                                style={{ color: '#ff4d4f' }}
+                            >
+                                Logout
+                            </List.Item>
+                        </List>
+                    </div>
+                </Popup>
+            </div>
+        )
+    }
+
+    // ==========================================================================
+    // DESKTOP LAYOUT (Original)
+    // ==========================================================================
 
     const userMenu: MenuProps = {
         items: [
@@ -263,7 +492,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Discover</Text>
             <Link href="/search">
                 <Button
-                    type={path === '/search' ? 'text' : 'text'} // 'primary' if active, but search is usually secondary
+                    type={path === '/search' ? 'text' : 'text'}
                     className={path === '/search' ? 'bg-gray-100' : ''}
                     block
                     style={{ justifyContent: 'flex-start' }}

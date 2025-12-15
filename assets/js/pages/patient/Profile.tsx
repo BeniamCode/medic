@@ -1,16 +1,16 @@
 import { useEffect, useMemo } from 'react'
 import {
   Avatar,
-  Button,
-  Card,
+  Button as DesktopButton,
+  Card as DesktopCard,
   Col,
   DatePicker,
   Divider,
   Flex,
-  Input,
+  Input as DesktopInput,
   Row,
   Space,
-  Switch,
+  Switch as DesktopSwitch,
   Tag,
   Typography,
   message,
@@ -23,8 +23,13 @@ import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import { router } from '@inertiajs/react'
+import { useIsMobile } from '@/lib/device'
 
 import type { AppPageProps } from '@/types/app'
+
+// Mobile imports
+import { Button as MobileButton, Card as MobileCard, Form as MobileForm, Input as MobileInput, Switch as MobileSwitch, Toast, ImageUploader } from 'antd-mobile'
+import type { ImageUploadItem } from 'antd-mobile/es/components/image-uploader'
 
 const { Title, Text } = Typography
 
@@ -47,8 +52,6 @@ type PageProps = AppPageProps<{
 }>
 
 const normalizePatient = (patient: any): PatientProfile => {
-  // Inertia camelizes keys; accept both and emit ONLY snake_case keys
-  // so react-hook-form doesn't keep/submit duplicate camelCase fields.
   const get = <T,>(snakeKey: string, camelKey: string, fallback: T): T => {
     const snakeVal = patient?.[snakeKey]
     if (snakeVal !== undefined && snakeVal !== null) return snakeVal as T
@@ -73,7 +76,265 @@ const normalizePatient = (patient: any): PatientProfile => {
   }
 }
 
-const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
+// =============================================================================
+// MOBILE PATIENT PROFILE
+// =============================================================================
+
+function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any; errors?: Record<string, string[]> }) {
+  const { t } = useTranslation('default')
+  const normalizedPatient = useMemo(() => normalizePatient(patient), [patient])
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setError,
+    setValue,
+    formState: { errors: formErrors }
+  } = useForm<PatientProfile>({
+    defaultValues: normalizedPatient
+  })
+
+  useEffect(() => {
+    reset(normalizedPatient)
+  }, [normalizedPatient, reset])
+
+  useEffect(() => {
+    if (!serverErrors) return
+    Object.entries(serverErrors).forEach(([field, messages]) => {
+      const firstMessage = Array.isArray(messages) ? messages[0] : undefined
+      if (!firstMessage) return
+      setError(field as keyof PatientProfile, { type: 'server', message: firstMessage })
+    })
+  }, [serverErrors, setError])
+
+  const mutation = useMutation({
+    mutationFn: async (values: PatientProfile) =>
+      await new Promise<void>((resolve) => {
+        router.post(
+          '/dashboard/patient/profile',
+          { patient: values },
+          {
+            preserveScroll: true,
+            onSuccess: () => {
+              Toast.show({ icon: 'success', content: t('patient.profile.saved', 'Profile saved') })
+              resolve()
+            },
+            onError: () => {
+              Toast.show({ icon: 'fail', content: t('patient.profile.save_failed', 'Unable to save') })
+              resolve()
+            }
+          }
+        )
+      })
+  })
+
+  const onSubmit = (values: PatientProfile) => mutation.mutate(values)
+
+  return (
+    <div style={{ padding: 16, paddingBottom: 100 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>
+          {t('patient.profile.title', 'Patient profile')}
+        </h2>
+        <p style={{ color: '#666', margin: 0, fontSize: 14 }}>
+          {t('patient.profile.subtitle', 'Keep your details up to date')}
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <MobileCard title="Basic Info" style={{ borderRadius: 12, marginBottom: 16 }}>
+          {/* Avatar */}
+          <Controller
+            name="profile_image_url"
+            control={control}
+            render={({ field }) => (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+                <Avatar
+                  size={80}
+                  src={field.value || undefined}
+                  style={{ backgroundColor: '#0d9488' }}
+                >
+                  {normalizedPatient.first_name?.charAt(0) || 'P'}
+                </Avatar>
+              </div>
+            )}
+          />
+
+          <MobileForm layout="vertical">
+            <div style={{ display: 'flex', gap: 12 }}>
+              <MobileForm.Item label={t('patient.profile.first_name', 'First name')} style={{ flex: 1 }}>
+                <Controller
+                  name="first_name"
+                  control={control}
+                  render={({ field }) => (
+                    <MobileInput
+                      placeholder="John"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      clearable
+                    />
+                  )}
+                />
+              </MobileForm.Item>
+
+              <MobileForm.Item label={t('patient.profile.last_name', 'Last name')} style={{ flex: 1 }}>
+                <Controller
+                  name="last_name"
+                  control={control}
+                  render={({ field }) => (
+                    <MobileInput
+                      placeholder="Doe"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      clearable
+                    />
+                  )}
+                />
+              </MobileForm.Item>
+            </div>
+
+            <MobileForm.Item label={t('patient.profile.dob', 'Date of birth')}>
+              <Controller
+                name="date_of_birth"
+                control={control}
+                render={({ field }) => (
+                  <MobileInput
+                    type="date"
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            </MobileForm.Item>
+
+            <MobileForm.Item label={t('patient.profile.phone', 'Phone')}>
+              <Controller
+                name="phone"
+                control={control}
+                render={({ field }) => (
+                  <MobileInput
+                    type="tel"
+                    placeholder="+30..."
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    clearable
+                  />
+                )}
+              />
+            </MobileForm.Item>
+
+            <MobileForm.Item label={t('patient.profile.emergency_contact', 'Emergency contact')}>
+              <Controller
+                name="emergency_contact"
+                control={control}
+                render={({ field }) => (
+                  <MobileInput
+                    placeholder="Name + phone"
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    clearable
+                  />
+                )}
+              />
+            </MobileForm.Item>
+          </MobileForm>
+        </MobileCard>
+
+        <MobileCard title="Preferences" style={{ borderRadius: 12, marginBottom: 16 }}>
+          <MobileForm layout="vertical">
+            <div style={{ display: 'flex', gap: 12 }}>
+              <MobileForm.Item label={t('patient.profile.preferred_language', 'Language')} style={{ flex: 1 }}>
+                <Controller
+                  name="preferred_language"
+                  control={control}
+                  render={({ field }) => (
+                    <MobileInput
+                      placeholder="en / el"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </MobileForm.Item>
+
+              <MobileForm.Item label={t('patient.profile.preferred_timezone', 'Timezone')} style={{ flex: 1 }}>
+                <Controller
+                  name="preferred_timezone"
+                  control={control}
+                  render={({ field }) => (
+                    <MobileInput
+                      placeholder="Europe/Athens"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+              </MobileForm.Item>
+            </div>
+
+            <div style={{ borderTop: '1px solid #f0f0f0', marginTop: 16, paddingTop: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('patient.profile.pref_email_reminders', 'Email reminders')}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>Appointment confirmations</div>
+                </div>
+                <Controller
+                  name="communication_preferences"
+                  control={control}
+                  render={({ field }) => (
+                    <MobileSwitch
+                      checked={!!((field.value || {}).email_reminders ?? true)}
+                      onChange={(checked) => {
+                        field.onChange({ ...(field.value || {}), email_reminders: checked })
+                      }}
+                    />
+                  )}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: 500 }}>{t('patient.profile.pref_sms_reminders', 'SMS reminders')}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>Optional SMS updates</div>
+                </div>
+                <Controller
+                  name="communication_preferences"
+                  control={control}
+                  render={({ field }) => (
+                    <MobileSwitch
+                      checked={!!((field.value || {}).sms_reminders ?? false)}
+                      onChange={(checked) => {
+                        field.onChange({ ...(field.value || {}), sms_reminders: checked })
+                      }}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+          </MobileForm>
+        </MobileCard>
+
+        <MobileButton
+          block
+          color="primary"
+          size="large"
+          type="submit"
+          loading={mutation.isPending}
+          style={{ '--border-radius': '8px' }}
+        >
+          {t('patient.profile.save', 'Save changes')}
+        </MobileButton>
+      </form>
+    </div>
+  )
+}
+
+// =============================================================================
+// DESKTOP PATIENT PROFILE (Original)
+// =============================================================================
+
+function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any; errors?: Record<string, string[]> }) {
   const { t } = useTranslation('default')
   const { token } = theme.useToken()
   const [messageApi, contextHolder] = message.useMessage()
@@ -135,7 +396,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
       {contextHolder}
 
       <Flex vertical gap="large">
-        <Card
+        <DesktopCard
           variant="outlined"
           style={{
             borderRadius: 16,
@@ -157,11 +418,11 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
             <Tag color="blue">{t('patient.profile.badge_private', 'Private')}</Tag>
             <Tag color="cyan">{t('patient.profile.badge_secure', 'Secure data')}</Tag>
           </Flex>
-        </Card>
+        </DesktopCard>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Flex vertical gap="large">
-            <Card variant="outlined" style={{ borderRadius: 16 }}>
+            <DesktopCard variant="outlined" style={{ borderRadius: 16 }}>
               <Title level={4} style={{ marginTop: 0 }}>
                 {t('patient.profile.basic', 'Basic info')}
               </Title>
@@ -220,27 +481,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                             const data = await res.json().catch(() => null)
 
                             if (!res.ok) {
-                              const code = data?.error
-                              const msg =
-                                code === 'missing_file'
-                                  ? t('patient.profile.photo_missing', 'No file received. Please try again.')
-                                  : code === 'patient_profile_missing'
-                                    ? t(
-                                        'patient.profile.photo_profile_missing',
-                                        'Save your profile first, then upload a photo.'
-                                      )
-                                    : code === 'unsupported_type'
-                                      ? t('patient.profile.photo_type', 'Please upload a JPG, PNG, or WebP image')
-                                      : code === 'too_large'
-                                        ? t('patient.profile.photo_size', 'Max file size is 5MB')
-                                        : code === 'storage_not_configured'
-                                          ? t(
-                                              'patient.profile.photo_storage',
-                                              'Storage is not configured. Configure storage and restart the server.'
-                                            )
-                                          : t('patient.profile.photo_failed', 'Unable to upload photo. Please try again.')
-
-                              messageApi.error(msg)
+                              messageApi.error(t('patient.profile.photo_failed', 'Unable to upload photo. Please try again.'))
                               throw new Error('upload_failed')
                             }
 
@@ -255,14 +496,11 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                           }
                         }}
                       >
-                        <Button type="default">{t('patient.profile.photo_upload', 'Upload photo')}</Button>
+                        <DesktopButton type="default">{t('patient.profile.photo_upload', 'Upload photo')}</DesktopButton>
                       </Upload>
 
                       <Text type="secondary" style={{ fontSize: 12, maxWidth: 520 }}>
-                        {t(
-                          'patient.profile.photo_help',
-                          'Use a clear photo. JPG/PNG/WebP up to 5MB.'
-                        )}
+                        {t('patient.profile.photo_help', 'Use a clear photo. JPG/PNG/WebP up to 5MB.')}
                       </Text>
                     </Flex>
                   </div>
@@ -279,7 +517,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Input {...field} status={formErrors.first_name ? 'error' : ''} />
+                      <DesktopInput {...field} value={field.value || ''} status={formErrors.first_name ? 'error' : ''} />
                     )}
                   />
                   {formErrors.first_name?.message && <Text type="danger">{formErrors.first_name.message}</Text>}
@@ -293,7 +531,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     control={control}
                     rules={{ required: true }}
                     render={({ field }) => (
-                      <Input {...field} status={formErrors.last_name ? 'error' : ''} />
+                      <DesktopInput {...field} value={field.value || ''} status={formErrors.last_name ? 'error' : ''} />
                     )}
                   />
                   {formErrors.last_name?.message && <Text type="danger">{formErrors.last_name.message}</Text>}
@@ -327,7 +565,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     name="phone"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} placeholder="+30..." status={formErrors.phone ? 'error' : ''} />
+                      <DesktopInput {...field} value={field.value || ''} placeholder="+30..." status={formErrors.phone ? 'error' : ''} />
                     )}
                   />
                   {formErrors.phone?.message && <Text type="danger">{formErrors.phone.message}</Text>}
@@ -343,14 +581,14 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     name="emergency_contact"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} placeholder={t('patient.profile.emergency_placeholder', 'Name + phone')} />
+                      <DesktopInput {...field} value={field.value || ''} placeholder={t('patient.profile.emergency_placeholder', 'Name + phone')} />
                     )}
                   />
                 </Col>
               </Row>
-            </Card>
+            </DesktopCard>
 
-            <Card variant="outlined" style={{ borderRadius: 16 }}>
+            <DesktopCard variant="outlined" style={{ borderRadius: 16 }}>
               <Title level={4} style={{ marginTop: 0 }}>
                 {t('patient.profile.preferences', 'Preferences')}
               </Title>
@@ -367,7 +605,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     name="preferred_language"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} placeholder="en / el" />
+                      <DesktopInput {...field} value={field.value || ''} placeholder="en / el" />
                     )}
                   />
                 </Col>
@@ -378,7 +616,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                   <Controller
                     name="preferred_timezone"
                     control={control}
-                    render={({ field }) => <Input {...field} placeholder="Europe/Athens" />}
+                    render={({ field }) => <DesktopInput {...field} value={field.value || ''} placeholder="Europe/Athens" />}
                   />
                 </Col>
               </Row>
@@ -397,7 +635,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     name="communication_preferences"
                     control={control}
                     render={({ field }) => (
-                      <Switch
+                      <DesktopSwitch
                         checked={!!((field.value || {}).email_reminders ?? true)}
                         onChange={(checked) => {
                           field.onChange({ ...(field.value || {}), email_reminders: checked })
@@ -418,7 +656,7 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                     name="communication_preferences"
                     control={control}
                     render={({ field }) => (
-                      <Switch
+                      <DesktopSwitch
                         checked={!!((field.value || {}).sms_reminders ?? false)}
                         onChange={(checked) => {
                           field.onChange({ ...(field.value || {}), sms_reminders: checked })
@@ -428,18 +666,32 @@ const PatientProfilePage = ({ patient, errors: serverErrors }: PageProps) => {
                   />
                 </Flex>
               </Space>
-            </Card>
+            </DesktopCard>
 
             <Flex justify="flex-end">
-              <Button type="primary" htmlType="submit" loading={mutation.isPending}>
+              <DesktopButton type="primary" htmlType="submit" loading={mutation.isPending}>
                 {t('patient.profile.save', 'Save changes')}
-              </Button>
+              </DesktopButton>
             </Flex>
           </Flex>
         </form>
       </Flex>
     </div>
   )
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+const PatientProfilePage = ({ patient, errors }: PageProps) => {
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return <MobilePatientProfile patient={patient} errors={errors} />
+  }
+
+  return <DesktopPatientProfile patient={patient} errors={errors} />
 }
 
 export default PatientProfilePage

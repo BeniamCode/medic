@@ -1,19 +1,143 @@
 import {
-    Button,
-    Card,
-    Input,
+    Button as DesktopButton,
+    Card as DesktopCard,
+    Input as DesktopInput,
     Typography,
     Form,
     Flex,
     Row,
     Col
 } from 'antd'
-import { Link, useForm } from '@inertiajs/react'
+import { Link, useForm, router } from '@inertiajs/react'
 import { FormEvent } from 'react'
+import { useIsMobile } from '@/lib/device'
+
+// Mobile imports
+import { Button as MobileButton, Input as MobileInput, Form as MobileForm, Card as MobileCard } from 'antd-mobile'
 
 const { Title, Text } = Typography
 
-export default function RegisterPage() {
+// =============================================================================
+// MOBILE REGISTER
+// =============================================================================
+
+function MobileRegisterPage() {
+    const { data, setData, post, processing, errors } = useForm({
+        email: '',
+        password: '',
+        first_name: '',
+        last_name: ''
+    })
+
+    const submit = () => {
+        post('/register')
+    }
+
+    return (
+        <div style={{ padding: 20, minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Create an account</h1>
+                <p style={{ color: '#666', margin: 0, fontSize: 15 }}>Book appointments and manage your health</p>
+            </div>
+
+            <MobileCard style={{ borderRadius: 16 }}>
+                <MobileForm
+                    layout="vertical"
+                    onFinish={submit}
+                    footer={
+                        <MobileButton
+                            block
+                            type="submit"
+                            color="primary"
+                            size="large"
+                            loading={processing}
+                            style={{ '--border-radius': '8px' }}
+                        >
+                            Create Patient Account
+                        </MobileButton>
+                    }
+                >
+                    <div style={{ display: 'flex', gap: 12 }}>
+                        <MobileForm.Item
+                            label="First name"
+                            name="first_name"
+                            style={{ flex: 1 }}
+                            help={errors.first_name}
+                        >
+                            <MobileInput
+                                placeholder="John"
+                                value={data.first_name}
+                                onChange={(val) => setData('first_name', val)}
+                                clearable
+                            />
+                        </MobileForm.Item>
+
+                        <MobileForm.Item
+                            label="Last name"
+                            name="last_name"
+                            style={{ flex: 1 }}
+                            help={errors.last_name}
+                        >
+                            <MobileInput
+                                placeholder="Doe"
+                                value={data.last_name}
+                                onChange={(val) => setData('last_name', val)}
+                                clearable
+                            />
+                        </MobileForm.Item>
+                    </div>
+
+                    <MobileForm.Item
+                        label="Email address"
+                        name="email"
+                        help={errors.email}
+                    >
+                        <MobileInput
+                            placeholder="you@medic.com"
+                            value={data.email}
+                            onChange={(val) => setData('email', val)}
+                            clearable
+                        />
+                    </MobileForm.Item>
+
+                    <MobileForm.Item
+                        label="Password"
+                        name="password"
+                        help={errors.password}
+                    >
+                        <MobileInput
+                            type="password"
+                            placeholder="Min. 8 characters"
+                            value={data.password}
+                            onChange={(val) => setData('password', val)}
+                            clearable
+                        />
+                    </MobileForm.Item>
+                </MobileForm>
+            </MobileCard>
+
+            <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14 }}>
+                Are you a doctor?{' '}
+                <a onClick={() => router.visit('/register/doctor')} style={{ fontWeight: 600, color: '#0d9488' }}>
+                    Register as a Specialist
+                </a>
+            </p>
+
+            <p style={{ textAlign: 'center', marginTop: 8, fontSize: 14 }}>
+                Already have an account?{' '}
+                <a onClick={() => router.visit('/login')} style={{ fontWeight: 600, color: '#0d9488' }}>
+                    Sign in
+                </a>
+            </p>
+        </div>
+    )
+}
+
+// =============================================================================
+// DESKTOP REGISTER (Original)
+// =============================================================================
+
+function DesktopRegisterPage() {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -33,7 +157,7 @@ export default function RegisterPage() {
                 <Text type="secondary">Book appointments and manage your health</Text>
             </Flex>
 
-            <Card bordered shadow="always" style={{ padding: 24 }}>
+            <DesktopCard bordered style={{ padding: 24 }}>
                 <form onSubmit={submit}>
                     <Flex vertical gap="middle">
                         <Row gutter={16}>
@@ -44,7 +168,7 @@ export default function RegisterPage() {
                                     style={{ marginBottom: 0 }}
                                 >
                                     <div style={{ marginBottom: 8 }}><Text strong>First name</Text></div>
-                                    <Input
+                                    <DesktopInput
                                         placeholder="John"
                                         value={data.first_name}
                                         onChange={(e) => setData('first_name', e.target.value)}
@@ -58,7 +182,7 @@ export default function RegisterPage() {
                                     style={{ marginBottom: 0 }}
                                 >
                                     <div style={{ marginBottom: 8 }}><Text strong>Last name</Text></div>
-                                    <Input
+                                    <DesktopInput
                                         placeholder="Doe"
                                         value={data.last_name}
                                         onChange={(e) => setData('last_name', e.target.value)}
@@ -73,7 +197,7 @@ export default function RegisterPage() {
                             style={{ marginBottom: 0 }}
                         >
                             <div style={{ marginBottom: 8 }}><Text strong>Email address</Text></div>
-                            <Input
+                            <DesktopInput
                                 placeholder="you@medic.com"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
@@ -86,19 +210,19 @@ export default function RegisterPage() {
                             style={{ marginBottom: 0 }}
                         >
                             <div style={{ marginBottom: 8 }}><Text strong>Password</Text></div>
-                            <Input.Password
+                            <DesktopInput.Password
                                 placeholder="Min. 8 characters"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                             />
                         </Form.Item>
 
-                        <Button type="primary" htmlType="submit" loading={processing} block size="large" style={{ marginTop: 24 }}>
+                        <DesktopButton type="primary" htmlType="submit" loading={processing} block size="large" style={{ marginTop: 24 }}>
                             Create Patient Account
-                        </Button>
+                        </DesktopButton>
                     </Flex>
                 </form>
-            </Card>
+            </DesktopCard>
 
             <Text style={{ display: 'block', textAlign: 'center', marginTop: 16 }}>
                 Are you a doctor?{' '}
@@ -115,4 +239,18 @@ export default function RegisterPage() {
             </Text>
         </div>
     )
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+export default function RegisterPage() {
+    const isMobile = useIsMobile()
+
+    if (isMobile) {
+        return <MobileRegisterPage />
+    }
+
+    return <DesktopRegisterPage />
 }

@@ -1,6 +1,6 @@
 import {
-  Button,
-  Card,
+  Button as DesktopButton,
+  Card as DesktopCard,
   Col,
   Row,
   Typography,
@@ -8,11 +8,16 @@ import {
   Avatar,
   Space
 } from 'antd'
-import { IconCalendar, IconDeviceLaptop, IconSearch, IconShieldCheck, IconStethoscope, IconUserCheck } from '@tabler/icons-react'
-import { Link } from '@inertiajs/react'
+import { IconCalendar, IconDeviceLaptop, IconSearch, IconStethoscope, IconUserCheck } from '@tabler/icons-react'
+import { Link, router } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
 import type { AppPageProps } from '@/types/app'
 import { LoopAnimation } from '@/components/LoopAnimation'
+import { useIsMobile } from '@/lib/device'
+
+// Mobile imports
+import { Button as MobileButton, Card as MobileCard, Tag as MobileTag, Grid } from 'antd-mobile'
+import { SearchOutline, UserAddOutline } from 'antd-mobile-icons'
 
 const { Title, Text } = Typography
 
@@ -39,9 +44,145 @@ const features = [
   }
 ]
 
-export default function HomePage({ app, auth }: AppPageProps) {
-  const { t } = useTranslation('default')
+// =============================================================================
+// MOBILE HOME PAGE
+// =============================================================================
 
+function MobileHomePage() {
+  return (
+    <div style={{ padding: 16, paddingBottom: 80 }}>
+      {/* Hero Section */}
+      <div style={{ textAlign: 'center', padding: '24px 0 32px' }}>
+        <MobileTag color="primary" fill="outline" style={{ marginBottom: 16 }}>
+          New: Telemedicine Support
+        </MobileTag>
+
+        <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, margin: '0 0 12px' }}>
+          Modern healthcare for <span style={{ color: '#0d9488' }}>everyone</span>
+        </h1>
+
+        <p style={{ fontSize: 15, color: '#666', margin: '0 0 24px', lineHeight: 1.5 }}>
+          Book appointments with trusted doctors, manage your visits, and take control of your health journey.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <MobileButton
+            block
+            color="primary"
+            size="large"
+            onClick={() => router.visit('/search')}
+            style={{ '--border-radius': '24px', height: 48 }}
+          >
+            <SearchOutline style={{ marginRight: 8 }} />
+            Find a Doctor
+          </MobileButton>
+
+          <MobileButton
+            block
+            size="large"
+            onClick={() => router.visit('/register')}
+            style={{ '--border-radius': '24px', height: 48 }}
+          >
+            <UserAddOutline style={{ marginRight: 8 }} />
+            Join as Patient
+          </MobileButton>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 24 }}>
+          <Avatar.Group maxCount={3} size="small">
+            {[...Array(3)].map((_, i) => (
+              <Avatar key={i} style={{ backgroundColor: `rgba(0,0,0,${0.1 * (i + 1)})` }} />
+            ))}
+          </Avatar.Group>
+          <span style={{ fontSize: 13, color: '#666' }}>
+            Trusted by 10,000+ patients
+          </span>
+        </div>
+      </div>
+
+      {/* Features Grid */}
+      <div style={{ marginTop: 16 }}>
+        <Grid columns={2} gap={12}>
+          {features.map((feature) => (
+            <Grid.Item key={feature.title}>
+              <MobileCard style={{ borderRadius: 12, height: '100%' }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 8,
+                    backgroundColor: '#e6fffa',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 12,
+                    color: '#0d9488'
+                  }}
+                >
+                  <feature.icon size={20} stroke={1.5} />
+                </div>
+                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{feature.title}</div>
+                <div style={{ fontSize: 12, color: '#666', lineHeight: 1.4 }}>{feature.description}</div>
+              </MobileCard>
+            </Grid.Item>
+          ))}
+        </Grid>
+      </div>
+
+      {/* CTA Section */}
+      <MobileCard
+        style={{
+          marginTop: 24,
+          borderRadius: 16,
+          backgroundColor: '#134e4a',
+          color: 'white'
+        }}
+      >
+        <div style={{ textAlign: 'center', padding: '8px 0' }}>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              backgroundColor: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#0d9488',
+              margin: '0 auto 16px'
+            }}
+          >
+            <IconStethoscope size={24} />
+          </div>
+          <h3 style={{ color: 'white', fontSize: 18, fontWeight: 600, margin: '0 0 8px' }}>
+            Are you a doctor?
+          </h3>
+          <p style={{ color: '#ccfbf1', fontSize: 13, margin: '0 0 16px', lineHeight: 1.4 }}>
+            Join our network of verified specialists and grow your practice.
+          </p>
+          <MobileButton
+            size="large"
+            onClick={() => router.visit('/register/doctor')}
+            style={{
+              '--background-color': 'white',
+              '--text-color': '#0d9488',
+              '--border-radius': '24px',
+              fontWeight: 600
+            }}
+          >
+            Join Medic Network
+          </MobileButton>
+        </div>
+      </MobileCard>
+    </div>
+  )
+}
+
+// =============================================================================
+// DESKTOP HOME PAGE (Original)
+// =============================================================================
+
+function DesktopHomePage() {
   return (
     <div style={{ paddingBottom: 80, display: 'flex', flexDirection: 'column', gap: 80 }}>
       {/* Hero Section */}
@@ -65,7 +206,7 @@ export default function HomePage({ app, auth }: AppPageProps) {
 
               <Space size="middle">
                 <Link href="/search">
-                  <Button
+                  <DesktopButton
                     type="primary"
                     size="large"
                     shape="round"
@@ -73,16 +214,16 @@ export default function HomePage({ app, auth }: AppPageProps) {
                     style={{ height: 50, paddingLeft: 32, paddingRight: 32 }}
                   >
                     Find a Doctor
-                  </Button>
+                  </DesktopButton>
                 </Link>
                 <Link href="/register">
-                  <Button
+                  <DesktopButton
                     size="large"
                     shape="round"
                     style={{ height: 50, paddingLeft: 32, paddingRight: 32 }}
                   >
                     Join as Patient
-                  </Button>
+                  </DesktopButton>
                 </Link>
               </Space>
 
@@ -113,10 +254,10 @@ export default function HomePage({ app, auth }: AppPageProps) {
         <Row gutter={[24, 24]}>
           {features.map((feature) => (
             <Col xs={24} sm={12} md={6} key={feature.title}>
-              <Card
+              <DesktopCard
                 hoverable
                 style={{ height: '100%', borderRadius: 16 }}
-                bodyStyle={{ padding: 24 }}
+                styles={{ body: { padding: 24 } }}
               >
                 <div style={{
                   width: 48,
@@ -133,7 +274,7 @@ export default function HomePage({ app, auth }: AppPageProps) {
                 </div>
                 <Text strong style={{ fontSize: 18, display: 'block', marginBottom: 8 }}>{feature.title}</Text>
                 <Text type="secondary" style={{ lineHeight: 1.6 }}>{feature.description}</Text>
-              </Card>
+              </DesktopCard>
             </Col>
           ))}
         </Row>
@@ -141,14 +282,14 @@ export default function HomePage({ app, auth }: AppPageProps) {
 
       {/* CTA Section */}
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 24px', width: '100%' }}>
-        <Card
+        <DesktopCard
           style={{
             borderRadius: 24,
-            backgroundColor: '#134e4a', // teal-900 equivalent logic or close
+            backgroundColor: '#134e4a',
             color: 'white',
             textAlign: 'center'
           }}
-          bodyStyle={{ padding: 60 }}
+          styles={{ body: { padding: 60 } }}
           bordered={false}
         >
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
@@ -169,7 +310,7 @@ export default function HomePage({ app, auth }: AppPageProps) {
               Join our network of over 600 verified specialists. specific tools to manage your schedule and grow your practice.
             </Text>
             <Link href="/register/doctor">
-              <Button
+              <DesktopButton
                 size="large"
                 shape="round"
                 style={{
@@ -181,11 +322,26 @@ export default function HomePage({ app, auth }: AppPageProps) {
                 }}
               >
                 Join Medic Network
-              </Button>
+              </DesktopButton>
             </Link>
           </div>
-        </Card>
+        </DesktopCard>
       </div>
     </div>
   )
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+export default function HomePage({ app, auth }: AppPageProps) {
+  const isMobile = useIsMobile()
+  const { t } = useTranslation('default')
+
+  if (isMobile) {
+    return <MobileHomePage />
+  }
+
+  return <DesktopHomePage />
 }

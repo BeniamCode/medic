@@ -1,16 +1,15 @@
 import {
-  Button,
-  Card,
+  Button as DesktopButton,
+  Card as DesktopCard,
   Col,
   Row,
   Statistic,
-  Table,
-  Tag,
   Typography,
   Space,
   Avatar,
-  List,
-  Flex
+  List as DesktopList,
+  Flex,
+  Tag
 } from 'antd'
 import {
   IconCalendar,
@@ -20,11 +19,16 @@ import {
   IconStar,
   IconUser
 } from '@tabler/icons-react'
-import { Link } from '@inertiajs/react'
+import { Link, router } from '@inertiajs/react'
 import { format } from 'date-fns'
 import { useTranslation } from 'react-i18next'
+import { useIsMobile } from '@/lib/device'
 
 import type { AppPageProps } from '@/types/app'
+
+// Mobile imports
+import { Card as MobileCard, List, Button as MobileButton, Tag as MobileTag, Empty } from 'antd-mobile'
+import { CalendarOutline, CheckOutline, StarOutline, ClockCircleOutline } from 'antd-mobile-icons'
 
 const { Title, Text } = Typography
 
@@ -55,7 +59,153 @@ type PageProps = AppPageProps<{
   upcomingCount: number
 }>
 
-const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCount, upcomingCount }: PageProps) => {
+// =============================================================================
+// MOBILE DOCTOR DASHBOARD
+// =============================================================================
+
+function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomingCount }: Omit<PageProps, 'app' | 'auth'>) {
+  const { t } = useTranslation('default')
+
+  return (
+    <div style={{ padding: 16, paddingBottom: 80 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>
+          {t('doctor.dashboard.title', 'Dashboard')}
+        </h2>
+        <p style={{ color: '#666', margin: 0, fontSize: 14 }}>
+          {t('doctor.dashboard.subtitle', 'Good morning, Dr. {{lastName}}', { lastName: doctor.lastName })}
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+        <MobileStatCard
+          icon={<CalendarOutline fontSize={20} />}
+          label="Today"
+          value={todayAppointments.length}
+          color="#3b82f6"
+          bg="#eff6ff"
+        />
+        <MobileStatCard
+          icon={<CheckOutline fontSize={20} />}
+          label="Pending"
+          value={pendingCount}
+          color="#eab308"
+          bg="#fef9c3"
+        />
+        <MobileStatCard
+          icon={<CalendarOutline fontSize={20} />}
+          label="This Week"
+          value={upcomingCount}
+          color="#10b981"
+          bg="#d1fae5"
+        />
+        <MobileStatCard
+          icon={<StarOutline fontSize={20} />}
+          label="Rating"
+          value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
+          color="#f59e0b"
+          bg="#fffbeb"
+        />
+      </div>
+
+      {/* Today's Appointments */}
+      <MobileCard title="Today's Schedule" style={{ borderRadius: 12, marginBottom: 16 }}>
+        {todayAppointments.length === 0 ? (
+          <Empty description="No appointments today" style={{ padding: 20 }} />
+        ) : (
+          <List>
+            {todayAppointments.map((appt) => {
+              const startsAt = new Date(appt.startsAt)
+              return (
+                <List.Item
+                  key={appt.id}
+                  description={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      <ClockCircleOutline fontSize={12} />
+                      <span>{format(startsAt, 'p')}</span>
+                      <MobileTag
+                        color={appt.status === 'confirmed' ? 'success' : 'primary'}
+                        fill="outline"
+                        style={{ fontSize: 10 }}
+                      >
+                        {appt.status}
+                      </MobileTag>
+                    </div>
+                  }
+                  arrow={false}
+                >
+                  <span style={{ fontWeight: 500 }}>
+                    {appt.patient.firstName} {appt.patient.lastName}
+                  </span>
+                  <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>
+                    {appt.appointmentType === 'telemedicine' ? '📹 Video' : '🏥 In-person'}
+                  </span>
+                </List.Item>
+              )
+            })}
+          </List>
+        )}
+      </MobileCard>
+
+      {/* Quick Actions */}
+      <MobileCard title="Quick Actions" style={{ borderRadius: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <MobileButton
+            block
+            size="large"
+            onClick={() => router.visit('/doctor/schedule')}
+            style={{ '--border-radius': '8px' }}
+          >
+            Manage Availability
+          </MobileButton>
+          <MobileButton
+            block
+            size="large"
+            onClick={() => router.visit('/dashboard/doctor/profile')}
+            style={{ '--border-radius': '8px' }}
+          >
+            Edit Profile
+          </MobileButton>
+        </div>
+      </MobileCard>
+    </div>
+  )
+}
+
+function MobileStatCard({ icon, label, value, color, bg }: { icon: React.ReactNode; label: string; value: number | string; color: string; bg: string }) {
+  return (
+    <div style={{
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 16,
+      border: '1px solid #f0f0f0'
+    }}>
+      <div style={{
+        width: 36,
+        height: 36,
+        borderRadius: '50%',
+        backgroundColor: bg,
+        color: color,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8
+      }}>
+        {icon}
+      </div>
+      <div style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700 }}>{value}</div>
+    </div>
+  )
+}
+
+// =============================================================================
+// DESKTOP DOCTOR DASHBOARD (Original)
+// =============================================================================
+
+function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomingCount }: Omit<PageProps, 'app' | 'auth'>) {
   const { t } = useTranslation('default')
 
   return (
@@ -70,9 +220,9 @@ const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCoun
           </Text>
         </div>
         <Link href="/dashboard/doctor/profile">
-          <Button type="default">
+          <DesktopButton type="default">
             {t('doctor.dashboard.edit_profile', 'Edit profile')}
-          </Button>
+          </DesktopButton>
         </Link>
       </Flex>
 
@@ -121,7 +271,7 @@ const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCoun
 
       <Row gutter={24}>
         <Col xs={24} lg={16}>
-          <Card
+          <DesktopCard
             title={<Title level={4} style={{ margin: 0 }}>{t('doctor.dashboard.today_schedule', "Today's schedule")}</Title>}
             bordered
             style={{ height: '100%', borderRadius: 12 }}
@@ -131,37 +281,37 @@ const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCoun
                 <Text type="secondary">{t('doctor.dashboard.no_appointments', 'No appointments today')}</Text>
               </div>
             ) : (
-              <List
+              <DesktopList
                 itemLayout="horizontal"
                 dataSource={todayAppointments}
                 renderItem={(appt) => <AppointmentRow appointment={appt} />}
               />
             )}
-          </Card>
+          </DesktopCard>
         </Col>
 
         <Col xs={24} lg={8}>
-          <Card
+          <DesktopCard
             title={<Title level={4} style={{ margin: 0 }}>{t('doctor.dashboard.quick_actions', 'Quick actions')}</Title>}
             bordered
             style={{ height: '100%', borderRadius: 12 }}
           >
             <Flex vertical gap="middle">
               <Link href="/doctor/schedule" style={{ display: 'block' }}>
-                <Button block size="large">
+                <DesktopButton block size="large">
                   {t('doctor.dashboard.manage_schedule', 'Manage availability')}
-                </Button>
+                </DesktopButton>
               </Link>
               <Link href="/dashboard/doctor/profile" style={{ display: 'block' }}>
-                <Button block size="large">
+                <DesktopButton block size="large">
                   {t('doctor.dashboard.edit_profile', 'Edit profile')}
-                </Button>
+                </DesktopButton>
               </Link>
-              <Button block size="large" disabled>
+              <DesktopButton block size="large" disabled>
                 {t('doctor.dashboard.analytics', 'Analytics (coming soon)')}
-              </Button>
+              </DesktopButton>
             </Flex>
-          </Card>
+          </DesktopCard>
         </Col>
       </Row>
     </div>
@@ -169,7 +319,7 @@ const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCoun
 }
 
 const StatCard = ({ icon, label, value, subtitle, color, bg }: { icon: React.ReactNode; label: string; value: number | string; subtitle: string, color: string, bg: string }) => (
-  <Card bordered style={{ borderRadius: 12, height: '100%' }} bodyStyle={{ padding: 20 }}>
+  <DesktopCard bordered style={{ borderRadius: 12, height: '100%' }} styles={{ body: { padding: 20 } }}>
     <Flex gap="middle" align="center">
       <div style={{
         borderRadius: '50%',
@@ -194,7 +344,7 @@ const StatCard = ({ icon, label, value, subtitle, color, bg }: { icon: React.Rea
         </Text>
       </div>
     </Flex>
-  </Card>
+  </DesktopCard>
 )
 
 const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
@@ -203,7 +353,7 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
   const startText = format(startsAt, 'p')
 
   return (
-    <Card bordered={false} style={{ marginBottom: 16, border: '1px solid #f0f0f0', borderRadius: 8 }} bodyStyle={{ padding: 16 }}>
+    <DesktopCard bordered={false} style={{ marginBottom: 16, border: '1px solid #f0f0f0', borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
       <Flex justify="space-between" align="flex-start">
         <Space direction="vertical" size={2}>
           <Text strong style={{ fontSize: 16 }}>
@@ -214,7 +364,7 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
               ? t('doctor.dashboard.telemed', 'Telemedicine')
               : t('doctor.dashboard.in_person', 'In-person')}
           </Text>
-          {appointment.notes && <Text style={{ fontSize: 14, fontStyle: 'italic' }}>“{appointment.notes}”</Text>}
+          {appointment.notes && <Text style={{ fontSize: 14, fontStyle: 'italic' }}>"{appointment.notes}"</Text>}
         </Space>
 
         <Flex vertical align="flex-end" gap={4}>
@@ -227,8 +377,22 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
           </Tag>
         </Flex>
       </Flex>
-    </Card>
+    </DesktopCard>
   )
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
+const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCount, upcomingCount }: PageProps) => {
+  const isMobile = useIsMobile()
+
+  if (isMobile) {
+    return <MobileDoctorDashboard doctor={doctor} todayAppointments={todayAppointments} pendingCount={pendingCount} upcomingCount={upcomingCount} />
+  }
+
+  return <DesktopDoctorDashboard doctor={doctor} todayAppointments={todayAppointments} pendingCount={pendingCount} upcomingCount={upcomingCount} />
 }
 
 export default DoctorDashboardPage
