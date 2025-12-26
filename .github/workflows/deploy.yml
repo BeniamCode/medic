@@ -1,0 +1,40 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  deploy:
+    name: Deploy to Hetzner Server
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H medic.gr >> ~/.ssh/known_hosts
+      
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/deploy_key root@medic.gr "cd /opt/medic && sudo -u medic bash /opt/medic/scripts/deploy.sh"
+      
+      - name: Restart application
+        run: |
+          ssh -i ~/.ssh/deploy_key root@medic.gr "systemctl restart medic"
+      
+      - name: Check deployment status
+        run: |
+          ssh -i ~/.ssh/deploy_key root@medic.gr "systemctl is-active medic && echo 'Deployment successful!'"
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key

@@ -2,8 +2,6 @@ defmodule Medic.Repo.Migrations.AddIsActiveToScheduleRules do
   use Ecto.Migration
 
   def change do
-    alter table(:schedule_rules) do
-      add :is_active, :boolean, default: true, null: false
-    end
+    execute "ALTER TABLE schedule_rules ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true NOT NULL"
   end
 end

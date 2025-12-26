@@ -1,0 +1,28 @@
+[Unit]
+Description=Phoenix Medic Application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=medic
+Group=medic
+WorkingDirectory=/opt/medic
+EnvironmentFile=/opt/medic/.env
+Environment="MIX_ENV=prod"
+Environment="PORT=4000"
+
+# Start the Phoenix application
+ExecStart=/opt/medic/_build/prod/rel/medic/bin/medic start
+
+# Restart strategy
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+PrivateTmp=yes
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
