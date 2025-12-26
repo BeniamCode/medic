@@ -6,6 +6,10 @@
 
 set -e  # Exit on error
 
+# Initialize ASDF
+export ASDF_DIR=/opt/asdf
+source $ASDF_DIR/asdf.sh
+
 APP_NAME="medic"
 APP_DIR="/opt/medic"
 REPO_URL="git@github.com:BeniamCode/medic.git"
