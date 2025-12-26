@@ -112,6 +112,8 @@ if config_env() == :prod do
   # Gmail SMTP configuration for Google Workspace (Gmail for Business)
   # Uses the GMAIL_SMTP_APP app password (single app password for all aliases)
   # The username can be any of your aliases - hi@, appointments@, etc.
+  config :logger, level: :debug
+  
   config :medic, Medic.Mailer,
     adapter: Swoosh.Adapters.SMTP,
     relay: "smtp.gmail.com",
@@ -123,10 +125,7 @@ if config_env() == :prod do
     tls_options: [
       verify: :verify_peer,
       cacertfile: CAStore.file_path(),
-      depth: 3,
-      customize_hostname_check: [
-        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-      ]
+      depth: 3
     ],
     auth: :always,
     retries: 2,
@@ -143,10 +142,7 @@ if config_env() == :prod do
     tls_options: [
       verify: :verify_peer,
       cacertfile: CAStore.file_path(),
-      depth: 3,
-      customize_hostname_check: [
-        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-      ]
+      depth: 3
     ],
     auth: :always,
     retries: 2,
