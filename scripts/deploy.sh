@@ -29,9 +29,9 @@ else
 fi
 
 # Install/update dependencies
-echo "[2/7] Installing Hex and Rebar..."
-mix local.hex --force
-mix local.rebar --force
+# [2/7] Installing Hex and Rebar (Skipped - installed manually)
+# mix local.hex --force
+# mix local.rebar --force
 
 echo "[3/7] Installing dependencies..."
 mix deps.get --only prod
