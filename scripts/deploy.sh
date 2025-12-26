@@ -7,6 +7,8 @@
 
 # Initialize ASDF
 . "$HOME/.asdf/asdf.sh"
+# Add manual Elixir path
+export PATH="/opt/medic/elixir/bin:$PATH"
 
 APP_NAME="medic"
 APP_DIR="/opt/medic"
