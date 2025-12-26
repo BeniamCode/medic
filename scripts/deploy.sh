@@ -15,6 +15,9 @@ APP_DIR="/opt/medic"
 REPO_URL="git@github.com:BeniamCode/medic.git"
 MIX_ENV="prod"
 
+# Define Mix command absolute path
+MIX_CMD="/opt/medic/elixir/bin/mix"
+
 echo "=== Deploying Phoenix Medic App ==="
 echo "Starting at: $(date)"
 
@@ -32,15 +35,15 @@ fi
 
 # Install/update dependencies
 # [2/7] Installing Hex and Rebar (Skipped - installed manually)
-# mix local.hex --force
-# mix local.rebar --force
+# $MIX_CMD local.hex --force
+# $MIX_CMD local.rebar --force
 
 # echo "[3/7] Installing dependencies..."
-# mix deps.get --only prod
+# $MIX_CMD deps.get --only prod
 
 # Compile the application
 echo "[4/7] Compiling application..."
-MIX_ENV=prod mix compile
+MIX_ENV=prod $MIX_CMD compile
 
 # Install Node.js dependencies and build assets
 echo "[5/7] Building assets..."
@@ -48,15 +51,16 @@ cd assets
 npm install
 npm run deploy
 cd ..
-MIX_ENV=prod mix assets.deploy
+MIX_ENV=prod $MIX_CMD assets.deploy
 
 # Run database migrations
 echo "[6/7] Running database migrations..."
-MIX_ENV=prod mix ecto.migrate
+MIX_ENV=prod $MIX_CMD ecto.migrate
 
 # Build release
 echo "[7/7] Building production release..."
-MIX_ENV=prod mix release --overwrite
+MIX_ENV=prod $MIX_CMD release --overwrite
+
 
 echo ""
 echo "=== Deployment Complete ==="
