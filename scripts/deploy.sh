@@ -9,6 +9,7 @@
 . "$HOME/.asdf/asdf.sh"
 # Add manual Elixir path and .mix for manually installed tools
 export PATH="/opt/medic/elixir/bin:$HOME/.mix:$PATH"
+export MIX_REBAR3="$HOME/.mix/rebar3"
 
 APP_NAME="medic"
 APP_DIR="/opt/medic"
