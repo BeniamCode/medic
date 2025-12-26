@@ -7,8 +7,8 @@
 
 # Initialize ASDF
 . "$HOME/.asdf/asdf.sh"
-# Add manual Elixir path
-export PATH="/opt/medic/elixir/bin:$PATH"
+# Add manual Elixir path and .mix for manually installed tools
+export PATH="/opt/medic/elixir/bin:$HOME/.mix:$PATH"
 
 APP_NAME="medic"
 APP_DIR="/opt/medic"
