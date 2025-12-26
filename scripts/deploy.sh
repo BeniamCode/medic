@@ -12,6 +12,13 @@ export PATH="/opt/medic/elixir/bin:$HOME/.mix:$PATH"
 export MIX_REBAR3="/opt/medic/.mix/rebar3"
 export MIX_REBAR="/opt/medic/.mix/rebar"
 
+# Load environment variables
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
 echo "Checking rebar3..."
 ls -l "$MIX_REBAR3"
 "$MIX_REBAR3" version
