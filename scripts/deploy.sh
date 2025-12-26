@@ -43,7 +43,7 @@ fi
 
 # Compile the application
 echo "[4/7] Compiling application..."
-MIX_ENV=prod $MIX_CMD compile
+MIX_ENV=prod $MIX_CMD compile --no-deps-check
 
 # Install Node.js dependencies and build assets
 echo "[5/7] Building assets..."
