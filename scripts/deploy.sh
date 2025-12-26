@@ -33,8 +33,8 @@ fi
 # mix local.hex --force
 # mix local.rebar --force
 
-echo "[3/7] Installing dependencies..."
-mix deps.get --only prod
+# echo "[3/7] Installing dependencies..."
+# mix deps.get --only prod
 
 # Compile the application
 echo "[4/7] Compiling application..."
