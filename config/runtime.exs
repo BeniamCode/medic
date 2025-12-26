@@ -120,6 +120,14 @@ if config_env() == :prod do
     password: System.get_env("GMAIL_SMTP_APP"),
     ssl: false,
     tls: :always,
+    tls_options: [
+      verify: :verify_peer,
+      cacertfile: CAStore.file_path(),
+      depth: 3,
+      customize_hostname_check: [
+        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+      ]
+    ],
     auth: :always,
     retries: 2,
     no_mx_lookups: false
@@ -132,6 +140,14 @@ if config_env() == :prod do
     password: System.get_env("APPOINTMENTS_SMTP_APP"),
     ssl: false,
     tls: :always,
+    tls_options: [
+      verify: :verify_peer,
+      cacertfile: CAStore.file_path(),
+      depth: 3,
+      customize_hostname_check: [
+        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+      ]
+    ],
     auth: :always,
     retries: 2,
     no_mx_lookups: false
