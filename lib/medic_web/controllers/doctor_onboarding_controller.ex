@@ -128,6 +128,15 @@ defmodule MedicWeb.DoctorOnboardingController do
     params
     |> Map.update("telemedicine_available", false, &truthy?/1)
     |> update_decimal("consultation_fee")
+    |> normalize_uuid("specialty_id")
+  end
+
+  defp normalize_uuid(params, field) do
+    case Map.get(params, field) do
+      nil -> params
+      "" -> Map.put(params, field, nil)
+      value -> params
+    end
   end
 
   defp truthy?(value) when value in [true, "true", "on", "1"], do: true

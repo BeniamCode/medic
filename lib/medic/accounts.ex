@@ -63,6 +63,13 @@ defmodule Medic.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Gets a single user without raising.
+
+  Returns nil if the User does not exist.
+  """
+  def get_user(id), do: Repo.get(User, id)
+
   ## User registration
 
   @doc """
@@ -82,7 +89,7 @@ defmodule Medic.Accounts do
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:user, User.registration_changeset(%User{}, attrs), returning: true)
     |> Ecto.Multi.run(:profile, fn _repo, %{user: user} ->
-      create_role_profile(user, role)
+      create_role_profile(user, role, attrs)
     end)
     |> Repo.transaction()
     |> case do
@@ -213,17 +220,35 @@ defmodule Medic.Accounts do
     Repo.preload(user, [:doctor, :patient])
   end
 
-  defp create_role_profile(user, "doctor") do
-    {first, last} = inferred_names(user.email, default_last: "Doctor")
-    Doctors.create_doctor(user, %{first_name: first, last_name: last})
+  defp create_role_profile(user, "doctor", attrs) do
+    first = Map.get(attrs, "first_name") || Map.get(attrs, :first_name)
+    last = Map.get(attrs, "last_name") || Map.get(attrs, :last_name)
+    
+    {final_first, final_last} = 
+      if first && last do
+        {first, last}
+      else
+        inferred_names(user.email, default_last: "Doctor")
+      end
+
+    Doctors.create_doctor(user, %{first_name: final_first, last_name: final_last})
   end
 
-  defp create_role_profile(user, "patient") do
-    {first, last} = inferred_names(user.email, default_last: "Patient")
-    Patients.create_patient(user, %{first_name: first, last_name: last})
+  defp create_role_profile(user, "patient", attrs) do
+    first = Map.get(attrs, "first_name") || Map.get(attrs, :first_name)
+    last = Map.get(attrs, "last_name") || Map.get(attrs, :last_name)
+
+    {final_first, final_last} = 
+      if first && last do
+        {first, last}
+      else
+        inferred_names(user.email, default_last: "Patient")
+      end
+
+    Patients.create_patient(user, %{first_name: final_first, last_name: final_last})
   end
 
-  defp create_role_profile(_user, _role), do: {:ok, nil}
+  defp create_role_profile(_user, _role, _attrs), do: {:ok, nil}
 
   defp inferred_names(nil, opts) do
     {Keyword.get(opts, :default_first, "New"), Keyword.get(opts, :default_last, "User")}

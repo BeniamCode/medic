@@ -77,7 +77,11 @@ defmodule Medic.MixProject do
       {:igniter, "~> 0.1"},
       {:timex, "~> 3.7"},
       {:oban, "~> 2.17"},
-      {:nimble_csv, "~> 1.2"}
+      {:nimble_csv, "~> 1.2"},
+      {:cors_plug, "~> 3.0"},
+      {:joken, "~> 2.6"},
+      # Email SMTP support
+      {:gen_smtp, "~> 1.2"}
     ]
   end
 
@@ -96,10 +100,11 @@ defmodule Medic.MixProject do
       "seed.dev": ["run priv/repo/seeds/dev.exs"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["cmd --cd assets npm install"],
-      "assets.build": ["cmd --cd assets npm run deploy", "esbuild medic"],
+      "assets.build": ["cmd --cd assets npm run deploy", "esbuild medic", "esbuild ssr"],
       "assets.deploy": [
         "cmd --cd assets npm run deploy",
         "esbuild medic --minify",
+        "esbuild ssr",
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]

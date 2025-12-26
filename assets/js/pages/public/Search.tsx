@@ -1,10 +1,12 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { Link, router } from '@inertiajs/react'
 import { useDebouncedValue } from '@mantine/hooks'
 import { useTranslation } from 'react-i18next'
 import type { AppPageProps } from '@/types/app'
-import DoctorMap from '@/components/Map'
 import { useIsMobile } from '@/lib/device'
+
+// Lazy load heavy MapLibre component (~1.5MB saved on other pages)
+const DoctorMap = lazy(() => import('@/components/Map'))
 
 // Desktop Ant Design imports
 import {
@@ -98,13 +100,17 @@ const createParams = (
 // =============================================================================
 
 function MobileDoctorCard({ doctor, onClick }: { doctor: SearchDoctor; onClick: () => void }) {
+  const { t } = useTranslation('default')
+
   return (
     <MobileCard
       onClick={onClick}
       style={{
         borderRadius: 12,
         marginBottom: 12,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+        // @ts-ignore
+        viewTransitionName: `doctor-card-${doctor.id}`
       }}
     >
       <div style={{ display: 'flex', gap: 12 }}>
@@ -116,13 +122,15 @@ function MobileDoctorCard({ doctor, onClick }: { doctor: SearchDoctor; onClick: 
             borderRadius: 12,
             backgroundColor: '#f5f5f5',
             flexShrink: 0,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            // @ts-ignore
+            viewTransitionName: `doctor-image-${doctor.id}`
           }}
         >
           {doctor.profileImageUrl ? (
             <img
               src={doctor.profileImageUrl}
-              alt={`${doctor.firstName ?? ''} ${doctor.lastName ?? ''}`.trim() || 'Doctor'}
+              alt={`${doctor.firstName ?? ''} ${doctor.lastName ?? ''}`.trim() || t('Doctor')}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : (
@@ -147,8 +155,16 @@ function MobileDoctorCard({ doctor, onClick }: { doctor: SearchDoctor; onClick: 
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: '#333' }}>
-              Dr. {doctor.firstName} {doctor.lastName}
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#333',
+                // @ts-ignore
+                viewTransitionName: `doctor-name-${doctor.id}`
+              }}
+            >
+              {t('Dr.')} {doctor.firstName} {doctor.lastName}
             </span>
             {doctor.verified && (
               <MobileTag color="primary" fill="outline" style={{ fontSize: 10, padding: '0 4px' }}>✓</MobileTag>
@@ -156,17 +172,17 @@ function MobileDoctorCard({ doctor, onClick }: { doctor: SearchDoctor; onClick: 
           </div>
 
           <span style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>
-            {doctor.specialtyName || 'General Practitioner'}
+            {doctor.specialtyName || t('General Practitioner')}
           </span>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#999' }}>
               <LocationOutline fontSize={14} />
-              <span style={{ fontSize: 12 }}>{doctor.city || 'Online'}</span>
+              <span style={{ fontSize: 12 }}>{doctor.city || t('Online')}</span>
             </div>
 
             <span style={{ fontSize: 16, fontWeight: 600, color: '#0d9488' }}>
-              {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
+              {doctor.consultationFee ? `€${doctor.consultationFee}` : t('Ask')}
             </span>
           </div>
         </div>
@@ -234,7 +250,20 @@ function MobileSearchPage({
   const activeFilterCount = [specialty, city, telemedicineOnly].filter(Boolean).length
 
   const handleDoctorClick = (id: string) => {
-    router.visit(`/doctors/${id}`)
+    // @ts-ignore
+    if (!document.startViewTransition) {
+      router.visit(`/doctors/${id}`)
+      return
+    }
+
+    // @ts-ignore
+    document.startViewTransition(() => {
+      return new Promise<void>((resolve) => {
+        router.visit(`/doctors/${id}`, {
+          onFinish: () => resolve()
+        })
+      })
+    })
   }
 
   return (
@@ -252,7 +281,7 @@ function MobileSearchPage({
         }}
       >
         <SearchBar
-          placeholder={t('search.placeholder', 'Search doctors...')}
+          placeholder={t('Search doctors...')}
           value={query}
           onChange={setQuery}
           onSearch={submit}
@@ -270,29 +299,31 @@ function MobileSearchPage({
           onChange={setActiveTab}
           style={{ marginTop: 12 }}
         >
-          <Tabs.Tab title="List" key="list" />
-          <Tabs.Tab title="Map" key="map" />
+          <Tabs.Tab title={t('List')} key="list" />
+          <Tabs.Tab title={t('Map')} key="map" />
         </Tabs>
       </div>
 
       {/* Results Count */}
       <div style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 14, color: '#666' }}>
-          {meta.total} doctors found
+          {t('{{count}} doctors found', { count: meta.total })}
         </span>
       </div>
 
       {/* Content */}
       {activeTab === 'map' ? (
         <div style={{ height: 'calc(100vh - 160px)' }}>
-          <DoctorMap doctors={doctors} height="100%" expanded focusedDoctorId={null} />
+          <Suspense fallback={<div style={{ background: '#f5f5f5', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading map...</div>}>
+            <DoctorMap doctors={doctors} height="100%" expanded focusedDoctorId={null} />
+          </Suspense>
         </div>
       ) : (
         <div style={{ padding: '0 16px', paddingBottom: 100 }}>
           {doctors.length === 0 ? (
             <Empty
               style={{ padding: '60px 0' }}
-              description="No doctors found"
+              description={t('No doctors found')}
             />
           ) : (
             doctors.map((doctor) => (
@@ -359,22 +390,22 @@ function MobileSearchPage({
       >
         <div style={{ padding: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Filters</h3>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>{t('Filters')}</h3>
             <MobileButton size="small" fill="none" onClick={clearFilters}>
-              Clear all
+              {t('Clear all')}
             </MobileButton>
           </div>
 
           <List>
             <List.Item
-              title="Specialty"
-              description={specialty || 'All specialties'}
+              title={t('Specialty')}
+              description={specialty || t('All specialties')}
               onClick={() => { }}
               arrow
             >
               <Selector
                 columns={1}
-                options={[{ value: '', label: 'All specialties' }, ...specialtyOptions]}
+                options={[{ value: '', label: t('All specialties') }, ...specialtyOptions]}
                 value={[specialty]}
                 onChange={(v) => setSpecialty(v[0] || '')}
                 style={{ marginTop: 8 }}
@@ -382,14 +413,14 @@ function MobileSearchPage({
             </List.Item>
 
             <List.Item
-              title="City"
-              description={city || 'All cities'}
+              title={t('City')}
+              description={city || t('All cities')}
               onClick={() => { }}
               arrow
             >
               <Selector
                 columns={2}
-                options={[{ value: '', label: 'All' }, ...cityOptions]}
+                options={[{ value: '', label: t('All') }, ...cityOptions]}
                 value={[city]}
                 onChange={(v) => setCity(v[0] || '')}
                 style={{ marginTop: 8 }}
@@ -397,7 +428,7 @@ function MobileSearchPage({
             </List.Item>
 
             <List.Item
-              title="Telemedicine only"
+              title={t('Telemedicine only')}
               extra={
                 <MobileSwitch
                   checked={telemedicineOnly}
@@ -414,7 +445,7 @@ function MobileSearchPage({
             style={{ marginTop: 24 }}
             onClick={() => setFilterPopupVisible(false)}
           >
-            Show {meta.total} results
+            {t('Show {{count}} results', { count: meta.total })}
           </MobileButton>
         </div>
       </Popup>
@@ -426,7 +457,9 @@ function MobileSearchPage({
 // DESKTOP COMPONENTS (using regular antd)
 // =============================================================================
 
-function DesktopDoctorCard({ doctor, isFocused, onClick }: { doctor: SearchDoctor; isFocused: boolean; onClick: () => void }) {
+function DesktopDoctorCard({ doctor, isFocused, onClick, onProfileClick }: { doctor: SearchDoctor; isFocused: boolean; onClick: () => void; onProfileClick: (id: string) => void }) {
+  const { t } = useTranslation('default')
+
   return (
     <DesktopCard
       hoverable
@@ -434,15 +467,24 @@ function DesktopDoctorCard({ doctor, isFocused, onClick }: { doctor: SearchDocto
         borderRadius: 12,
         borderColor: isFocused ? '#13c2c2' : undefined,
         transition: 'all 0.2s',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        // @ts-ignore
+        viewTransitionName: `doctor-card-${doctor.id}`
       }}
       styles={{ body: { padding: 16 } }}
       cover={
-        <div style={{ height: 200, backgroundColor: '#f0f0f0' }}>
+        <div
+          style={{
+            height: 200,
+            backgroundColor: '#f0f0f0',
+            // @ts-ignore
+            viewTransitionName: `doctor-image-${doctor.id}`
+          }}
+        >
           {doctor.profileImageUrl ? (
             <img
               src={doctor.profileImageUrl}
-              alt={`${doctor.firstName ?? ''} ${doctor.lastName ?? ''}`.trim() || 'Doctor'}
+              alt={`${doctor.firstName ?? ''} ${doctor.lastName ?? ''}`.trim() || t('Doctor')}
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           ) : (
@@ -469,10 +511,19 @@ function DesktopDoctorCard({ doctor, isFocused, onClick }: { doctor: SearchDocto
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <Title level={4} style={{ margin: 0, fontSize: 16, lineHeight: 1.2 }}>
-              {doctor.firstName} {doctor.lastName}
+            <Title
+              level={4}
+              style={{
+                margin: 0,
+                fontSize: 16,
+                lineHeight: 1.2,
+                // @ts-ignore
+                viewTransitionName: `doctor-name-${doctor.id}`
+              }}
+            >
+              {t('Dr.')} {doctor.firstName} {doctor.lastName}
             </Title>
-            {doctor.verified && <Tag color="cyan" style={{ marginTop: 4, marginRight: 0 }}>Verified</Tag>}
+            {doctor.verified && <Tag color="cyan" style={{ marginTop: 4, marginRight: 0 }}>{t('Verified')}</Tag>}
           </div>
           {(doctor.appreciationCount || 0) > 0 && (
             <Tag color="magenta" icon={<HeartOutlined />} style={{ margin: 0 }}>
@@ -481,22 +532,26 @@ function DesktopDoctorCard({ doctor, isFocused, onClick }: { doctor: SearchDocto
           )}
         </div>
 
-        <Text type="secondary" style={{ fontSize: 13 }}>{doctor.specialtyName || 'General Practitioner'}</Text>
+        <Text type="secondary" style={{ fontSize: 13 }}>{doctor.specialtyName || t('General Practitioner')}</Text>
 
         <Space size={4} style={{ color: 'rgba(0,0,0,0.45)' }}>
           <IconMapPin size={16} />
-          <Text type="secondary" style={{ fontSize: 13 }}>{doctor.city || 'Online'}</Text>
+          <Text type="secondary" style={{ fontSize: 13 }}>{doctor.city || t('Online')}</Text>
         </Space>
 
         <Row justify="space-between" align="middle" style={{ marginTop: 8 }}>
           <Text strong style={{ fontSize: 18, color: '#0d9488' }}>
-            {doctor.consultationFee ? `€${doctor.consultationFee}` : 'Ask'}
+            {doctor.consultationFee ? `€${doctor.consultationFee}` : t('Ask')}
           </Text>
-          <Link href={`/doctors/${doctor.id}`}>
-            <DesktopButton size="small" onClick={(e: any) => e.stopPropagation()}>
-              View Profile
-            </DesktopButton>
-          </Link>
+          <DesktopButton
+            size="small"
+            onClick={(e: any) => {
+              e.stopPropagation();
+              onProfileClick(doctor.id);
+            }}
+          >
+            {t('View Profile')}
+          </DesktopButton>
         </Row>
       </div>
     </DesktopCard>
@@ -583,10 +638,15 @@ function DesktopSearchPage({
           transition: 'height 0.3s ease',
           zIndex: 10,
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          borderRadius: 16
         }}
+        onMouseEnter={() => setMapHeight(500)}
+        onMouseLeave={() => !focusedDoctorId && setMapHeight(250)}
       >
-        <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} focusedDoctorId={focusedDoctorId} />
+        <Suspense fallback={<div style={{ background: '#f5f5f5', height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 16 }}>Loading map...</div>}>
+          <DoctorMap doctors={doctors} height={500} expanded={mapHeight === 500} focusedDoctorId={focusedDoctorId} />
+        </Suspense>
       </div>
 
       {/* Search Bar */}
@@ -598,7 +658,7 @@ function DesktopSearchPage({
         >
           <Space.Compact style={{ width: '100%' }}>
             <DesktopInput
-              placeholder={t('search.placeholder', 'Search doctors, clinics, specialties, etc.')}
+              placeholder={t('Search doctors, clinics, specialties, etc.')}
               size="large"
               variant="borderless"
               value={query}
@@ -606,7 +666,7 @@ function DesktopSearchPage({
               onPressEnter={() => submit(query)}
             />
             <DesktopButton type="primary" size="large" onClick={() => submit(query)} icon={<IconSearch size={18} />}>
-              Search
+              {t('Search')}
             </DesktopButton>
           </Space.Compact>
         </DesktopCard>
@@ -622,14 +682,14 @@ function DesktopSearchPage({
                   <div style={{ padding: 6, borderRadius: 6, backgroundColor: '#e6fffa', color: '#0d9488' }}>
                     <IconFilter size={16} />
                   </div>
-                  <Text strong>Filters</Text>
+                  <Text strong>{t('Filters')}</Text>
                 </Space>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
-                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Specialty</Text>
+                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>{t('Specialty')}</Text>
                     <DesktopSelect
-                      placeholder="Select specialty"
+                      placeholder={t('Select specialty')}
                       options={specialtyOptions}
                       value={specialty || undefined}
                       onChange={(value) => setSpecialty(value || '')}
@@ -640,9 +700,9 @@ function DesktopSearchPage({
                   </div>
 
                   <div>
-                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>City</Text>
+                    <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>{t('City')}</Text>
                     <DesktopSelect
-                      placeholder="Select city"
+                      placeholder={t('Select city')}
                       options={cityOptions}
                       value={city || undefined}
                       onChange={(value) => setCity(value || '')}
@@ -654,8 +714,8 @@ function DesktopSearchPage({
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <Text strong style={{ display: 'block', fontSize: 13 }}>Telemedicine available</Text>
-                      <Text type="secondary" style={{ fontSize: 12 }}>Only show doctors offering telehealth</Text>
+                      <Text strong style={{ display: 'block', fontSize: 13 }}>{t('Telemedicine available')}</Text>
+                      <Text type="secondary" style={{ fontSize: 12 }}>{t('Only show doctors offering telehealth')}</Text>
                     </div>
                     <DesktopSwitch checked={telemedicineOnly} onChange={(checked) => setTelemedicineOnly(checked)} />
                   </div>
@@ -667,15 +727,15 @@ function DesktopSearchPage({
                     onClick={() => setShowMoreFilters((v) => !v)}
                     style={{ width: '100%' }}
                   >
-                    {showMoreFilters ? 'Less filters' : 'More filters'}
+                    {showMoreFilters ? t('Less filters') : t('More filters')}
                   </DesktopButton>
 
                   {showMoreFilters && (
                     <>
                       <div>
-                        <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Insurance</Text>
+                        <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>{t('Insurance')}</Text>
                         <DesktopSelect
-                          placeholder="Select insurance"
+                          placeholder={t('Select insurance')}
                           options={insuranceOptions}
                           value={insurance || undefined}
                           onChange={(value) => setInsurance(value || '')}
@@ -686,7 +746,7 @@ function DesktopSearchPage({
                       </div>
 
                       <div>
-                        <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>Max price</Text>
+                        <Text strong style={{ display: 'block', marginBottom: 8, fontSize: 13 }}>{t('Max price')}</Text>
                         <Slider
                           min={30}
                           max={300}
@@ -699,7 +759,7 @@ function DesktopSearchPage({
                           tooltip={{ formatter: (val) => `€${val}`, open: false }}
                         />
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                          {typeof maxPrice === 'number' ? `≤ €${maxPrice}` : 'Any price'}
+                          {typeof maxPrice === 'number' ? `≤ €${maxPrice}` : t('Any price')}
                         </Text>
                       </div>
 
@@ -708,7 +768,7 @@ function DesktopSearchPage({
                         onClick={clearFilters}
                         style={{ width: '100%' }}
                       >
-                        Clear filters
+                        {t('Clear filters')}
                       </DesktopButton>
                     </>
                   )}
@@ -720,8 +780,8 @@ function DesktopSearchPage({
           {/* Results */}
           <Col xs={24} md={18}>
             <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-              <Text strong style={{ fontSize: 16 }}> {meta.total} specialists found</Text>
-              <Tag>Sort by: Best Match</Tag>
+              <Text strong style={{ fontSize: 16 }}> {t('{{count}} specialists found', { count: meta.total })}</Text>
+              <Tag>{t('Sort by: Best Match')}</Tag>
             </Row>
 
             <Row gutter={[24, 24]}>
@@ -733,6 +793,21 @@ function DesktopSearchPage({
                       doctor={doctor}
                       isFocused={isFocused}
                       onClick={() => handleDoctorClick(doctor.id)}
+                      onProfileClick={(id) => {
+                        // @ts-ignore
+                        if (!document.startViewTransition) {
+                          router.visit(`/doctors/${id}`)
+                          return
+                        }
+                        // @ts-ignore
+                        document.startViewTransition(() => {
+                          return new Promise<void>((resolve) => {
+                            router.visit(`/doctors/${id}`, {
+                              onFinish: () => resolve()
+                            })
+                          })
+                        })
+                      }}
                     />
                   </Col>
                 )
@@ -744,8 +819,8 @@ function DesktopSearchPage({
                 <div style={{ padding: 20, borderRadius: 20, backgroundColor: '#f5f5f5', marginBottom: 16 }}>
                   <IconSearch size={30} color="#999" />
                 </div>
-                <Title level={4} style={{ margin: 0 }}>No doctors found</Title>
-                <Text type="secondary">Try adjusting your filters</Text>
+                <Title level={4} style={{ margin: 0 }}>{t('No doctors found')}</Title>
+                <Text type="secondary">{t('Try adjusting your filters')}</Text>
               </div>
             )}
           </Col>

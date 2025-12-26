@@ -1,25 +1,31 @@
 <!DOCTYPE html>
-<html lang="el" data-theme="medic">
+<html lang="en" data-theme="medic">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <title suffix=" · Medic">
-      <%= assigns[:page_title] || "Medic" %>
-    </title>
+    <meta name="description" content="Book appointments with trusted doctors in Greece. Find specialists, manage your health journey, and access telemedicine - all in one place." />
+    <meta name="theme-color" content="#0D9488" />
+    <meta name="robots" content="index, follow" />
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={assigns[:page_title] || "Medic - Find & Book Trusted Doctors"} />
+    <meta property="og:description" content="Book appointments with trusted doctors in Greece. Find specialists, manage your health journey, and access telemedicine." />
+    <meta property="og:image" content={url(~p"/images/logo-medic-sun.svg")} />
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <title><%= assigns[:page_title] || "Medic - Find & Book Trusted Doctors" %></title>
     <link rel="icon" type="image/svg+xml" href={~p"/images/logo-medic-sun.svg"} />
-    <!-- Inertia Head Removed for Debugging -->
+    <link rel="apple-touch-icon" href={~p"/images/logo-medic-sun.svg"} />
     <!-- CSS bundle output to /assets/app.css by esbuild -->
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
+    <!-- Preload critical fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
-    <link
-      href="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.css"
-      rel="stylesheet"
-    />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js">
-    </script>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet"></noscript>
+
     <script defer phx-track-static type="module" src={~p"/assets/app.js"}>
     </script>
     <script>

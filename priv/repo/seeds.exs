@@ -14,7 +14,11 @@ Code.require_file("prod.exs", seeds_dir)
 # Appreciation system seeds (achievements definitions)
 Code.require_file("appreciate.exs", seeds_dir)
 
+# Admin user (always run)
+Code.require_file("admin.exs", seeds_dir)
+
 # Run development seeds only in dev/test
 if Mix.env() in [:dev, :test] do
   Code.require_file("dev.exs", seeds_dir)
 end
+

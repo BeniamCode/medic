@@ -16,6 +16,8 @@ defmodule Medic.Application do
       {Phoenix.PubSub, name: Medic.PubSub},
       # Oban for background jobs (reminders, search indexing)
       {Oban, Application.fetch_env!(:medic, Oban)},
+      # Inertia SSR process pool
+      {Inertia.SSR, path: Path.join([Application.app_dir(:medic), "priv"])},
       # Start to serve requests, typically the last entry
       MedicWeb.Endpoint
     ]

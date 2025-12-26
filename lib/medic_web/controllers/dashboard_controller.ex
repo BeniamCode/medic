@@ -4,8 +4,9 @@ defmodule MedicWeb.DashboardController do
   alias Medic.Appointments
   alias Medic.Patients
 
-  def show(conn, _params) do
+  def show(conn, params) do
     current_user = conn.assigns.current_user
+    tab = Map.get(params, "tab", "dashboard")
 
     with {:ok, patient} <- fetch_patient(current_user) do
       upcoming =
@@ -19,21 +20,30 @@ defmodule MedicWeb.DashboardController do
         Appointments.list_appointments(
           patient_id: patient.id,
           status: ["completed", "cancelled", "no_show"],
-          preload: [doctor: [:specialty], appreciation: []]
+          preload: [doctor: [:specialty], appreciation: [], experience_submission: []]
         )
 
       stats = patient_stats(patient)
+      
+      my_doctors = 
+        if tab == "doctors" do
+          Patients.list_my_doctors(patient.id)
+          |> Enum.map(&doctor_props/1)
+        else
+          []
+        end
 
       conn
       |> assign(:page_title, dgettext("default", "Dashboard"))
       |> assign_prop(:patient, %{
-        id: patient.id,
-        first_name: patient.first_name,
-        last_name: patient.last_name
+        firstName: patient.first_name,
+        lastName: patient.last_name
       })
-      |> assign_prop(:upcoming_appointments, Enum.map(upcoming, &appointment_props/1))
-      |> assign_prop(:past_appointments, Enum.map(past, &appointment_props/1))
+      |> assign_prop(:upcomingAppointments, Enum.map(upcoming, &appointment_props/1))
+      |> assign_prop(:pastAppointments, Enum.map(past, &appointment_props/1))
       |> assign_prop(:stats, stats)
+      |> assign_prop(:myDoctors, my_doctors)
+      |> assign_prop(:activeTab, tab)
       |> render_inertia("Patient/Dashboard")
     else
       _ -> redirect(conn, to: ~p"/onboarding/doctor")
@@ -60,6 +70,7 @@ defmodule MedicWeb.DashboardController do
         appointment.pending_expires_at && DateTime.to_iso8601(appointment.pending_expires_at),
       rescheduledFromAppointmentId: appointment.rescheduled_from_appointment_id,
       appreciated: not is_nil(appointment.appreciation),
+      hasExperienceSubmission: not is_nil(appointment.experience_submission),
       doctor: %{
         id: doctor.id,
         firstName: doctor.first_name,
@@ -67,6 +78,22 @@ defmodule MedicWeb.DashboardController do
         specialty: doctor.specialty && doctor.specialty.name_en,
         avatarUrl: Map.get(doctor, :avatar_url) || Map.get(doctor, :profile_image_url)
       }
+    }
+  end
+
+  defp doctor_props(d) do
+    %{
+      id: d.doctor_id,
+      firstName: d.first_name,
+      lastName: d.last_name,
+      specialty: d.specialty,
+      profileImageUrl: d.profile_image_url,
+      rating: d.rating,
+      visitCount: d.visit_count,
+      lastVisit: d.last_visit && DateTime.to_iso8601(d.last_visit),
+      firstVisit: d.first_visit && DateTime.to_iso8601(d.first_visit),
+      hasContext: not is_nil(d.context),
+      tags: (d.context && d.context.tags) || []
     }
   end
 

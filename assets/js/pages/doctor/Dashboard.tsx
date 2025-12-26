@@ -9,7 +9,8 @@ import {
   Avatar,
   List as DesktopList,
   Flex,
-  Tag
+  Tag,
+  Input
 } from 'antd'
 import {
   IconCalendar,
@@ -17,18 +18,21 @@ import {
   IconClock,
   IconVideo,
   IconStar,
-  IconUser
+  IconUser,
+  IconSearch as IconSearchDesktop
 } from '@tabler/icons-react'
 import { Link, router } from '@inertiajs/react'
 import { format } from 'date-fns'
+import { enUS, el } from 'date-fns/locale'
 import { useTranslation } from 'react-i18next'
 import { useIsMobile } from '@/lib/device'
 
 import type { AppPageProps } from '@/types/app'
 
 // Mobile imports
-import { Card as MobileCard, List, Button as MobileButton, Tag as MobileTag, Empty } from 'antd-mobile'
+import { Card as MobileCard, List, Button as MobileButton, Tag as MobileTag, Empty, SearchBar } from 'antd-mobile'
 import { CalendarOutline, CheckOutline, StarOutline, ClockCircleOutline } from 'antd-mobile-icons'
+import { useState } from 'react'
 
 const { Title, Text } = Typography
 
@@ -57,24 +61,223 @@ type PageProps = AppPageProps<{
   todayAppointments: Appointment[]
   pendingCount: number
   upcomingCount: number
+  myPatients: MyPatient[]
+  activeTab: 'dashboard' | 'patients'
 }>
+
+type MyPatient = {
+  id: string
+  firstName: string
+  lastName: string
+  phone?: string
+  age?: number
+  profileImageUrl?: string
+  visitCount: number
+  lastVisit: string | null
+  firstVisit: string | null
+  hasContext: boolean
+  tags?: string[]
+}
+
+const DATE_LOCALES: Record<string, any> = {
+  en: enUS,
+  el: el
+}
+
+// =============================================================================
+// MY PATIENTS LIST - DESKTOP
+// =============================================================================
+
+function MyPatientsList({ patients }: { patients: MyPatient[] }) {
+  const { t, i18n } = useTranslation('default')
+  const dateLocale = DATE_LOCALES[i18n.language] || enUS
+  const [searchText, setSearchText] = useState('')
+
+  const filteredPatients = patients.filter(patient => {
+    const fullName = `${patient.firstName || ''} ${patient.lastName || ''}`.toLowerCase()
+    const phone = patient.phone || ''
+    return fullName.includes(searchText.toLowerCase()) || phone.includes(searchText)
+  })
+
+  return (
+    <DesktopCard
+      title={<Title level={4} style={{ margin: 0 }}>{t('My Patients')}</Title>}
+      extra={
+        <Input
+          placeholder={t('Search patients...')}
+          prefix={<IconSearchDesktop size={16} />}
+          style={{ width: 250 }}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+        />
+      }
+      bordered
+      style={{ borderRadius: 12 }}
+    >
+      <DesktopList
+        itemLayout="horizontal"
+        dataSource={filteredPatients}
+        pagination={{ pageSize: 10 }}
+        locale={{ emptyText: t('No patients found') }}
+        renderItem={(patient) => (
+          <DesktopList.Item
+            actions={[
+              <DesktopButton type="text" key="notes" onClick={() => {
+                // TODO: Implement notes modal
+                console.log('Edit notes for patient:', patient.id)
+              }}>
+                {patient.hasContext ? t('Edit Notes') : t('Add Notes')}
+              </DesktopButton>
+            ]}
+          >
+            <DesktopList.Item.Meta
+              avatar={
+                patient.profileImageUrl ? (
+                  <Avatar src={patient.profileImageUrl} />
+                ) : (
+                  <Avatar style={{ backgroundColor: '#0d9488' }}>{patient.firstName?.[0] || '?'}</Avatar>
+                )
+              }
+              title={
+                <Space>
+                  <span style={{ fontWeight: 600 }}>{patient.firstName} {patient.lastName}</span>
+                  {patient.age && <Tag color="blue">{patient.age} {t('years')}</Tag>}
+                  {patient.tags && patient.tags.length > 0 && patient.tags.map(tag => (
+                    <Tag key={tag} color="default">{tag}</Tag>
+                  ))}
+                </Space>
+              }
+              description={
+                <Space direction="vertical" size={0}>
+                  <Space split="|" size="small">
+                    <Text type="secondary">{t('Seen {{count}} times', { count: patient.visitCount })}</Text>
+                    {patient.lastVisit && (
+                      <Text type="secondary">
+                        {t('Last visit')}: {format(new Date(patient.lastVisit), 'P', { locale: dateLocale })}
+                      </Text>
+                    )}
+                  </Space>
+                  {patient.phone && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>📱 {patient.phone}</Text>
+                  )}
+                  {patient.firstVisit && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('First visit')}: {format(new Date(patient.firstVisit), 'P', { locale: dateLocale })}
+                    </Text>
+                  )}
+                </Space>
+              }
+            />
+          </DesktopList.Item>
+        )}
+      />
+    </DesktopCard>
+  )
+}
+
+// =============================================================================
+// MY PATIENTS LIST - MOBILE
+// =============================================================================
+
+function MobileMyPatientsList({ patients }: { patients: MyPatient[] }) {
+  const { t, i18n } = useTranslation('default')
+  const dateLocale = DATE_LOCALES[i18n.language] || enUS
+  const [searchText, setSearchText] = useState('')
+
+  const filteredPatients = patients.filter(patient => {
+    const fullName = `${patient.firstName || ''} ${patient.lastName || ''}`.toLowerCase()
+    const phone = patient.phone || ''
+    return fullName.includes(searchText.toLowerCase()) || phone.includes(searchText)
+  })
+
+  return (
+    <div style={{ padding: 16, paddingBottom: 80 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 16px' }}>
+        {t('My Patients')}
+      </h2>
+
+      <SearchBar
+        placeholder={t('Search patients...')}
+        value={searchText}
+        onChange={setSearchText}
+        style={{ marginBottom: 16 }}
+      />
+
+      <MobileCard style={{ borderRadius: 12 }}>
+        {filteredPatients.length === 0 ? (
+          <Empty description={t('No patients found')} style={{ padding: 20 }} />
+        ) : (
+          <List>
+            {filteredPatients.map((patient) => (
+              <List.Item
+                key={patient.id}
+                prefix={
+                  patient.profileImageUrl ? (
+                    <Avatar src={patient.profileImageUrl} />
+                  ) : (
+                    <Avatar style={{ backgroundColor: '#0d9488' }}>
+                      {patient.firstName?.[0] || '?'}
+                    </Avatar>
+                  )
+                }
+                description={
+                  <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+                    <div>{t('Seen {{count}} times', { count: patient.visitCount })}</div>
+                    {patient.phone && <div>📱 {patient.phone}</div>}
+                    {patient.lastVisit && (
+                      <div>
+                        {t('Last visit')}: {format(new Date(patient.lastVisit), 'P', { locale: dateLocale })}
+                      </div>
+                    )}
+                    {patient.firstVisit && (
+                      <div style={{ fontSize: 11 }}>
+                        {t('First visit')}: {format(new Date(patient.firstVisit), 'P', { locale: dateLocale })}
+                      </div>
+                    )}
+                  </div>
+                }
+                arrow={false}
+              >
+                <div>
+                  <div style={{ fontWeight: 500 }}>
+                    {patient.firstName} {patient.lastName}
+                    {patient.age && <span style={{ marginLeft: 8, color: '#999', fontSize: 13 }}>({patient.age})</span>}
+                  </div>
+                  {patient.tags && patient.tags.length > 0 && (
+                    <div style={{ marginTop: 4 }}>
+                      {patient.tags.map(tag => (
+                        <MobileTag key={tag} color="default" style={{ fontSize: 10, marginRight: 4 }}>{tag}</MobileTag>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </List.Item>
+            ))}
+          </List>
+        )}
+      </MobileCard>
+    </div>
+  )
+}
 
 // =============================================================================
 // MOBILE DOCTOR DASHBOARD
 // =============================================================================
 
 function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomingCount }: Omit<PageProps, 'app' | 'auth'>) {
-  const { t } = useTranslation('default')
+  const { t, i18n } = useTranslation('default')
+  const dateLocale = DATE_LOCALES[i18n.language] || enUS
 
   return (
     <div style={{ padding: 16, paddingBottom: 80 }}>
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>
-          {t('doctor.dashboard.title', 'Dashboard')}
+          {t('Dashboard')}
         </h2>
         <p style={{ color: '#666', margin: 0, fontSize: 14 }}>
-          {t('doctor.dashboard.subtitle', 'Good morning, Dr. {{lastName}}', { lastName: doctor.lastName })}
+          {t('Good morning, Dr. {{lastName}}', { lastName: doctor.lastName })}
         </p>
       </div>
 
@@ -82,28 +285,28 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
         <MobileStatCard
           icon={<CalendarOutline fontSize={20} />}
-          label="Today"
+          label={t('Today')}
           value={todayAppointments.length}
           color="#3b82f6"
           bg="#eff6ff"
         />
         <MobileStatCard
           icon={<CheckOutline fontSize={20} />}
-          label="Pending"
+          label={t('Pending')}
           value={pendingCount}
           color="#eab308"
           bg="#fef9c3"
         />
         <MobileStatCard
           icon={<CalendarOutline fontSize={20} />}
-          label="This Week"
+          label={t('This Week')}
           value={upcomingCount}
           color="#10b981"
           bg="#d1fae5"
         />
         <MobileStatCard
           icon={<StarOutline fontSize={20} />}
-          label="Rating"
+          label={t('Rating')}
           value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
           color="#f59e0b"
           bg="#fffbeb"
@@ -111,12 +314,12 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
       </div>
 
       {/* Today's Appointments */}
-      <MobileCard title="Today's Schedule" style={{ borderRadius: 12, marginBottom: 16 }}>
+      <MobileCard title={t("Today's Schedule")} style={{ borderRadius: 12, marginBottom: 16 }}>
         {todayAppointments.length === 0 ? (
-          <Empty description="No appointments today" style={{ padding: 20 }} />
+          <Empty description={t('No appointments today')} style={{ padding: 20 }} />
         ) : (
           <List>
-            {todayAppointments.map((appt) => {
+            {todayAppointments.map((appt: Appointment) => {
               const startsAt = new Date(appt.startsAt)
               return (
                 <List.Item
@@ -124,7 +327,7 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
                   description={
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                       <ClockCircleOutline fontSize={12} />
-                      <span>{format(startsAt, 'p')}</span>
+                      <span>{format(startsAt, 'p', { locale: dateLocale })}</span>
                       <MobileTag
                         color={appt.status === 'confirmed' ? 'success' : 'primary'}
                         fill="outline"
@@ -140,7 +343,7 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
                     {appt.patient.firstName} {appt.patient.lastName}
                   </span>
                   <span style={{ color: '#999', marginLeft: 8, fontSize: 13 }}>
-                    {appt.appointmentType === 'telemedicine' ? '📹 Video' : '🏥 In-person'}
+                    {appt.appointmentType === 'telemedicine' ? `📹 ${t('Video')}` : `🏥 ${t('In-person')}`}
                   </span>
                 </List.Item>
               )
@@ -150,7 +353,7 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
       </MobileCard>
 
       {/* Quick Actions */}
-      <MobileCard title="Quick Actions" style={{ borderRadius: 12 }}>
+      <MobileCard title={t('Quick Actions')} style={{ borderRadius: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <MobileButton
             block
@@ -158,7 +361,7 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
             onClick={() => router.visit('/doctor/schedule')}
             style={{ '--border-radius': '8px' }}
           >
-            Manage Availability
+            {t('Manage Availability')}
           </MobileButton>
           <MobileButton
             block
@@ -166,7 +369,7 @@ function MobileDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomi
             onClick={() => router.visit('/dashboard/doctor/profile')}
             style={{ '--border-radius': '8px' }}
           >
-            Edit Profile
+            {t('Edit Profile')}
           </MobileButton>
         </div>
       </MobileCard>
@@ -205,23 +408,31 @@ function MobileStatCard({ icon, label, value, color, bg }: { icon: React.ReactNo
 // DESKTOP DOCTOR DASHBOARD (Original)
 // =============================================================================
 
-function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomingCount }: Omit<PageProps, 'app' | 'auth'>) {
-  const { t } = useTranslation('default')
+function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcomingCount, myPatients, activeTab }: Omit<PageProps, 'app' | 'auth'>) {
+  const { t, i18n } = useTranslation('default')
+
+  if (activeTab === 'patients') {
+    return (
+      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+        <MyPatientsList patients={myPatients} />
+      </div>
+    )
+  }
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
       <Flex justify="space-between" align="center" style={{ marginBottom: 32 }}>
         <div>
-          <Title level={2} style={{ margin: 0 }}>{t('doctor.dashboard.title', 'Doctor Dashboard')}</Title>
+          <Title level={2} style={{ margin: 0 }}>{t('Doctor Dashboard')}</Title>
           <Text type="secondary">
-            {t('doctor.dashboard.subtitle', 'Good morning, Dr. {{lastName}}', {
+            {t('Good morning, Dr. {{lastName}}', {
               lastName: doctor.lastName
             })}
           </Text>
         </div>
         <Link href="/dashboard/doctor/profile">
           <DesktopButton type="default">
-            {t('doctor.dashboard.edit_profile', 'Edit profile')}
+            {t('Edit Profile')}
           </DesktopButton>
         </Link>
       </Flex>
@@ -230,9 +441,9 @@ function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcom
         <Col xs={24} sm={12} md={6}>
           <StatCard
             icon={<IconCalendar size={20} />}
-            label={t('doctor.dashboard.stats.today', 'Today')}
+            label={t('Today')}
             value={todayAppointments.length}
-            subtitle={t('doctor.dashboard.stats.today_sub', 'appointments')}
+            subtitle={t('appointments')}
             color="#3b82f6"
             bg="#eff6ff"
           />
@@ -240,9 +451,9 @@ function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcom
         <Col xs={24} sm={12} md={6}>
           <StatCard
             icon={<IconCheck size={20} />}
-            label={t('doctor.dashboard.stats.pending', 'Pending requests')}
+            label={t('Pending requests')}
             value={pendingCount}
-            subtitle={t('doctor.dashboard.stats.pending_sub', 'Action required')}
+            subtitle={t('Action required')}
             color="#eab308"
             bg="#fef9c3"
           />
@@ -250,9 +461,9 @@ function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcom
         <Col xs={24} sm={12} md={6}>
           <StatCard
             icon={<IconCalendar size={20} />}
-            label={t('doctor.dashboard.stats.week', 'Confirmed (week)')}
+            label={t('Confirmed (week)')}
             value={upcomingCount}
-            subtitle={t('doctor.dashboard.stats.week_sub', 'upcoming visits')}
+            subtitle={t('upcoming visits')}
             color="#10b981"
             bg="#d1fae5"
           />
@@ -260,9 +471,9 @@ function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcom
         <Col xs={24} sm={12} md={6}>
           <StatCard
             icon={<IconStar size={20} />}
-            label={t('doctor.dashboard.stats.rating', 'Rating')}
+            label={t('Rating')}
             value={doctor.rating ? doctor.rating.toFixed(1) : '—'}
-            subtitle={`${doctor.reviewCount || 0} ${t('doctor.dashboard.stats.reviews', 'reviews')}`}
+            subtitle={`${doctor.reviewCount || 0} ${t('reviews')}`}
             color="#f59e0b"
             bg="#fffbeb"
           />
@@ -272,19 +483,19 @@ function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcom
       <Row gutter={24}>
         <Col xs={24} lg={16}>
           <DesktopCard
-            title={<Title level={4} style={{ margin: 0 }}>{t('doctor.dashboard.today_schedule', "Today's schedule")}</Title>}
+            title={<Title level={4} style={{ margin: 0 }}>{t("Today's Schedule")}</Title>}
             bordered
             style={{ height: '100%', borderRadius: 12 }}
           >
             {todayAppointments.length === 0 ? (
               <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                <Text type="secondary">{t('doctor.dashboard.no_appointments', 'No appointments today')}</Text>
+                <Text type="secondary">{t('No appointments today')}</Text>
               </div>
             ) : (
               <DesktopList
                 itemLayout="horizontal"
                 dataSource={todayAppointments}
-                renderItem={(appt) => <AppointmentRow appointment={appt} />}
+                renderItem={(appt: Appointment) => <AppointmentRow appointment={appt} />}
               />
             )}
           </DesktopCard>
@@ -292,23 +503,23 @@ function DesktopDoctorDashboard({ doctor, todayAppointments, pendingCount, upcom
 
         <Col xs={24} lg={8}>
           <DesktopCard
-            title={<Title level={4} style={{ margin: 0 }}>{t('doctor.dashboard.quick_actions', 'Quick actions')}</Title>}
+            title={<Title level={4} style={{ margin: 0 }}>{t('Quick Actions')}</Title>}
             bordered
             style={{ height: '100%', borderRadius: 12 }}
           >
             <Flex vertical gap="middle">
               <Link href="/doctor/schedule" style={{ display: 'block' }}>
                 <DesktopButton block size="large">
-                  {t('doctor.dashboard.manage_schedule', 'Manage availability')}
+                  {t('Manage Availability')}
                 </DesktopButton>
               </Link>
               <Link href="/dashboard/doctor/profile" style={{ display: 'block' }}>
                 <DesktopButton block size="large">
-                  {t('doctor.dashboard.edit_profile', 'Edit profile')}
+                  {t('Edit Profile')}
                 </DesktopButton>
               </Link>
               <DesktopButton block size="large" disabled>
-                {t('doctor.dashboard.analytics', 'Analytics (coming soon)')}
+                {t('Analytics (coming soon)')}
               </DesktopButton>
             </Flex>
           </DesktopCard>
@@ -348,9 +559,10 @@ const StatCard = ({ icon, label, value, subtitle, color, bg }: { icon: React.Rea
 )
 
 const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
-  const { t } = useTranslation('default')
+  const { t, i18n } = useTranslation('default')
+  const dateLocale = DATE_LOCALES[i18n.language] || enUS
   const startsAt = new Date(appointment.startsAt)
-  const startText = format(startsAt, 'p')
+  const startText = format(startsAt, 'p', { locale: dateLocale })
 
   return (
     <DesktopCard bordered={false} style={{ marginBottom: 16, border: '1px solid #f0f0f0', borderRadius: 8 }} styles={{ body: { padding: 16 } }}>
@@ -361,8 +573,8 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
           </Text>
           <Text type="secondary" style={{ fontSize: 14 }}>
             {appointment.appointmentType === 'telemedicine'
-              ? t('doctor.dashboard.telemed', 'Telemedicine')
-              : t('doctor.dashboard.in_person', 'In-person')}
+              ? t('Telemedicine')
+              : t('In-person')}
           </Text>
           {appointment.notes && <Text style={{ fontSize: 14, fontStyle: 'italic' }}>"{appointment.notes}"</Text>}
         </Space>
@@ -385,14 +597,19 @@ const AppointmentRow = ({ appointment }: { appointment: Appointment }) => {
 // MAIN COMPONENT
 // =============================================================================
 
-const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCount, upcomingCount }: PageProps) => {
+const DoctorDashboardPage = ({ app, auth, doctor, todayAppointments, pendingCount, upcomingCount, myPatients, activeTab }: PageProps) => {
   const isMobile = useIsMobile()
 
-  if (isMobile) {
-    return <MobileDoctorDashboard doctor={doctor} todayAppointments={todayAppointments} pendingCount={pendingCount} upcomingCount={upcomingCount} />
+  // Mobile: Show patients tab when activeTab is 'patients'
+  if (isMobile && activeTab === 'patients') {
+    return <MobileMyPatientsList patients={myPatients} />
   }
 
-  return <DesktopDoctorDashboard doctor={doctor} todayAppointments={todayAppointments} pendingCount={pendingCount} upcomingCount={upcomingCount} />
+  if (isMobile) {
+    return <MobileDoctorDashboard doctor={doctor} todayAppointments={todayAppointments} pendingCount={pendingCount} upcomingCount={upcomingCount} myPatients={myPatients} activeTab={activeTab} />
+  }
+
+  return <DesktopDoctorDashboard doctor={doctor} todayAppointments={todayAppointments} pendingCount={pendingCount} upcomingCount={upcomingCount} myPatients={myPatients} activeTab={activeTab as 'dashboard' | 'patients'} />
 }
 
 export default DoctorDashboardPage

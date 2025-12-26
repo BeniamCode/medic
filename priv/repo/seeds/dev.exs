@@ -235,7 +235,7 @@ if doctors_to_create > 0 do
     last_name = DevSeeds.random_item(last_names)
     email = "doctor#{existing_doctor_count + i}@demo.medic.gr"
 
-    # Create user
+    # Create user (this creates a basic doctor profile via register_user callback)
     {:ok, user} =
       Accounts.register_user(%{
         email: email,
@@ -243,9 +243,14 @@ if doctors_to_create > 0 do
         role: "doctor"
       })
 
-    # Create doctor profile
+    # Load the doctor profile created by register_user and UPDATE it
+    user = Ash.load!(user, [:doctor])
+    doctor = user.doctor
+    
+    # Update doctor with full profile details
     {:ok, doctor} =
-      Doctors.create_doctor(user, %{
+      doctor
+      |> Doctor.changeset(%{
         first_name: first_name,
         last_name: last_name,
         specialty_id: specialty.id,
@@ -254,9 +259,9 @@ if doctors_to_create > 0 do
         address: "#{Enum.random(1..999)} Main Street, #{city.name}",
         location_lat: lat,
         location_lng: lng,
-        consultation_fee: DevSeeds.random_fee(),
-        cal_com_username: if(Enum.random(1..100) > 30, do: "dr-#{String.downcase(last_name)}-#{i}")
+        consultation_fee: DevSeeds.random_fee()
       })
+      |> Repo.update()
 
     # Verify 70% of doctors
     if Enum.random(1..100) <= 70 do
@@ -302,12 +307,19 @@ if patients_to_create > 0 do
         role: "patient"
       })
 
-    Patients.create_patient(user, %{
+    # Load the patient profile created by register_user and UPDATE it
+    user = Ash.load!(user, [:patient])
+    patient = user.patient
+    
+    # Update patient with full profile details
+    patient
+    |> Patient.changeset(%{
       first_name: first_name,
       last_name: last_name,
       phone: "+30 69#{:rand.uniform(99999999) |> Integer.to_string() |> String.pad_leading(8, "0")}",
       date_of_birth: Date.add(Date.utc_today(), -Enum.random(18..80) * 365)
     })
+    |> Repo.update!()
   end
 else
   IO.puts("  • #{existing_patient_count} patients already exist")

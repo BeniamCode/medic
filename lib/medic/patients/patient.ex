@@ -14,7 +14,13 @@ defmodule Medic.Patients.Patient do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
+
+    destroy :destroy do
+      primary? true
+      soft? true
+      change set_attribute(:deleted_at, &DateTime.utc_now/0)
+    end
 
     create :create do
       primary? true
@@ -26,6 +32,7 @@ defmodule Medic.Patients.Patient do
         :phone,
         :emergency_contact,
         :profile_image_url,
+        :email,
         :preferred_language,
         :preferred_timezone,
         :communication_preferences,
@@ -41,6 +48,7 @@ defmodule Medic.Patients.Patient do
         :phone,
         :emergency_contact,
         :profile_image_url,
+        :email,
         :preferred_language,
         :preferred_timezone,
         :communication_preferences
@@ -57,15 +65,23 @@ defmodule Medic.Patients.Patient do
     attribute :phone, :string
     attribute :emergency_contact, :string
     attribute :profile_image_url, :string
+    attribute :email, :string
     attribute :preferred_language, :string, default: "en"
     attribute :preferred_timezone, :string
     attribute :communication_preferences, :map, default: %{}
+    attribute :doctor_initiated, :boolean, default: false
+
+    attribute :deleted_at, :utc_datetime_usec do
+      public? true
+    end
 
     timestamps()
   end
 
   relationships do
-    belongs_to :user, Medic.Accounts.User
+    belongs_to :user, Medic.Accounts.User do
+      allow_nil? true
+    end
     has_many :appointments, Medic.Appointments.Appointment
   end
 

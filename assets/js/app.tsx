@@ -5,39 +5,63 @@ import { InertiaProgress } from '@inertiajs/progress'
 import { createInertiaApp, router } from '@inertiajs/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode, createContext, useContext, useState } from 'react'
-import { createRoot } from 'react-dom/client'
+import { hydrateRoot } from 'react-dom/client'
 
 import { ensureI18n } from '@/lib/i18n'
 import type { AppPageProps, SharedAppProps } from '@/types/app'
 import { resolvePage } from '@/pages'
 import axios from 'axios'
 
-// Mutable store for CSRF token
-let currentCsrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+// Global CSRF token store - keeps track of the latest token
+// This is updated on every Inertia navigation success
+let _csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
 
-if (currentCsrfToken) {
-  // Ensure traditional axios requests include the CSRF token
-  axios.defaults.headers.common['X-CSRF-TOKEN'] = currentCsrfToken
+// Export helper to get current CSRF token (for use in components)
+export const getCSRFToken = () => _csrfToken || document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
 
-  // Inertia uses fetch under the hood, so we manually push the CSRF header
-  document.addEventListener('inertia:before', (event) => {
+// Make it globally available for components that import differently
+if (typeof window !== 'undefined') {
+  (window as any).__getCSRFToken = getCSRFToken
+}
+
+// Set up Axios defaults for CSRF
+axios.defaults.headers.common['X-CSRF-Token'] = getCSRFToken()
+axios.defaults.headers.common['X-CSRF-TOKEN'] = getCSRFToken()
+
+// Axios interceptor to always use fresh token
+axios.interceptors.request.use((config) => {
+  const token = getCSRFToken()
+  if (token) {
+    config.headers['X-CSRF-Token'] = token
+    config.headers['X-CSRF-TOKEN'] = token
+  }
+  return config
+})
+
+// Add CSRF token to ALL Inertia requests
+router.on('before', (event) => {
+  const token = getCSRFToken()
+  if (token && event.detail?.visit) {
     event.detail.visit.headers = {
       ...event.detail.visit.headers,
-      'x-csrf-token': currentCsrfToken
+      'X-CSRF-Token': token,
+      'x-csrf-token': token
     }
-  })
-}
+  }
+})
 
 // Update CSRF token on each navigation (if provided in props)
 router.on('success', (event) => {
-  const newProps = event.detail.page.props as SharedAppProps
-  const newToken = newProps.app?.csrfToken
+  const newProps = event.detail.page.props as unknown as SharedAppProps
+  const newToken = newProps.app?.csrf_token
 
-  if (newToken && newToken !== currentCsrfToken) {
-    currentCsrfToken = newToken
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = newToken
+  if (newToken) {
+    // Update our global store
+    _csrfToken = newToken
     // Update meta tag for consistency
     document.querySelector("meta[name='csrf-token']")?.setAttribute('content', newToken)
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = newToken
+    axios.defaults.headers.common['X-CSRF-Token'] = newToken
   }
 
   void ensureI18n(newProps.i18n)
@@ -128,24 +152,25 @@ createInertiaApp<AppPageProps>({
     return component
   },
   setup({ el, App, props }) {
-    const root = createRoot(el)
-    void ensureI18n((props.initialPage.props as SharedAppProps).i18n)
-
-    root.render(
-      <StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <ThemeModeProvider>
-            <App {...props} />
-          </ThemeModeProvider>
-        </QueryClientProvider>
-      </StrictMode>
-    )
+    axios.defaults.headers.common['X-CSRF-Token'] = (
+      props.initialPage.props as SharedAppProps
+    ).app.csrf_token
+    ensureI18n((props.initialPage.props as SharedAppProps).i18n).then(() => {
+      hydrateRoot(
+        el,
+        <StrictMode>
+          <QueryClientProvider client={queryClient}>
+            <ThemeModeProvider>
+              <App {...props} />
+            </ThemeModeProvider>
+          </QueryClientProvider>
+        </StrictMode>
+      )
+    })
   }
 })
 
-router.on('success', (event) => {
-  void ensureI18n((event.detail.page.props as SharedAppProps).i18n)
-})
+
 
 InertiaProgress.init({ color: '#1f7aec', showSpinner: false })
 

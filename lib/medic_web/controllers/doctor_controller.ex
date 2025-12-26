@@ -24,15 +24,33 @@ defmodule MedicWeb.DoctorController do
 
     case fetch_doctor(id) do
       {:ok, doctor} ->
+        # Parallelize independent fetches
+        # 1. Appreciation Stats
+        # 2. Experience Profile
+        # 3. Availability (Cache access + potential calculation)
+        
+        task_appreciation = Task.async(fn -> Repo.get(DoctorAppreciationStat, doctor.id) end)
+        task_experience = Task.async(fn -> Medic.Doctors.get_doctor_experience_profile(doctor.id) end)
+        task_availability = Task.async(fn -> 
+           # Use cached schedule if available
+           timezone = "Europe/Athens" # Default timezone
+           get_weekly_slots(doctor, start_date, timezone)
+        end)
+
+        # Main thread parses/formats the doctor (CPU bound, fast)
         formatted = format_doctor(doctor, locale)
         page_title = formatted.full_name || dgettext("default", "Doctor")
-        appreciation_stats = Repo.get(DoctorAppreciationStat, doctor.id)
-        availability = Scheduling.get_slots_for_range(doctor, start_date, Date.add(start_date, 6))
+
+        # Await results
+        appreciation_stats = Task.await(task_appreciation)
+        experience_profile = Task.await(task_experience)
+        availability = Task.await(task_availability)
 
         conn
         |> assign(:page_title, page_title)
         |> assign_prop(:doctor, formatted)
         |> assign_prop(:appreciation, appreciation_props(appreciation_stats))
+        |> assign_prop(:experienceProfile, experience_profile)
         |> assign_prop(:availability, Enum.map(availability, &availability_props/1))
         # Pass current start date to frontend for pagination logic
         |> assign_prop(:startDate, Date.to_iso8601(start_date))
@@ -44,6 +62,62 @@ defmodule MedicWeb.DoctorController do
         |> put_view(ErrorHTML)
         |> render("404.html", layout: false)
     end
+  end
+
+  defp get_weekly_slots(doctor, start_date, timezone) do
+    end_date = Timex.shift(start_date, days: 6)
+
+    # Attempt to read from cache first
+    cached_map = doctor.cached_schedule || %{}
+    
+    # Check if we have data for the requested range in the cache
+    # We iterate 0..6 and check if all days exist in the map
+    week_range_iso = 
+        0..6 
+        |> Enum.map(fn i -> Timex.shift(start_date, days: i) |> Date.to_iso8601() end)
+    
+    cache_hit? = Enum.all?(week_range_iso, fn iso -> Map.has_key?(cached_map, iso) end)
+
+    if cache_hit? do
+      # Cache Hit!
+      # We skip parsing dates back to DateTime structs, because availability_props
+      # would just convert them back to strings anyway.
+      # We just ensuring keys are atoms for the controller to work with.
+      
+      Enum.map(week_range_iso, fn iso ->
+        %{
+          date: Date.from_iso8601!(iso),
+          # Slots from JSON have string keys and string values for dates.
+          slots: Map.get(cached_map, iso) |> snake_case_keys_fast()
+        }
+      end)
+    else
+      # Cache Miss: Calculate on the fly AND trigger background refresh
+      if Timex.compare(start_date, Date.utc_today()) >= 0 do
+         Task.start(fn -> 
+            Medic.Scheduling.refresh_doctor_schedule_cache(doctor.id) 
+         end)
+      end
+      
+      # When calculating on the fly, slots contain DateTime structs.
+      Medic.Scheduling.get_slots_for_range(doctor, start_date, end_date, timezone: timezone)
+    end
+  end
+
+  # Optimized helper: Just converts keys to atoms, leaves values as strings (for dates)
+  defp snake_case_keys_fast(slots) do
+    Enum.map(slots, fn slot ->
+      for {key, val} <- slot, into: %{} do
+        # We know the specific keys: "starts_at", "ends_at", "status"
+        # We keep dates as STRINGS to avoid redundant parsing/formatting
+        case key do
+           "starts_at" -> {:starts_at, val} 
+           "ends_at" -> {:ends_at, val}
+           "status" -> {:status, String.to_existing_atom(val)}
+           _ -> {String.to_existing_atom(key), val}
+        end
+      end
+    end)
   end
 
   defp fetch_doctor(id) do
@@ -252,11 +326,14 @@ defmodule MedicWeb.DoctorController do
       slots:
         Enum.map(slots, fn slot ->
           %{
-            starts_at: DateTime.to_iso8601(slot.starts_at),
-            ends_at: DateTime.to_iso8601(slot.ends_at),
+            starts_at: ensure_iso(slot.starts_at),
+            ends_at: ensure_iso(slot.ends_at),
             status: slot.status
           }
         end)
     }
   end
+  
+  defp ensure_iso(val) when is_binary(val), do: val
+  defp ensure_iso(%DateTime{} = dt), do: DateTime.to_iso8601(dt)
 end

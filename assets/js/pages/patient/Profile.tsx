@@ -117,11 +117,11 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
           {
             preserveScroll: true,
             onSuccess: () => {
-              Toast.show({ icon: 'success', content: t('patient.profile.saved', 'Profile saved') })
+              Toast.show({ icon: 'success', content: t('Profile saved') })
               resolve()
             },
             onError: () => {
-              Toast.show({ icon: 'fail', content: t('patient.profile.save_failed', 'Unable to save') })
+              Toast.show({ icon: 'fail', content: t('Unable to save') })
               resolve()
             }
           }
@@ -135,15 +135,15 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
     <div style={{ padding: 16, paddingBottom: 100 }}>
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>
-          {t('patient.profile.title', 'Patient profile')}
+          {t('Patient profile')}
         </h2>
         <p style={{ color: '#666', margin: 0, fontSize: 14 }}>
-          {t('patient.profile.subtitle', 'Keep your details up to date')}
+          {t('Keep your details up to date')}
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <MobileCard title="Basic Info" style={{ borderRadius: 12, marginBottom: 16 }}>
+        <MobileCard title={t('Basic Info')} style={{ borderRadius: 12, marginBottom: 16 }}>
           {/* Avatar */}
           <Controller
             name="profile_image_url"
@@ -163,7 +163,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
 
           <MobileForm layout="vertical">
             <div style={{ display: 'flex', gap: 12 }}>
-              <MobileForm.Item label={t('patient.profile.first_name', 'First name')} style={{ flex: 1 }}>
+              <MobileForm.Item label={t('First name')} style={{ flex: 1 }}>
                 <Controller
                   name="first_name"
                   control={control}
@@ -178,7 +178,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
                 />
               </MobileForm.Item>
 
-              <MobileForm.Item label={t('patient.profile.last_name', 'Last name')} style={{ flex: 1 }}>
+              <MobileForm.Item label={t('Last name')} style={{ flex: 1 }}>
                 <Controller
                   name="last_name"
                   control={control}
@@ -194,7 +194,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
               </MobileForm.Item>
             </div>
 
-            <MobileForm.Item label={t('patient.profile.dob', 'Date of birth')}>
+            <MobileForm.Item label={t('Date of birth')}>
               <Controller
                 name="date_of_birth"
                 control={control}
@@ -208,7 +208,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
               />
             </MobileForm.Item>
 
-            <MobileForm.Item label={t('patient.profile.phone', 'Phone')}>
+            <MobileForm.Item label={t('Phone')}>
               <Controller
                 name="phone"
                 control={control}
@@ -224,7 +224,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
               />
             </MobileForm.Item>
 
-            <MobileForm.Item label={t('patient.profile.emergency_contact', 'Emergency contact')}>
+            <MobileForm.Item label={t('Emergency contact')}>
               <Controller
                 name="emergency_contact"
                 control={control}
@@ -241,10 +241,10 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
           </MobileForm>
         </MobileCard>
 
-        <MobileCard title="Preferences" style={{ borderRadius: 12, marginBottom: 16 }}>
+        <MobileCard title={t('Preferences')} style={{ borderRadius: 12, marginBottom: 16 }}>
           <MobileForm layout="vertical">
             <div style={{ display: 'flex', gap: 12 }}>
-              <MobileForm.Item label={t('patient.profile.preferred_language', 'Language')} style={{ flex: 1 }}>
+              <MobileForm.Item label={t('Preferred language')} style={{ flex: 1 }}>
                 <Controller
                   name="preferred_language"
                   control={control}
@@ -258,7 +258,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
                 />
               </MobileForm.Item>
 
-              <MobileForm.Item label={t('patient.profile.preferred_timezone', 'Timezone')} style={{ flex: 1 }}>
+              <MobileForm.Item label={t('Preferred timezone')} style={{ flex: 1 }}>
                 <Controller
                   name="preferred_timezone"
                   control={control}
@@ -276,8 +276,8 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
             <div style={{ borderTop: '1px solid #f0f0f0', marginTop: 16, paddingTop: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
-                  <div style={{ fontWeight: 500 }}>{t('patient.profile.pref_email_reminders', 'Email reminders')}</div>
-                  <div style={{ fontSize: 12, color: '#999' }}>Appointment confirmations</div>
+                  <div style={{ fontWeight: 500 }}>{t('Email reminders')}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>{t('Appointment confirmations')}</div>
                 </div>
                 <Controller
                   name="communication_preferences"
@@ -295,8 +295,8 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontWeight: 500 }}>{t('patient.profile.pref_sms_reminders', 'SMS reminders')}</div>
-                  <div style={{ fontSize: 12, color: '#999' }}>Optional SMS updates</div>
+                  <div style={{ fontWeight: 500 }}>{t('SMS reminders')}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>{t('Optional SMS updates')}</div>
                 </div>
                 <Controller
                   name="communication_preferences"
@@ -323,7 +323,7 @@ function MobilePatientProfile({ patient, errors: serverErrors }: { patient: any;
           loading={mutation.isPending}
           style={{ '--border-radius': '8px' }}
         >
-          {t('patient.profile.save', 'Save changes')}
+          {t('Save changes')}
         </MobileButton>
       </form>
     </div>
@@ -375,12 +375,12 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
           {
             preserveScroll: true,
             onSuccess: () => {
-              messageApi.success(t('patient.profile.saved', 'Profile saved'))
+              messageApi.success(t('Profile saved'))
               resolve()
             },
             onError: () => {
               messageApi.error(
-                t('patient.profile.save_failed', 'Unable to save. Please review the highlighted fields.')
+                t('Unable to save. Please review the highlighted fields.')
               )
               resolve()
             }
@@ -405,18 +405,17 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
           styles={{ body: { padding: 32 } }}
         >
           <Title level={2} style={{ margin: 0 }}>
-            {t('patient.profile.title', 'Patient profile')}
+            {t('Patient profile')}
           </Title>
           <Text type="secondary" style={{ marginTop: 8, display: 'block', maxWidth: 620 }}>
             {t(
-              'patient.profile.subtitle',
               'Keep your details up to date so we can personalize your experience and help clinics reach you about appointments.'
             )}
           </Text>
 
           <Flex gap="small" style={{ marginTop: 16 }} wrap>
-            <Tag color="blue">{t('patient.profile.badge_private', 'Private')}</Tag>
-            <Tag color="cyan">{t('patient.profile.badge_secure', 'Secure data')}</Tag>
+            <Tag color="blue">{t('Private')}</Tag>
+            <Tag color="cyan">{t('Secure data')}</Tag>
           </Flex>
         </DesktopCard>
 
@@ -424,7 +423,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
           <Flex vertical gap="large">
             <DesktopCard variant="outlined" style={{ borderRadius: 16 }}>
               <Title level={4} style={{ marginTop: 0 }}>
-                {t('patient.profile.basic', 'Basic info')}
+                {t('Basic info')}
               </Title>
 
               <Controller
@@ -433,7 +432,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
                 render={({ field }) => (
                   <div style={{ marginBottom: 24 }}>
                     <div style={{ marginBottom: 8 }}>
-                      <Text strong>{t('patient.profile.photo', 'Profile photo')}</Text>
+                      <Text strong>{t('Profile photo')}</Text>
                     </div>
 
                     <Flex gap="middle" align="center" wrap>
@@ -451,12 +450,12 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
                         beforeUpload={(file) => {
                           const okType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
                           if (!okType) {
-                            messageApi.error(t('patient.profile.photo_type', 'Please upload a JPG, PNG, or WebP image'))
+                            messageApi.error(t('Please upload a JPG, PNG, or WebP image'))
                             return Upload.LIST_IGNORE
                           }
                           const okSize = file.size <= 5 * 1024 * 1024
                           if (!okSize) {
-                            messageApi.error(t('patient.profile.photo_size', 'Max file size is 5MB'))
+                            messageApi.error(t('Max file size is 5MB'))
                             return Upload.LIST_IGNORE
                           }
                           return true
@@ -481,26 +480,26 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
                             const data = await res.json().catch(() => null)
 
                             if (!res.ok) {
-                              messageApi.error(t('patient.profile.photo_failed', 'Unable to upload photo. Please try again.'))
+                              messageApi.error(t('Unable to upload photo. Please try again.'))
                               throw new Error('upload_failed')
                             }
 
                             if (!data?.profile_image_url) throw new Error('upload_failed')
 
                             setValue('profile_image_url', data.profile_image_url, { shouldDirty: true })
-                            messageApi.success(t('patient.profile.photo_uploaded', 'Photo updated'))
+                            messageApi.success(t('Photo updated'))
                             options.onSuccess?.(data as any)
                           } catch (e) {
-                            messageApi.error(t('patient.profile.photo_failed', 'Unable to upload photo. Please try again.'))
+                            messageApi.error(t('Unable to upload photo. Please try again.'))
                             options.onError?.(e as any)
                           }
                         }}
                       >
-                        <DesktopButton type="default">{t('patient.profile.photo_upload', 'Upload photo')}</DesktopButton>
+                        <DesktopButton type="default">{t('Upload photo')}</DesktopButton>
                       </Upload>
 
                       <Text type="secondary" style={{ fontSize: 12, maxWidth: 520 }}>
-                        {t('patient.profile.photo_help', 'Use a clear photo. JPG/PNG/WebP up to 5MB.')}
+                        {t('Use a clear photo. JPG/PNG/WebP up to 5MB.')}
                       </Text>
                     </Flex>
                   </div>
@@ -510,7 +509,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
               <Row gutter={16}>
                 <Col xs={24} md={12}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.first_name', 'First name')}</Text>
+                    <Text strong>{t('First name')}</Text>
                   </div>
                   <Controller
                     name="first_name"
@@ -524,7 +523,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
                 </Col>
                 <Col xs={24} md={12}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.last_name', 'Last name')}</Text>
+                    <Text strong>{t('Last name')}</Text>
                   </div>
                   <Controller
                     name="last_name"
@@ -543,7 +542,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
               <Row gutter={16}>
                 <Col xs={24} md={12}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.dob', 'Date of birth')}</Text>
+                    <Text strong>{t('Date of birth')}</Text>
                   </div>
                   <Controller
                     name="date_of_birth"
@@ -559,7 +558,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
                 </Col>
                 <Col xs={24} md={12}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.phone', 'Phone')}</Text>
+                    <Text strong>{t('Phone')}</Text>
                   </div>
                   <Controller
                     name="phone"
@@ -575,13 +574,13 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
               <Row gutter={16} style={{ marginTop: 16 }}>
                 <Col xs={24} md={24}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.emergency_contact', 'Emergency contact')}</Text>
+                    <Text strong>{t('Emergency contact')}</Text>
                   </div>
                   <Controller
                     name="emergency_contact"
                     control={control}
                     render={({ field }) => (
-                      <DesktopInput {...field} value={field.value || ''} placeholder={t('patient.profile.emergency_placeholder', 'Name + phone')} />
+                      <DesktopInput {...field} value={field.value || ''} placeholder={t('Name + phone')} />
                     )}
                   />
                 </Col>
@@ -590,16 +589,16 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
 
             <DesktopCard variant="outlined" style={{ borderRadius: 16 }}>
               <Title level={4} style={{ marginTop: 0 }}>
-                {t('patient.profile.preferences', 'Preferences')}
+                {t('Preferences')}
               </Title>
               <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-                {t('patient.profile.preferences_help', 'These help us tailor notifications and the experience.')}
+                {t('These help us tailor notifications and the experience.')}
               </Text>
 
               <Row gutter={16}>
                 <Col xs={24} md={12}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.preferred_language', 'Preferred language')}</Text>
+                    <Text strong>{t('Preferred language')}</Text>
                   </div>
                   <Controller
                     name="preferred_language"
@@ -611,7 +610,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
                 </Col>
                 <Col xs={24} md={12}>
                   <div style={{ marginBottom: 8 }}>
-                    <Text strong>{t('patient.profile.preferred_timezone', 'Preferred timezone')}</Text>
+                    <Text strong>{t('Preferred timezone')}</Text>
                   </div>
                   <Controller
                     name="preferred_timezone"
@@ -626,9 +625,9 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 <Flex justify="space-between" align="center">
                   <div>
-                    <Text strong>{t('patient.profile.pref_email_reminders', 'Email reminders')}</Text>
+                    <Text strong>{t('Email reminders')}</Text>
                     <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
-                      {t('patient.profile.pref_email_reminders_help', 'Appointment confirmations and reminders')}
+                      {t('Appointment confirmations and reminders')}
                     </Text>
                   </div>
                   <Controller
@@ -647,9 +646,9 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
 
                 <Flex justify="space-between" align="center">
                   <div>
-                    <Text strong>{t('patient.profile.pref_sms_reminders', 'SMS reminders')}</Text>
+                    <Text strong>{t('SMS reminders')}</Text>
                     <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
-                      {t('patient.profile.pref_sms_reminders_help', 'Optional SMS updates when available')}
+                      {t('Optional SMS updates when available')}
                     </Text>
                   </div>
                   <Controller
@@ -670,7 +669,7 @@ function DesktopPatientProfile({ patient, errors: serverErrors }: { patient: any
 
             <Flex justify="flex-end">
               <DesktopButton type="primary" htmlType="submit" loading={mutation.isPending}>
-                {t('patient.profile.save', 'Save changes')}
+                {t('Save changes')}
               </DesktopButton>
             </Flex>
           </Flex>

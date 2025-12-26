@@ -25,7 +25,8 @@ import {
     IconSettings,
     IconSun,
     IconUserCircle,
-    IconMenu2
+    IconMenu2,
+    IconUsers
 } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { SharedAppProps } from '@/types/app'
@@ -34,6 +35,7 @@ import { useThemeMode } from '@/app'
 import { ensureNotificationsStream } from '@/lib/notificationsStream'
 import { useIsMobile } from '@/lib/device'
 import { NotificationBell } from '@/components/NotificationBell'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 //Mobile antd-mobile imports
 import { TabBar, NavBar, Popup, List, SafeArea } from 'antd-mobile'
@@ -65,11 +67,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
     const { notification } = AntdApp.useApp()
 
-    const [unreadCount, setUnreadCount] = useState<number>(app.unreadCount || 0)
+    const [unreadCount, setUnreadCount] = useState<number>(app.unread_count || 0)
 
     useEffect(() => {
-        setUnreadCount(app.unreadCount || 0)
-    }, [app.unreadCount])
+        setUnreadCount(app.unread_count || 0)
+    }, [app.unread_count])
 
     useEffect(() => {
         if (!auth.authenticated) {
@@ -78,32 +80,35 @@ export default function AppLayout({ children }: AppLayoutProps) {
             return
         }
 
+        // Initialize notification stream
+        if (!user) {
+            ensureNotificationsStream().stop()
+            return
+        }
+
         ensureNotificationsStream().start()
 
-        const onUnread = (ev: Event) => {
-            const detail = (ev as CustomEvent).detail as { unreadCount?: number } | undefined
-            if (detail && typeof detail.unreadCount === 'number') {
-                setUnreadCount(detail.unreadCount)
+        const updateUnreadCount = (ev: Event) => {
+            const count = (ev as CustomEvent).detail?.count
+            if (typeof count === 'number') {
+                setUnreadCount(count)
             }
         }
 
-        const onNew = (ev: Event) => {
-            const detail = (ev as CustomEvent).detail as { title?: string; message?: string } | undefined
-            if (!detail) return
-
-            notification.info({
-                message: detail.title || 'Notification',
-                description: detail.message || '',
-                placement: 'topRight'
-            })
+        const onNewNotification = () => {
+            // Invalidate the unread count or fetch recent
+            // We rely on the stream to update us or we can fetch manually
+            // For now, we just ensure the bell knows something happened
+            window.dispatchEvent(new CustomEvent('medic:notifications:fetch_unread'))
         }
 
-        window.addEventListener('medic:notifications:unreadCount', onUnread)
-        window.addEventListener('medic:notifications:new', onNew)
+        window.addEventListener('medic:notifications:unreadCount', updateUnreadCount)
+        window.addEventListener('medic:notifications:new', onNewNotification)
 
         return () => {
-            window.removeEventListener('medic:notifications:unreadCount', onUnread)
-            window.removeEventListener('medic:notifications:new', onNew)
+            window.removeEventListener('medic:notifications:unreadCount', updateUnreadCount)
+            window.removeEventListener('medic:notifications:new', onNewNotification)
+            ensureNotificationsStream().stop()
         }
     }, [auth.authenticated, notification])
 
@@ -153,23 +158,23 @@ export default function AppLayout({ children }: AppLayoutProps) {
     // ==========================================================================
     if (isMobile) {
         const doctorTabs = [
-            { key: 'home', title: 'Home', icon: <AppOutline /> },
-            { key: 'schedule', title: 'Schedule', icon: <CalendarOutline /> },
-            { key: 'search', title: 'Search', icon: <SearchOutline /> },
-            { key: 'notifications', title: 'Alerts', icon: unreadCount > 0 ? <Badge count={unreadCount} size="small"><BellOutline /></Badge> : <BellOutline /> },
-            { key: 'profile', title: 'Profile', icon: <UserOutline /> }
+            { key: 'home', title: t('Home'), icon: <AppOutline /> },
+            { key: 'schedule', title: t('Schedule'), icon: <CalendarOutline /> },
+            { key: 'search', title: t('Search'), icon: <SearchOutline /> },
+            { key: 'notifications', title: t('Alerts'), icon: unreadCount > 0 ? <Badge count={unreadCount} size="small"><BellOutline /></Badge> : <BellOutline /> },
+            { key: 'profile', title: t('Profile'), icon: <UserOutline /> }
         ]
 
         const patientTabs = [
-            { key: 'home', title: 'Home', icon: <AppOutline /> },
-            { key: 'search', title: 'Search', icon: <SearchOutline /> },
-            { key: 'notifications', title: 'Alerts', icon: unreadCount > 0 ? <Badge count={unreadCount} size="small"><BellOutline /></Badge> : <BellOutline /> },
-            { key: 'profile', title: 'Profile', icon: <UserOutline /> }
+            { key: 'home', title: t('Home'), icon: <AppOutline /> },
+            { key: 'search', title: t('Search'), icon: <SearchOutline /> },
+            { key: 'notifications', title: t('Alerts'), icon: unreadCount > 0 ? <Badge count={unreadCount} size="small"><BellOutline /></Badge> : <BellOutline /> },
+            { key: 'profile', title: t('Profile'), icon: <UserOutline /> }
         ]
 
         const guestTabs = [
-            { key: 'search', title: 'Search', icon: <SearchOutline /> },
-            { key: 'profile', title: 'Sign In', icon: <UserOutline /> }
+            { key: 'search', title: t('Search'), icon: <SearchOutline /> },
+            { key: 'profile', title: t('Sign In'), icon: <UserOutline /> }
         ]
 
         const tabs = user ? (isDoctor ? doctorTabs : patientTabs) : guestTabs
@@ -323,17 +328,18 @@ export default function AppLayout({ children }: AppLayoutProps) {
                                     router.visit('/settings')
                                 }}
                             >
-                                Settings
+                                {t('Settings')}
                             </List.Item>
                             <List.Item
                                 prefix={<IconLogout size={20} />}
                                 onClick={() => {
                                     setMobileMenuOpen(false)
-                                    router.delete('/logout')
+                                    const token = document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+                                    router.delete('/logout', { headers: { 'X-CSRF-Token': token } })
                                 }}
                                 style={{ color: '#ff4d4f' }}
                             >
-                                Logout
+                                {t('Logout')}
                             </List.Item>
                         </List>
                     </div>
@@ -350,7 +356,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         items: [
             {
                 key: 'settings',
-                label: <Link href="/settings">Settings</Link>,
+                label: <Link href="/settings">{t('Settings')}</Link>,
                 icon: <IconSettings size={14} />
             },
             {
@@ -359,9 +365,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {
                 key: 'logout',
                 label: (
-                    <Link href="/logout" method="delete" as="button" className="w-full text-left">
-                        Logout
-                    </Link>
+                    <span
+                        onClick={() => {
+                            const token = document.querySelector("meta[name='csrf-token']")?.getAttribute('content') || ''
+                            router.delete('/logout', { headers: { 'X-CSRF-Token': token } })
+                        }}
+                        className="w-full text-left cursor-pointer"
+                    >
+                        {t('Logout')}
+                    </span>
                 ),
                 icon: <IconLogout size={14} />,
                 danger: true
@@ -380,13 +392,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                     icon={<IconHome size={20} />}
                 >
-                    {!collapsed && 'Home'}
+                    {!collapsed && t('Home')}
                 </Button>
             </Link>
 
             {isDoctor ? (
                 <>
-                    {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Practice</Text>}
+                    {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>{t('Practice')}</Text>}
                     <Link href="/dashboard/doctor">
                         <Button
                             type={path.startsWith('/dashboard/doctor') && !path.includes('profile') ? 'primary' : 'text'}
@@ -396,7 +408,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconLayoutDashboard size={20} />}
                         >
-                            {!collapsed && 'Dashboard'}
+                            {!collapsed && t('Dashboard')}
+                        </Button>
+                    </Link>
+                    <Link href="/dashboard/doctor?tab=patients">
+                        <Button
+                            type={url.includes('tab=patients') ? 'primary' : 'text'}
+                            ghost={url.includes('tab=patients')}
+                            className={url.includes('tab=patients') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
+                            icon={<IconUsers size={20} />}
+                        >
+                            {!collapsed && t('My Patients')}
                         </Button>
                     </Link>
                     <Link href="/dashboard/doctor/appointments">
@@ -408,7 +432,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconCalendarEvent size={20} />}
                         >
-                            {!collapsed && 'Appointments'}
+                            {!collapsed && t('Appointments')}
                         </Button>
                     </Link>
                     <Link href="/doctor/schedule">
@@ -420,7 +444,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconCalendarEvent size={20} />}
                         >
-                            {!collapsed && 'My Schedule'}
+                            {!collapsed && t('My Schedule')}
+                        </Button>
+                    </Link>
+                    <Link href="/dashboard/doctor/calendar">
+                        <Button
+                            type={path.startsWith('/dashboard/doctor/calendar') ? 'primary' : 'text'}
+                            ghost={path.startsWith('/dashboard/doctor/calendar')}
+                            className={path.startsWith('/dashboard/doctor/calendar') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
+                            icon={<IconCalendar size={20} />}
+                        >
+                            {!collapsed && t('Booking Calendar')}
                         </Button>
                     </Link>
                     <Link href="/dashboard/doctor/profile">
@@ -432,7 +468,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconUserCircle size={20} />}
                         >
-                            {!collapsed && 'My Profile'}
+                            {!collapsed && t('My Profile')}
                         </Button>
                     </Link>
                     <Link href="/notifications">
@@ -444,13 +480,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconBell size={20} />}
                         >
-                            {!collapsed && 'Notifications'}
+                            {!collapsed && t('Notifications')}
                         </Button>
                     </Link>
                 </>
             ) : (
                 <>
-                    {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Patient</Text>}
+                    {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>{t('Patient')}</Text>}
                     <Link href="/dashboard">
                         <Button
                             type={path === '/dashboard' ? 'primary' : 'text'}
@@ -460,7 +496,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconCalendar size={20} />}
                         >
-                            {!collapsed && 'Appointments'}
+                            {!collapsed && t('Appointments')}
+                        </Button>
+                    </Link>
+
+                    <Link href="/dashboard?tab=doctors">
+                        <Button
+                            type={url.includes('tab=doctors') ? 'primary' : 'text'}
+                            ghost={url.includes('tab=doctors')}
+                            className={url.includes('tab=doctors') ? 'bg-teal-50 text-teal-700' : ''}
+                            block
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
+                            icon={<IconUsers size={20} />}
+                        >
+                            {!collapsed && t('My Doctors')}
                         </Button>
                     </Link>
 
@@ -473,7 +522,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconUserCircle size={20} />}
                         >
-                            {!collapsed && 'My Profile'}
+                            {!collapsed && t('My Profile')}
                         </Button>
                     </Link>
 
@@ -486,13 +535,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
                             style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                             icon={<IconBell size={20} />}
                         >
-                            {!collapsed && 'Notifications'}
+                            {!collapsed && t('Notifications')}
                         </Button>
                     </Link>
                 </>
-            )}
+            )
+            }
 
-            {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>Discover</Text>}
+            {!collapsed && <Text type="secondary" style={{ fontSize: '11px', fontWeight: 700, marginTop: 16, marginBottom: 8, textTransform: 'uppercase' }}>{t('Discover')}</Text>}
             <Link href="/search">
                 <Button
                     type={path === '/search' ? 'text' : 'text'}
@@ -501,10 +551,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                     icon={<IconSearch size={20} />}
                 >
-                    {!collapsed && 'Find Doctors'}
+                    {!collapsed && t('Find Doctors')}
                 </Button>
             </Link>
-        </Flex>
+        </Flex >
     )
 
     return (
@@ -575,13 +625,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
                     ) : (
                         <Space>
                             <Link href="/login">
-                                <Button type="text">Sign in</Button>
+                                <Button type="text">{t('Sign In')}</Button>
                             </Link>
                             <Link href="/register">
-                                <Button type="primary">Sign up</Button>
+                                <Button type="primary">{t('Sign Up')}</Button>
                             </Link>
                         </Space>
                     )}
+                    <LanguageSwitcher />
                 </Flex>
             </Header>
 

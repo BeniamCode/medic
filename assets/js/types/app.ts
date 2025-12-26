@@ -12,13 +12,13 @@ export type SharedAuthUser = {
 
 export type SharedAppProps = {
   app: {
-    csrfToken: string
-    currentScope: string
+    csrf_token: string
+    current_scope: string
     locale: string
-    availableLocales: string[]
+    available_locales: string[]
     path: string
     method: string
-    unreadCount: number
+    unread_count: number
   }
   auth: {
     authenticated: boolean
@@ -28,7 +28,7 @@ export type SharedAppProps = {
   flash: Partial<Record<'info' | 'success' | 'error' | 'warning', string>>
   i18n: {
     locale: string
-    defaultLocale: string
+    default_locale: string
     translations: Record<string, Record<string, string | Record<string, string>>>
   }
 }

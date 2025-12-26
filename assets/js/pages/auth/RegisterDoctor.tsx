@@ -9,6 +9,7 @@ import {
     Col
 } from 'antd'
 import { Link, useForm, router } from '@inertiajs/react'
+import { useTranslation } from 'react-i18next'
 import { FormEvent } from 'react'
 import { useIsMobile } from '@/lib/device'
 
@@ -22,6 +23,7 @@ const { Title, Text } = Typography
 // =============================================================================
 
 function MobileRegisterDoctorPage() {
+    const { t } = useTranslation('default')
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -36,8 +38,8 @@ function MobileRegisterDoctorPage() {
     return (
         <div style={{ padding: 20, minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Join as a Specialist</h1>
-                <p style={{ color: '#666', margin: 0, fontSize: 15 }}>Managing your practice has never been easier</p>
+                <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>{t('Join as a Specialist')}</h1>
+                <p style={{ color: '#666', margin: 0, fontSize: 15 }}>{t('Managing your practice has never been easier')}</p>
             </div>
 
             <MobileCard style={{ borderRadius: 16 }}>
@@ -53,13 +55,13 @@ function MobileRegisterDoctorPage() {
                             loading={processing}
                             style={{ '--border-radius': '8px' }}
                         >
-                            Start Application
+                            {t('Start Application')}
                         </MobileButton>
                     }
                 >
                     <div style={{ display: 'flex', gap: 12 }}>
                         <MobileForm.Item
-                            label="First name"
+                            label={t('First name')}
                             name="first_name"
                             style={{ flex: 1 }}
                             help={errors.first_name}
@@ -73,7 +75,7 @@ function MobileRegisterDoctorPage() {
                         </MobileForm.Item>
 
                         <MobileForm.Item
-                            label="Last name"
+                            label={t('Last name')}
                             name="last_name"
                             style={{ flex: 1 }}
                             help={errors.last_name}
@@ -88,7 +90,7 @@ function MobileRegisterDoctorPage() {
                     </div>
 
                     <MobileForm.Item
-                        label="Email address"
+                        label={t('Email address')}
                         name="email"
                         help={errors.email}
                     >
@@ -101,13 +103,13 @@ function MobileRegisterDoctorPage() {
                     </MobileForm.Item>
 
                     <MobileForm.Item
-                        label="Password"
+                        label={t('Password')}
                         name="password"
                         help={errors.password}
                     >
                         <MobileInput
                             type="password"
-                            placeholder="Min. 8 characters"
+                            placeholder={t('Min. 8 characters')}
                             value={data.password}
                             onChange={(val) => setData('password', val)}
                             clearable
@@ -117,16 +119,16 @@ function MobileRegisterDoctorPage() {
             </MobileCard>
 
             <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14 }}>
-                Are you a patient?{' '}
+                {t('Are you a patient?')}{' '}
                 <a onClick={() => router.visit('/register')} style={{ fontWeight: 600, color: '#0d9488' }}>
-                    Create Patient Account
+                    {t('Create Patient Account')}
                 </a>
             </p>
 
             <p style={{ textAlign: 'center', marginTop: 8, fontSize: 14 }}>
-                Already have an account?{' '}
+                {t('Already have an account?')}{' '}
                 <a onClick={() => router.visit('/login')} style={{ fontWeight: 600, color: '#0d9488' }}>
-                    Sign in
+                    {t('Sign in')}
                 </a>
             </p>
         </div>
@@ -138,6 +140,7 @@ function MobileRegisterDoctorPage() {
 // =============================================================================
 
 function DesktopRegisterDoctorPage() {
+    const { t } = useTranslation('default')
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -153,8 +156,8 @@ function DesktopRegisterDoctorPage() {
     return (
         <div style={{ maxWidth: 400, margin: '80px auto' }}>
             <Flex vertical align="center" style={{ marginBottom: 32 }}>
-                <Title level={1}>Join as a Specialist</Title>
-                <Text type="secondary">Managing your practice has never been easier</Text>
+                <Title level={1}>{t('Join as a Specialist')}</Title>
+                <Text type="secondary">{t('Managing your practice has never been easier')}</Text>
             </Flex>
 
             <DesktopCard bordered style={{ padding: 24 }}>
@@ -167,7 +170,7 @@ function DesktopRegisterDoctorPage() {
                                     help={errors.first_name}
                                     style={{ marginBottom: 0 }}
                                 >
-                                    <div style={{ marginBottom: 8 }}><Text strong>First name</Text></div>
+                                    <div style={{ marginBottom: 8 }}><Text strong>{t('First name')}</Text></div>
                                     <DesktopInput
                                         placeholder="John"
                                         value={data.first_name}
@@ -181,7 +184,7 @@ function DesktopRegisterDoctorPage() {
                                     help={errors.last_name}
                                     style={{ marginBottom: 0 }}
                                 >
-                                    <div style={{ marginBottom: 8 }}><Text strong>Last name</Text></div>
+                                    <div style={{ marginBottom: 8 }}><Text strong>{t('Last name')}</Text></div>
                                     <DesktopInput
                                         placeholder="Doe"
                                         value={data.last_name}
@@ -196,7 +199,7 @@ function DesktopRegisterDoctorPage() {
                             help={errors.email}
                             style={{ marginBottom: 0 }}
                         >
-                            <div style={{ marginBottom: 8 }}><Text strong>Email address</Text></div>
+                            <div style={{ marginBottom: 8 }}><Text strong>{t('Email address')}</Text></div>
                             <DesktopInput
                                 placeholder="doctor@clinic.com"
                                 value={data.email}
@@ -209,32 +212,32 @@ function DesktopRegisterDoctorPage() {
                             help={errors.password}
                             style={{ marginBottom: 0 }}
                         >
-                            <div style={{ marginBottom: 8 }}><Text strong>Password</Text></div>
+                            <div style={{ marginBottom: 8 }}><Text strong>{t('Password')}</Text></div>
                             <DesktopInput.Password
-                                placeholder="Min. 8 characters"
+                                placeholder={t('Min. 8 characters')}
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                             />
                         </Form.Item>
 
                         <DesktopButton type="primary" htmlType="submit" loading={processing} block size="large" style={{ marginTop: 24 }}>
-                            Start Application
+                            {t('Start Application')}
                         </DesktopButton>
                     </Flex>
                 </form>
             </DesktopCard>
 
             <Text style={{ display: 'block', textAlign: 'center', marginTop: 16 }}>
-                Are you a patient?{' '}
+                {t('Are you a patient?')}{' '}
                 <Link href="/register" style={{ fontWeight: 700 }}>
-                    Create Patient Account
+                    {t('Create Patient Account')}
                 </Link>
             </Text>
 
             <Text style={{ display: 'block', textAlign: 'center', marginTop: 8 }}>
-                Already have an account?{' '}
+                {t('Already have an account?')}{' '}
                 <Link href="/login" style={{ fontWeight: 700 }}>
-                    Sign in
+                    {t('Sign in')}
                 </Link>
             </Text>
         </div>

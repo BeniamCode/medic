@@ -11,8 +11,9 @@ config :medic, Oban,
       Oban.Plugins.Cron,
       crontab: [
         {"*/1 * * * *", Medic.Workers.AppointmentAutoComplete},
-        {"0 3 * * *", Medic.Workers.AppreciationMaintenance}
+        {"0 3 * * *", Medic.Workers.AppreciationMaintenance},
+        {"*/15 * * * *", Medic.Workers.AppointmentReminder}
       ]
     }
   ],
-  queues: [default: 10, mailers: 10, search: 10, maintenance: 2]
+  queues: [default: 5, mailers: 5, search: 5, maintenance: 2]

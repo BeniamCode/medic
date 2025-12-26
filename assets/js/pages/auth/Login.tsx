@@ -8,6 +8,7 @@ import {
     Flex
 } from 'antd'
 import { Link, useForm, router } from '@inertiajs/react'
+import { useTranslation } from 'react-i18next'
 import { FormEvent } from 'react'
 import { LockOutlined, MailOutlined } from '@ant-design/icons'
 import { useIsMobile } from '@/lib/device'
@@ -23,6 +24,7 @@ const { Title, Text } = Typography
 // =============================================================================
 
 function MobileLoginPage() {
+    const { t } = useTranslation('default')
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -36,8 +38,8 @@ function MobileLoginPage() {
     return (
         <div style={{ padding: 20, minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Welcome back</h1>
-                <p style={{ color: '#666', margin: 0, fontSize: 15 }}>Sign in to manage your appointments</p>
+                <h1 style={{ fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>{t('Welcome back')}</h1>
+                <p style={{ color: '#666', margin: 0, fontSize: 15 }}>{t('Sign in to manage your appointments')}</p>
             </div>
 
             <MobileCard style={{ borderRadius: 16 }}>
@@ -53,14 +55,14 @@ function MobileLoginPage() {
                             loading={processing}
                             style={{ '--border-radius': '8px' }}
                         >
-                            Sign in
+                            {t('Sign in')}
                         </MobileButton>
                     }
                 >
                     <MobileForm.Item
-                        label="Email address"
+                        label={t('Email address')}
                         name="email"
-                        rules={[{ required: true, message: 'Please enter your email' }]}
+                        rules={[{ required: true, message: t('Please enter your email') }]}
                         help={errors.email}
                     >
                         <MobileInput
@@ -72,14 +74,14 @@ function MobileLoginPage() {
                     </MobileForm.Item>
 
                     <MobileForm.Item
-                        label="Password"
+                        label={t('Password')}
                         name="password"
-                        rules={[{ required: true, message: 'Please enter your password' }]}
+                        rules={[{ required: true, message: t('Please enter your password') }]}
                         help={errors.password}
                     >
                         <MobileInput
                             type="password"
-                            placeholder="Your password"
+                            placeholder={t('Your password')}
                             value={data.password}
                             onChange={(val) => setData('password', val)}
                             clearable
@@ -92,25 +94,25 @@ function MobileLoginPage() {
                             onChange={(checked) => setData('remember_me', checked)}
                             style={{ '--icon-size': '18px', '--font-size': '14px' }}
                         >
-                            Remember me
+                            {t('Remember me')}
                         </MobileCheckbox>
                         <a
                             onClick={() => router.visit('/forgot-password')}
                             style={{ fontSize: 14, color: '#0d9488' }}
                         >
-                            Forgot password?
+                            {t('Forgot password?')}
                         </a>
                     </div>
                 </MobileForm>
             </MobileCard>
 
             <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14 }}>
-                Don't have an account?{' '}
+                {t("Don't have an account?")}{' '}
                 <a
                     onClick={() => router.visit('/register')}
                     style={{ fontWeight: 600, color: '#0d9488' }}
                 >
-                    Register
+                    {t('Register')}
                 </a>
             </p>
         </div>
@@ -122,6 +124,7 @@ function MobileLoginPage() {
 // =============================================================================
 
 function DesktopLoginPage() {
+    const { t } = useTranslation('default')
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -136,8 +139,8 @@ function DesktopLoginPage() {
     return (
         <div style={{ maxWidth: 400, margin: '80px auto' }}>
             <Flex vertical align="center" style={{ marginBottom: 32 }}>
-                <Title level={1}>Welcome back</Title>
-                <Text type="secondary">Sign in to manage your appointments</Text>
+                <Title level={1}>{t('Welcome back')}</Title>
+                <Text type="secondary">{t('Sign in to manage your appointments')}</Text>
             </Flex>
 
             <DesktopCard bordered style={{ padding: 24 }}>
@@ -148,7 +151,7 @@ function DesktopLoginPage() {
                             help={errors.email}
                             style={{ marginBottom: 0 }}
                         >
-                            <div style={{ marginBottom: 8 }}><Text strong>Email address</Text></div>
+                            <div style={{ marginBottom: 8 }}><Text strong>{t('Email address')}</Text></div>
                             <DesktopInput
                                 prefix={<MailOutlined />}
                                 placeholder="you@medic.com"
@@ -163,10 +166,10 @@ function DesktopLoginPage() {
                             help={errors.password}
                             style={{ marginBottom: 0 }}
                         >
-                            <div style={{ marginBottom: 8 }}><Text strong>Password</Text></div>
+                            <div style={{ marginBottom: 8 }}><Text strong>{t('Password')}</Text></div>
                             <DesktopInput.Password
                                 prefix={<LockOutlined />}
-                                placeholder="Your password"
+                                placeholder={t('Your password')}
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                                 size="large"
@@ -178,24 +181,24 @@ function DesktopLoginPage() {
                                 checked={data.remember_me}
                                 onChange={(e) => setData('remember_me', e.target.checked)}
                             >
-                                Remember me
+                                {t('Remember me')}
                             </Checkbox>
                             <Link href="/forgot-password" className="text-sm">
-                                Forgot password?
+                                {t('Forgot password?')}
                             </Link>
                         </Flex>
 
                         <DesktopButton type="primary" htmlType="submit" loading={processing} block size="large" style={{ marginTop: 24 }}>
-                            Sign in
+                            {t('Sign in')}
                         </DesktopButton>
                     </Flex>
                 </form>
             </DesktopCard>
 
             <Text style={{ display: 'block', textAlign: 'center', marginTop: 16 }}>
-                Don&apos;t have an account?{' '}
+                {t("Don't have an account?")}{' '}
                 <Link href="/register" style={{ fontWeight: 700 }}>
-                    Register
+                    {t('Register')}
                 </Link>
             </Text>
         </div>

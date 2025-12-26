@@ -15,7 +15,13 @@ defmodule Medic.Doctors.Doctor do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
+
+    destroy :destroy do
+      primary? true
+      soft? true
+      change set_attribute(:deleted_at, &DateTime.utc_now/0)
+    end
 
     create :create do
       primary? true
@@ -57,7 +63,9 @@ defmodule Medic.Doctors.Doctor do
     end
 
     update :update do
+      require_atomic? false
       accept [
+        :cached_schedule, # Add this to accepted attributes
         :first_name,
         :last_name,
         :bio,
@@ -137,6 +145,12 @@ defmodule Medic.Doctors.Doctor do
     attribute :rating, :float, default: 0.0
     attribute :review_count, :integer, default: 0
     attribute :consultation_fee, :decimal
+    
+    attribute :cached_schedule, :map do
+      public? true
+      default %{}
+    end
+
     attribute :next_available_slot, :utc_datetime
     attribute :verified_at, :utc_datetime
 
@@ -156,6 +170,10 @@ defmodule Medic.Doctors.Doctor do
     attribute :accessibility_items, {:array, :string}, default: []
     attribute :awards, {:array, :string}, default: []
     attribute :publications, {:array, :string}, default: []
+
+    attribute :deleted_at, :utc_datetime_usec do
+      public? true
+    end
 
     timestamps()
   end

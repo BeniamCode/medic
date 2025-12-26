@@ -17,7 +17,7 @@ defmodule Medic.Doctors.Changes.GeocodeAddress do
     should_geocode? = 
       (Ash.Changeset.changing_attribute?(changeset, :address) or 
        Ash.Changeset.changing_attribute?(changeset, :city)) or
-       (address && address != "" && is_nil(changeset.data.location_lat))
+       (not is_nil(address) and address != "" and is_nil(changeset.data.location_lat))
 
     if should_geocode? and address && address != "" do
       case Geocoding.geocode_address(address, city) do

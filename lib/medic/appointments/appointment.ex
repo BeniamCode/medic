@@ -54,6 +54,13 @@ defmodule Medic.Appointments.Appointment do
         :rescheduled_from_appointment_id,
         :approval_required_snapshot
       ]
+
+      after_action(fn _changeset, appointment, _context ->
+        Task.start(fn -> 
+          Medic.Scheduling.refresh_doctor_schedule_cache(appointment.doctor_id) 
+        end)
+        {:ok, appointment}
+      end)
     end
 
     update :update do
@@ -88,6 +95,13 @@ defmodule Medic.Appointments.Appointment do
         :rescheduled_from_appointment_id,
         :approval_required_snapshot
       ]
+
+      after_action(fn _changeset, appointment, _context ->
+        Task.start(fn -> 
+          Medic.Scheduling.refresh_doctor_schedule_cache(appointment.doctor_id) 
+        end)
+        {:ok, appointment}
+      end)
     end
   end
 
@@ -145,6 +159,10 @@ defmodule Medic.Appointments.Appointment do
     has_many :resource_claims, Medic.Appointments.AppointmentResourceClaim
 
     has_one :appreciation, Medic.Appreciate.DoctorAppreciation do
+      destination_attribute :appointment_id
+    end
+
+    has_one :experience_submission, Medic.Doctors.ExperienceSubmission do
       destination_attribute :appointment_id
     end
   end

@@ -420,7 +420,7 @@ msgstr "Τιμή: Χαμηλή προς Υψηλή"
 #: lib/medic_web/live/search_live.ex:294
 #, elixir-autogen, elixir-format
 msgid "Rating"
-msgstr "Βαθμολογία"
+msgstr "Αξιολόγηση"
 
 #: lib/medic_web/live/doctor_live/show.ex:59
 #, elixir-autogen, elixir-format
@@ -487,7 +487,7 @@ msgstr "Ειδικότητα"
 #: lib/medic_web/live/search_live.ex:442
 #, elixir-autogen, elixir-format
 msgid "Verified"
-msgstr "Πιστοποιημένος/η"
+msgstr "Πιστοποιημένος"
 
 #: lib/medic_web/live/search_live.ex:377
 #, elixir-autogen, elixir-format
@@ -517,7 +517,7 @@ msgstr "Διαθέσιμη Βιντεοκλήση"
 #: lib/medic_web/live/doctor_live/show.ex:91
 #, elixir-autogen, elixir-format
 msgid "Video Visit"
-msgstr "Βιντεοεπίσκεψη"
+msgstr "Επίσκεψη Βίντεο"
 
 #: lib/medic_web/live/search_live.ex:487
 #, elixir-autogen, elixir-format
@@ -553,3 +553,1302 @@ msgstr "για εσάς"
 #, elixir-autogen, elixir-format
 msgid "initial visit"
 msgstr "αρχική επίσκεψη"
+
+msgid "New: Telemedicine Support"
+msgstr "Νέο: Υποστήριξη Τηλεϊατρικής"
+
+msgid "Modern healthcare for"
+msgstr "Σύγχρονη υγειονομική περίθαλψη για"
+
+msgid "everyone"
+msgstr "όλους"
+
+msgid "Book appointments with trusted doctors, manage your visits, and take control of your health journey."
+msgstr "Κλείστε ραντεβού με έμπιστους γιατρούς, διαχειριστείτε τις επισκέψεις σας και πάρτε τον έλεγχο της υγείας σας."
+
+msgid "Join as Patient"
+msgstr "Εγγραφή ως Ασθενής"
+
+msgid "Trusted by 10,000+ patients"
+msgstr "Το εμπιστεύονται 10.000+ ασθενείς"
+
+msgid "Easy Search"
+msgstr "Εύκολη Αναζήτηση"
+
+msgid "Find specialists by name, specialty, or location instantly."
+msgstr "Βρείτε ειδικούς με όνομα, ειδικότητα ή τοποθεσία άμεσα."
+
+msgid "Instant Booking"
+msgstr "Άμεση Κράτηση"
+
+msgid "Real-time availability means no more phone tag."
+msgstr "Διαθεσιμότητα σε πραγματικό χρόνο, τέλος στην αναμονή."
+
+msgid "Verified Doctors"
+msgstr "Πιστοποιημένοι Γιατροί"
+
+msgid "Every specialist is vetted for license and quality."
+msgstr "Κάθε ειδικός ελέγχεται για την άδεια και την ποιότητα."
+
+msgid "Telemedicine"
+msgstr "Τηλεϊατρική"
+
+msgid "Connect with doctors from the comfort of your home."
+msgstr "Συνδεθείτε με γιατρούς από την άνεση του σπιτιού σας."
+
+msgid "Are you a doctor?"
+msgstr "Είστε γιατρός;"
+
+msgid "Join our network of verified specialists and grow your practice."
+msgstr "Γίνετε μέλος του δικτύου πιστοποιημένων ειδικών και αναπτύξτε το ιατρείο σας."
+
+msgid "Join Medic Network"
+msgstr "Γίνετε μέλος του Medic"
+
+msgid "Book appointments with trusted doctors, manage your visits, and take control of your health journey—all in one place."
+msgstr "Κλείστε ραντεβού με έμπιστους γιατρούς, διαχειριστείτε τις επισκέψεις σας και πάρτε τον έλεγχο της υγείας σας—όλα σε ένα μέρος."
+
+msgid "Are you a qualified doctor?"
+msgstr "Είστε εξειδικευμένος γιατρός;"
+
+msgid "Join our network of over 600 verified specialists. specific tools to manage your schedule and grow your practice."
+msgstr "Γίνετε μέλος του δικτύου μας με πάνω από 600 πιστοποιημένους ειδικούς. Εργαλεία για τη διαχείριση του προγράμματός σας και την ανάπτυξη του ιατρείου σας."
+
+msgid "Doctor"
+msgstr "Γιατρός"
+
+msgid "Dr."
+msgstr "Δρ."
+
+msgid "General Practitioner"
+msgstr "Γενικός Ιατρός"
+
+msgid "Online"
+msgstr "Online"
+
+msgid "Ask"
+msgstr "Ρωτήστε"
+
+msgid "Search doctors..."
+msgstr "Αναζήτηση γιατρών..."
+
+msgid "List"
+msgstr "Λίστα"
+
+msgid "Map"
+msgstr "Χάρτης"
+
+msgid "{{count}} doctors found"
+msgstr "Βρέθηκαν {{count}} γιατροί"
+
+msgid "All specialties"
+msgstr "Όλες οι ειδικότητες"
+
+msgid "All"
+msgstr "Όλα"
+
+msgid "All cities"
+msgstr "Όλες οι πόλεις"
+
+msgid "Telemedicine only"
+msgstr "Μόνο τηλεϊατρική"
+
+msgid "Show {{count}} results"
+msgstr "Προβολή {{count}} αποτελεσμάτων"
+
+msgid "Search doctors, clinics, specialties, etc."
+msgstr "Αναζήτηση γιατρών, κλινικών, ειδικοτήτων κ.λπ."
+
+msgid "Select specialty"
+msgstr "Επιλογή ειδικότητας"
+
+msgid "Select city"
+msgstr "Επιλογή πόλης"
+
+msgid "Telemedicine available"
+msgstr "Διαθέσιμη τηλεϊατρική"
+
+msgid "Only show doctors offering telehealth"
+msgstr "Εμφάνιση μόνο γιατρών που προσφέρουν τηλεϊατρική"
+
+msgid "Less filters"
+msgstr "Λιγότερα φίλτρα"
+
+msgid "More filters"
+msgstr "Περισσότερα φίλτρα"
+
+msgid "Select insurance"
+msgstr "Επιλογή ασφάλειας"
+
+msgid "Max price"
+msgstr "Μέγιστη τιμή"
+
+msgid "Any price"
+msgstr "Οποιαδήποτε τιμή"
+
+msgid "Clear filters"
+msgstr "Καθαρισμός φίλτρων"
+
+msgid "{{count}} specialists found"
+msgstr "Βρέθηκαν {{count}} ειδικοί"
+
+msgid "Sort by: Best Match"
+msgstr "Ταξινόμηση: Καλύτερη Αντιστοίχιση"
+
+msgid "Try adjusting your filters"
+msgstr "Δοκιμάστε να προσαρμόσετε τα φίλτρα σας"
+
+msgid "Medical Specialist"
+msgstr "Ιατρικός Ειδικός"
+
+msgid "{{count}}+ years"
+msgstr "{{count}}+ χρόνια"
+
+msgid "Consultation"
+msgstr "Επίσκεψη"
+
+msgid "Book Now"
+msgstr "Κλείστε Τώρα"
+
+msgid "Book"
+msgstr "Κράτηση"
+
+msgid "Visit Type"
+msgstr "Τύπος Επίσκεψης"
+
+msgid "Clinic"
+msgstr "Κλινική"
+
+msgid "Video"
+msgstr "Βίντεο"
+
+msgid "Select Date"
+msgstr "Επιλογή Ημερομηνίας"
+
+msgid "Available Slots"
+msgstr "Διαθέσιμα Ραντεβού"
+
+msgid "No available slots"
+msgstr "Δεν υπάρχουν διαθέσιμα ραντεβού"
+
+msgid "Reason for visit (optional)..."
+msgstr "Λόγος επίσκεψης (προαιρετικό)..."
+
+msgid "Confirm Booking"
+msgstr "Επιβεβαίωση Κράτησης"
+
+msgid "No payment required to book"
+msgstr "Δεν απαιτείται πληρωμή για την κράτηση"
+
+msgid "Biography"
+msgstr "Βιογραφικό"
+
+msgid "No biography available."
+msgstr "Δεν υπάρχει διαθέσιμο βιογραφικό."
+
+msgid "Special Interests"
+msgstr "Ειδικά Ενδιαφέροντα"
+
+msgid "Procedures"
+msgstr "Διαδικασίες"
+
+msgid "Practice Address"
+msgstr "Διεύθυνση Ιατρείου"
+
+msgid "Affiliation"
+msgstr "Συνεργασία"
+
+msgid "Map View"
+msgstr "Προβολή Χάρτη"
+
+msgid "About"
+msgstr "Σχετικά"
+
+msgid "About & Expertise"
+msgstr "Σχετικά & Εμπειρία"
+
+msgid "Medical Expertise"
+msgstr "Ιατρική Εμπειρία"
+
+msgid "Interactive Map"
+msgstr "Διαδραστικός Χάρτης"
+
+msgid "Get Directions"
+msgstr "Λήψη Οδηγιών"
+
+msgid "Appreciated by {{count}} patients"
+msgstr "Εκτιμήθηκε από {{count}} ασθενείς"
+
+msgid "+{{count}} in last 30 days"
+msgstr "+{{count}} τις τελευταίες 30 ημέρες"
+
+msgid "{{count}}+ Years Exp."
+msgstr "{{count}}+ Χρόνια Εμπειρίας"
+
+msgid "Clinic Visit"
+msgstr "Επίσκεψη στο Ιατρείο"
+
+msgid "Video Call"
+msgstr "Βιντεοκλήση"
+
+msgid "No available slots for this date."
+msgstr "Δεν υπάρχουν διαθέσιμα ραντεβού για αυτήν την ημερομηνία."
+
+msgid "No payment required to book."
+msgstr "Δεν απαιτείται πληρωμή για την κράτηση."
+
+msgid "Good morning, Dr. {{lastName}}"
+msgstr "Καλημέρα, Δρ. {{lastName}}"
+
+msgid "Today"
+msgstr "Σήμερα"
+
+msgid "Pending"
+msgstr "Εκκρεμείς"
+
+msgid "This Week"
+msgstr "Αυτήν την Εβδομάδα"
+
+msgid "Today's Schedule"
+msgstr "Το Πρόγραμμα της Ημέρας"
+
+msgid "No appointments today"
+msgstr "Δεν υπάρχουν ραντεβού σήμερα"
+
+msgid "Manage Availability"
+msgstr "Διαχείριση Διαθεσιμότητας"
+
+msgid "Edit Profile"
+msgstr "Επεξεργασία Προφίλ"
+
+msgid "Doctor Dashboard"
+msgstr "Πίνακας Ελέγχου Γιατρού"
+
+msgid "appointments"
+msgstr "ραντεβού"
+
+msgid "Pending requests"
+msgstr "Εκκρεμή αιτήματα"
+
+msgid "Action required"
+msgstr "Απαιτείται ενέργεια"
+
+msgid "Confirmed (week)"
+msgstr "Επιβεβαίωση (εβδ.)"
+
+msgid "upcoming visits"
+msgstr "επερχόμενες επισκέψεις"
+
+msgid "reviews"
+msgstr "κριτικές"
+
+msgid "Quick Actions"
+msgstr "Γρήγορες Ενέργειες"
+
+msgid "Analytics (coming soon)"
+msgstr "Αναλυτικά (σύντομα)"
+
+msgid "In-person"
+msgstr "Δια ζώσης"
+
+msgid "Unknown"
+msgstr "Άγνωστος"
+
+msgid "Phone"
+msgstr "Τηλέφωνο"
+
+msgid "Patient message"
+msgstr "Μήνυμα ασθενούς"
+
+msgid "No message provided"
+msgstr "Δεν παρεχέθηκε μήνυμα"
+
+msgid "Patient"
+msgstr "Ασθενής"
+
+msgid "Time"
+msgstr "Ώρα"
+
+msgid "Mode"
+msgstr "Τρόπος"
+
+msgid "Status"
+msgstr "Κατάσταση"
+
+msgid "Awaiting patient approval"
+msgstr "Αναμονή έγκρισης ασθενούς"
+
+msgid "Expires"
+msgstr "Λήγει"
+
+msgid "Actions"
+msgstr "Ενέργειες"
+
+msgid "Approve this appointment?"
+msgstr "Έγκριση αυτού του ραντεβού;"
+
+msgid "Approve"
+msgstr "Έγκριση"
+
+msgid "Awaiting patient decision"
+msgstr "Αναμονή απόφασης ασθενούς"
+
+msgid "Reschedule"
+msgstr "Επαναπρογραμματισμός"
+
+msgid "Reject"
+msgstr "Απόρριψη"
+
+msgid "Pending approval"
+msgstr "Εκκρεμεί έγκριση"
+
+msgid "Upcoming"
+msgstr "Επερχόμενα"
+
+msgid "Completed"
+msgstr "Ολοκληρωμένα"
+
+msgid "Total"
+msgstr "Σύνολο"
+
+msgid "Practice"
+msgstr "Ιατρείο"
+
+msgid "Approve, reschedule, or cancel your visits"
+msgstr "Εγκρίνετε, επαναπρογραμματίστε ή ακυρώστε τις επισκέψεις σας"
+
+msgid "Cancelled"
+msgstr "Ακυρωμένα"
+
+msgid "Add a short reason for the patient"
+msgstr "Προσθέστε σύντομη αιτιολογία για τον ασθενή"
+
+msgid "Example: prefer earlier in the day"
+msgstr "Παράδειγμα: προτιμώ νωρίτερα μέσα στην ημέρα"
+
+msgid "Pick a new slot to propose"
+msgstr "Επιλέξτε νέο ραντεβού για πρόταση"
+
+msgid "Add a note for the patient (optional)"
+msgstr "Προσθέστε σημείωση για τον ασθενή (προαιρετικό)"
+
+msgid "Send reschedule request"
+msgstr "Αποστολή αιτήματος επαναπρογραμματισμού"
+
+msgid "Manage Schedule"
+msgstr "Διαχείριση Προγράμματος"
+
+msgid "Set your recurring weekly availability."
+msgstr "Ορίστε την επαναλαμβανόμενη εβδομαδιαία διαθεσιμότητά σας."
+
+msgid "Reset Schedule"
+msgstr "Επαναφορά Προγράμματος"
+
+msgid "Edit Availability"
+msgstr "Επεξεργασία Διαθεσιμότητας"
+
+msgid "Weekly Hours"
+msgstr "Εβδομαδιαίες Ώρες"
+
+msgid "Time Off & Holidays"
+msgstr "Άδειες & Αργίες"
+
+msgid "Add"
+msgstr "Προσθήκη"
+
+msgid "No availability slots for this day."
+msgstr "Δεν υπάρχουν ραντεβού διαθεσιμότητας για αυτήν την ημέρα."
+
+msgid "min"
+msgstr "λεπ"
+
+msgid "Day Off"
+msgstr "Ρεπό"
+
+msgid "No time off scheduled"
+msgstr "Δεν έχουν προγραμματιστεί άδειες"
+
+msgid "Reason"
+msgstr "Αιτία"
+
+msgid "Holiday"
+msgstr "Αργία"
+
+msgid "Vacation"
+msgstr "Διακοπές"
+
+msgid "Personal"
+msgstr "Προσωπικά"
+
+msgid "Conference"
+msgstr "Συνέδριο"
+
+msgid "Other"
+msgstr "Άλλο"
+
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+msgid "Save"
+msgstr "Αποθήκευση"
+
+msgid "Upcoming Appointments"
+msgstr "Επερχόμενα Ραντεβού"
+
+msgid "No upcoming appointments"
+msgstr "Δεν υπάρχουν επερχόμενα ραντεβού"
+
+msgid "Setup Availability"
+msgstr "Ρύθμιση Διαθεσιμότητας"
+
+msgid "Preview Slots"
+msgstr "Προεπισκόπηση Ραντεβού"
+
+msgid "Save availability"
+msgstr "Αποθήκευση διαθεσιμότητας"
+
+msgid "Consultation Mode"
+msgstr "Τρόπος Επίσκεψης"
+
+msgid "In-Person"
+msgstr "Δια Ζώσης"
+
+msgid "Phone Call"
+msgstr "Τηλεφωνική Κλήση"
+
+msgid "Timezone"
+msgstr "Ζώνη Ώρας"
+
+msgid "Hours"
+msgstr "Ώρες"
+
+msgid "Interval"
+msgstr "Διάστημα"
+
+msgid "Are you sure?"
+msgstr "Είστε σίγουροι;"
+
+msgid "This will remove ALL your availability rules. Are you sure?"
+msgstr "Αυτό θα αφαιρέσει ΟΛΟΥΣ τους κανόνες διαθεσιμότητάς σας. Είστε σίγουροι;"
+
+msgid "Yes"
+msgstr "Ναι"
+
+msgid "No"
+msgstr "Όχι"
+
+msgid "Single Day"
+msgstr "Μια Μέρα"
+
+msgid "Date Range"
+msgstr "Εύρος Ημερομηνιών"
+
+msgid "Date"
+msgstr "Ημερομηνία"
+
+msgid "European Board Certification"
+msgstr "Πιστοποίηση Ευρωπαϊκού Συμβουλίου"
+
+msgid "Greek Medical Association"
+msgstr "Ελληνικός Ιατρικός Σύλλογος"
+
+msgid "American Board Certification"
+msgstr "Πιστοποίηση Αμερικανικού Συμβουλίου"
+
+msgid "Cardiology"
+msgstr "Καρδιολογία"
+
+msgid "Dermatology"
+msgstr "Δερματολογία"
+
+msgid "Orthopedics"
+msgstr "Ορθοπεδική"
+
+msgid "Endocrinology"
+msgstr "Ενδοκρινολογία"
+
+msgid "Neurology"
+msgstr "Νευρολογία"
+
+msgid "MRI Consultation"
+msgstr "Γνωμάτευση MRI"
+
+msgid "Endoscopy"
+msgstr "Ενδοσκόπηση"
+
+msgid "Physical Therapy Eval"
+msgstr "Αξιολόγηση Φυσιοθεραπείας"
+
+msgid "Telemedicine Follow-up"
+msgstr "Παρακολούθηση Τηλεϊατρικής"
+
+msgid "Hypertension"
+msgstr "Υπέρταση"
+
+msgid "Diabetes"
+msgstr "Διαβήτης"
+
+msgid "Back Pain"
+msgstr "Οσφυαλγία"
+
+msgid "Anxiety"
+msgstr "Άγχος"
+
+msgid "Skin Allergy"
+msgstr "Δερματική Αλλεργία"
+
+msgid "Profile saved"
+msgstr "Το προφίλ αποθηκεύτηκε"
+
+msgid "Unable to save. Please review the highlighted fields."
+msgstr "Αδυναμία αποθήκευσης. Παρακαλώ ελέγξτε τα επισημασμένα πεδία."
+
+msgid "Doctor profile"
+msgstr "Προφίλ Γιατρού"
+
+msgid "Polish your public profile so patients instantly understand who you are, what you treat, and how to book you."
+msgstr "Τελειοποιήστε το δημόσιο προφίλ σας ώστε οι ασθενείς να καταλάβουν αμέσως ποιος είστε, τι θεραπεύετε και πώς να κλείσουν ραντεβού."
+
+msgid "Visible in search"
+msgstr "Ορατό στην αναζήτηση"
+
+msgid "Secure data"
+msgstr "Ασφαλή δεδομένα"
+
+msgid "Profile completeness"
+msgstr "Πληρότητα προφίλ"
+
+msgid "Complete all sections to unlock premium placements."
+msgstr "Ολοκληρώστε όλες τις ενότητες για να ξεκλειδώσετε προνομιακές τοποθετήσεις."
+
+msgid "Quick actions"
+msgstr "Γρήγορες ενέργειες"
+
+msgid "Update your public card in one place and preview the patient-facing layout."
+msgstr "Ενημερώστε τη δημόσια κάρτα σας σε ένα μέρος και δείτε την προεπισκόπηση όπως θα την βλέπουν οι ασθενείς."
+
+msgid "basic"
+msgstr "Βασικά"
+
+msgid "professional"
+msgstr "Επαγγελματικά"
+
+msgid "location"
+msgstr "Τοποθεσία"
+
+msgid "expertise"
+msgstr "Εξειδίκευση"
+
+msgid "Basic info"
+msgstr "Βασικές πληροφορίες"
+
+msgid "Professional"
+msgstr "Επαγγελματικά"
+
+msgid "Location & services"
+msgstr "Τοποθεσία & Υπηρεσίες"
+
+msgid "Expertise"
+msgstr "Εξειδίκευση"
+
+msgid "Professional photo"
+msgstr "Επαγγελματική φωτογραφία"
+
+msgid "Please upload a JPG, PNG, or WebP image"
+msgstr "Παρακαλώ ανεβάστε εικόνα JPG, PNG ή WebP"
+
+msgid "Max file size is 5MB"
+msgstr "Το μέγιστο μέγεθος αρχείου είναι 5MB"
+
+msgid "No file received. Please try again."
+msgstr "Δεν ελήφθη αρχείο. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "Save your profile first, then upload a photo."
+msgstr "Αποθηκεύστε πρώτα το προφίλ σας, μετά ανεβάστε φωτογραφία."
+
+msgid "Storage is not configured. Set Backblaze B2 env vars and restart the server."
+msgstr "Ο χώρος αποθήκευσης δεν έχει ρυθμιστεί. Ορίστε τις μεταβλητές περιβάλλοντος Backblaze B2 και επανεκκινήστε τον διακομιστή."
+
+msgid "Unable to upload photo. Please try again."
+msgstr "Αδυναμία μεταφόρτωσης φωτογραφίας. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "Photo updated"
+msgstr "Η φωτογραφία ενημερώθηκε"
+
+msgid "Upload photo"
+msgstr "Μεταφόρτωση φωτογραφίας"
+
+msgid "Use a clear, front-facing headshot on a neutral background. JPG/PNG/WebP up to 5MB."
+msgstr "Χρησιμοποιήστε μια καθαρή, μετωπική φωτογραφία προσώπου σε ουδέτερο φόντο. JPG/PNG/WebP έως 5MB."
+
+msgid "First name"
+msgstr "Όνομα"
+
+msgid "Last name"
+msgstr "Επώνυμο"
+
+msgid "Title"
+msgstr "Τίτλος"
+
+msgid "Academic title"
+msgstr "Ακαδημαϊκός τίτλος"
+
+msgid "Profile image URL"
+msgstr "URL εικόνας προφίλ"
+
+msgid "Registration number"
+msgstr "Αρ. Μητρώου"
+
+msgid "Years of experience"
+msgstr "Έτη εμπειρίας"
+
+msgid "Hospital affiliation"
+msgstr "Νοσοκομειακή συνεργασία"
+
+msgid "Bio (EN)"
+msgstr "Βιογραφικό (EN)"
+
+msgid "Bio (EL)"
+msgstr "Βιογραφικό (EL)"
+
+msgid "Certifications"
+msgstr "Πιστοποιήσεις"
+
+msgid "e.g. European Board of ..."
+msgstr "π.χ. Ευρωπαϊκό Συμβούλιο..."
+
+msgid "Languages"
+msgstr "Γλώσσες"
+
+msgid "Select or add languages"
+msgstr "Επιλέξτε ή προσθέστε γλώσσες"
+
+msgid "Insurance networks"
+msgstr "Ασφαλιστικά ταμεία"
+
+msgid "Choose accepted networks"
+msgstr "Επιλέξτε αποδεκτά ταμεία"
+
+msgid "Address"
+msgstr "Διεύθυνση"
+
+msgid "Area"
+msgstr "Περιοχή"
+
+msgid "Zip Code"
+msgstr "Τ.Κ."
+
+msgid "Location found! You can adjust the pin."
+msgstr "Η τοποθεσία βρέθηκε! Μπορείτε να προσαρμόσετε την πινέζα."
+
+msgid "Address not found."
+msgstr "Η διεύθυνση δεν βρέθηκε."
+
+msgid "Could not fetch location."
+msgstr "Αδυναμία εύρεσης τοποθεσίας."
+
+msgid "Locate on Map"
+msgstr "Εντοπισμός στο Χάρτη"
+
+msgid "Click to preview, then drag the pin to correct precise location."
+msgstr "Κάντε κλικ για προεπισκόπηση, στη συνέχεια σύρετε την πινέζα για ακριβή τοποθεσία."
+
+msgid "Consultation fee (€)"
+msgstr "Κόστος επίσκεψης (€)"
+
+msgid "Sub-specialties"
+msgstr "Εξειδικεύσεις"
+
+msgid "Add focus areas"
+msgstr "Προσθέστε τομείς εστίασης"
+
+msgid "Clinical procedures"
+msgstr "Κλινικές διαδικασίες"
+
+msgid "Conditions treated"
+msgstr "Παθήσεις που αντιμετωπίζονται"
+
+msgid "Doctor Portal"
+msgstr "Πύλη Γιατρών"
+
+msgid "Sign out"
+msgstr "Αποσύνδεση"
+
+msgid "Profile progress"
+msgstr "Πρόοδος Προφίλ"
+
+msgid "welcome"
+msgstr "Καλωσόρισμα"
+
+msgid "personal"
+msgstr "Προσωπικά"
+
+msgid "specialty"
+msgstr "Ειδικότητα"
+
+msgid "pricing"
+msgstr "Τιμολόγηση"
+
+msgid "complete"
+msgstr "Ολοκλήρωση"
+
+msgid "Submit profile"
+msgstr "Υποβολή Προφίλ"
+
+msgid "Let's start"
+msgstr "Ας Ξεκινήσουμε"
+
+msgid "Continue"
+msgstr "Συνέχεια"
+
+msgid "Welcome to Medic"
+msgstr "Καλώς ήρθατε στο Medic"
+
+msgid "Think of this as a guided intro—answer a few friendly questions and we will shape your booking profile."
+msgstr "Δείτε αυτό ως μια καθοδηγούμενη εισαγωγή—απαντήστε σε μερικές φιλικές ερωτήσεις και θα φτιάξουμε το προφίλ κρατήσεών σας."
+
+msgid "Tell us about you"
+msgstr "Πείτε μας για εσάς"
+
+msgid "A warm introduction helps patients know they are in excellent hands."
+msgstr "Μια θερλή εισαγωγή βοηθά τους ασθενείς να γνωρίζουν ότι είναι σε καλά χέρια."
+
+msgid "First Name"
+msgstr "Όνομα"
+
+msgid "Last Name"
+msgstr "Επώνυμο"
+
+msgid "Registration No."
+msgstr "Αρ. Μητρώου"
+
+msgid "Experience (Years)"
+msgstr "Εμπειρία (Έτη)"
+
+msgid "What is your area of expertise?"
+msgstr "Ποιος είναι ο τομέας εξειδίκευσής σας;"
+
+msgid "Select your specialty"
+msgstr "Επιλέξτε την ειδικότητά σας"
+
+msgid "Professional Bio"
+msgstr "Επαγγελματικό Βιογραφικό"
+
+msgid "Share a short paragraph highlighting your style and focus areas."
+msgstr "Μοιραστείτε μια σύντομη παράγραφο τονίζοντας το στυλ και τους τομείς εστίασής σας."
+
+msgid "Where do you meet patients?"
+msgstr "Πού συναντάτε τους ασθενείς;"
+
+msgid "Street Address"
+msgstr "Διεύθυνση"
+
+msgid "Offer telemedicine appointments?"
+msgstr "Προσφέρετε ραντεβού τηλεϊατρικής;"
+
+msgid "Set your consultation fee"
+msgstr "Ορίστε την αμοιβή επίσκεψης"
+
+msgid "Transparency builds trust—you can always fine-tune later."
+msgstr "Η διαφάνεια χτίζει εμπιστοσύνη—μπορείτε πάντα να την προσαρμόσετε αργότερα."
+
+msgid "Profile ready!"
+msgstr "Το προφίλ είναι έτοιμο!"
+
+msgid "Next stop: availability. Set your calendar so patients can start booking you right away."
+msgstr "Επόμενο βήμα: διαθεσιμότητα. Ορίστε το ημερολόγιό σας ώστε οι ασθενείς να μπορούν να σας κλείσουν ραντεβού αμέσως."
+
+msgid "Manage availability"
+msgstr "Διαχείριση διαθεσιμότητας"
+
+msgid "Reschedule approved"
+msgstr "Ο επαναπρογραμματισμός εγκρίθηκε"
+
+msgid "Something went wrong"
+msgstr "Κάτι πήγε στραβά"
+
+msgid "You declined this reschedule"
+msgstr "Απορρίψατε αυτόν τον επαναπρογραμματισμό"
+
+msgid "Reschedule rejected"
+msgstr "Ο επαναπρογραμματισμός απορρίφθηκε"
+
+msgid "Unable to reject"
+msgstr "Αδυναμία απόρριψης"
+
+msgid "This will remove your booking."
+msgstr "Αυτό θα αφαιρέσει την κράτησή σας."
+
+msgid "Cancelled by patient"
+msgstr "Ακυρώθηκε από τον ασθενή"
+
+msgid "Appointment cancelled"
+msgstr "Το ραντεβού ακυρώθηκε"
+
+msgid "Unable to cancel"
+msgstr "Αδυναμία ακύρωσης"
+
+msgid "Already appreciated"
+msgstr "Έχετε ήδη στείλει ευχαριστήριο"
+
+msgid "Thank you!"
+msgstr "Ευχαριστούμε!"
+
+msgid "Unable to send"
+msgstr "Αδυναμία αποστολής"
+
+msgid "General practice"
+msgstr "Γενική ιατρική"
+
+msgid "Review this rescheduled time"
+msgstr "Ελέγξτε αυτήν την ώρα επαναπρογραμματισμού"
+
+msgid "Confirm if the new time works or choose to reject it."
+msgstr "Επιβεβαιώστε εάν η νέα ώρα σας βολεύει ή επιλέξτε να την απορρίψετε."
+
+msgid "Reject this rescheduled time?"
+msgstr "Απόρριψη αυτής της ώρας επαναπρογραμματισμού;"
+
+msgid "This booking will be cancelled if you reject."
+msgstr "Αυτή η κράτηση θα ακυρωθεί εάν απορρίψετε."
+
+msgid "Waiting for your doctor to confirm"
+msgstr "Αναμονή επιβεβαίωσης από τον γιατρό σας"
+
+msgid "Cancel this appointment?"
+msgstr "Ακύρωση αυτού του ραντεβού;"
+
+msgid "Join Call"
+msgstr "Συμμετοχή στην Κλήση"
+
+msgid "Book a new appointment"
+msgstr "Κλείστε νέο ραντεβού"
+
+msgid "Past"
+msgstr "Παλαιότερα"
+
+msgid "No past appointments"
+msgstr "Δεν υπάρχουν παλαιότερα ραντεβού"
+
+msgid "Hello, {{name}}"
+msgstr "Γεια σου, {{name}}"
+
+msgid "Manage your health journey"
+msgstr "Διαχειριστείτε την υγεία σας"
+
+msgid "Your Appointments"
+msgstr "Τα Ραντεβού Σας"
+
+msgid "Medical Records"
+msgstr "Ιατρικό Ιστορικό"
+
+msgid "Get the Medic App"
+msgstr "Κατεβάστε την εφαρμογή Medic"
+
+msgid "Manage appointments on the go with our mobile app."
+msgstr "Διαχειριστείτε τα ραντεβού σας εν κινήσει με την εφαρμογή μας."
+
+msgid "Download"
+msgstr "Λήψη"
+
+msgid "Appreciate Doctor"
+msgstr "Ευχαριστήστε τον Γιατρό"
+
+msgid "Send Appreciation"
+msgstr "Αποστολή Ευχαριστηρίου"
+
+msgid "Would you like to leave a short thank-you note? (Optional)"
+msgstr "Θα θέλατε να αφήσετε ένα σύντομο ευχαριστήριο σημείωμα; (Προαιρετικό)"
+
+msgid "e.g. Very kind and caring..."
+msgstr "π.χ. Πολύ ευγενικός και φροντιστικός..."
+
+msgid "Appreciation sent!"
+msgstr "Η ευχαριστία εστάλη!"
+
+msgid "Unable to submit appreciation. Please try again."
+msgstr "Αδυναμία υποβολής ευχαριστίας. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "Unable to save"
+msgstr "Αδυναμία αποθήκευσης"
+
+msgid "Patient profile"
+msgstr "Προφίλ ασθενούς"
+
+msgid "Keep your details up to date"
+msgstr "Κρατήστε τα στοιχεία σας ενημερωμένα"
+
+msgid "Basic Info"
+msgstr "Βασικές Πληροφορίες"
+
+msgid "Date of birth"
+msgstr "Ημερομηνία γέννησης"
+
+msgid "Emergency contact"
+msgstr "Επαφή έκτακτης ανάγκης"
+
+msgid "Preferences"
+msgstr "Προτιμήσεις"
+
+msgid "Preferred language"
+msgstr "Προτιμώμενη γλώσσα"
+
+msgid "Preferred timezone"
+msgstr "Προτιμώμενη ζώνη ώρας"
+
+msgid "Email reminders"
+msgstr "Υπενθυμίσεις Email"
+
+msgid "SMS reminders"
+msgstr "Υπενθυμίσεις SMS"
+
+msgid "Save changes"
+msgstr "Αποθήκευση αλλαγών"
+
+msgid "Private"
+msgstr "Ιδιωτικό"
+
+msgid "Profile photo"
+msgstr "Φωτογραφία προφίλ"
+
+msgid "Use a clear photo. JPG/PNG/WebP up to 5MB."
+msgstr "Χρησιμοποιήστε μια καθαρή φωτογραφία. JPG/PNG/WebP έως 5MB."
+
+msgid "Name + phone"
+msgstr "Όνομα + τηλέφωνο"
+
+msgid "These help us tailor notifications and the experience."
+msgstr "Αυτά μας βοηθούν να προσαρμόσουμε τις ειδοποιήσεις και την εμπειρία."
+
+msgid "Appointment confirmations"
+msgstr "Επιβεβαιώσεις ραντεβού"
+
+msgid "Appointment confirmations and reminders"
+msgstr "Επιβεβαιώσεις και υπενθυμίσεις ραντεβού"
+
+msgid "Optional SMS updates"
+msgstr "Προαιρετικές ενημερώσεις SMS"
+
+msgid "Optional SMS updates when available"
+msgstr "Προαιρετικές ενημερώσεις SMS όταν είναι διαθέσιμες"
+
+msgid "How was your experience?"
+msgstr "Πώς ήταν η εμπειρία σας;"
+
+msgid "Your appreciation helps other patients find great care."
+msgstr "Η εκτίμησή σας βοηθά άλλους ασθενείς να βρουν εξαιρετική φροντίδα."
+
+msgid "Your appreciation is anonymous and helps other patients find great care."
+msgstr "Η εκτίμησή σας είναι ανώνυμη και βοηθά άλλους ασθενείς να βρουν εξαιρετική φροντίδα."
+
+msgid "Send"
+msgstr "Αποστολή"
+
+msgid "Send appreciation"
+msgstr "Αποστολή εκτίμησης"
+
+msgid "Skip"
+msgstr "Παράλειψη"
+
+msgid "Appointment details"
+msgstr "Λεπτομέρειες ραντεβού"
+
+msgid "Notes"
+msgstr "Σημειώσεις"
+
+msgid "Cancel appointment"
+msgstr "Ακύρωση ραντεβού"
+
+msgid "Express appreciation"
+msgstr "Εκφράστε την εκτίμησή σας"
+
+msgid "Optional thank-you note (max 80 characters)"
+msgstr "Προαιρετικό ευχαριστήριο (μέγ. 80 χαρακτήρες)"
+
+msgid "Account settings"
+msgstr "Ρυθμίσεις λογαριασμού"
+
+msgid "Manage your profile and preferences"
+msgstr "Διαχειριστείτε το προφίλ και τις προτιμήσεις σας"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Role"
+msgstr "Ρόλος"
+
+msgid "Update profile"
+msgstr "Ενημέρωση προφίλ"
+
+msgid "Security"
+msgstr "Ασφάλεια"
+
+msgid "Welcome back"
+msgstr "Καλώς ήρθατε ξανά"
+
+msgid "Sign in to manage your appointments"
+msgstr "Συνδεθείτε για να διαχειριστείτε τα ραντεβού σας"
+
+msgid "Email address"
+msgstr "Διεύθυνση email"
+
+msgid "Please enter your email"
+msgstr "Παρακαλώ εισάγετε το email σας"
+
+msgid "Password"
+msgstr "Κωδικός"
+
+msgid "Please enter your password"
+msgstr "Παρακαλώ εισάγετε τον κωδικό σας"
+
+msgid "Your password"
+msgstr "Ο κωδικός σας"
+
+msgid "Remember me"
+msgstr "Να με θυμάσαι"
+
+msgid "Forgot password?"
+msgstr "Ξεχάσατε τον κωδικό;"
+
+msgid "Sign in"
+msgstr "Σύνδεση"
+
+msgid "Don't have an account?"
+msgstr "Δεν έχετε λογαριασμό;"
+
+msgid "Create an account"
+msgstr "Δημιουργία λογαριασμού"
+
+msgid "Book appointments and manage your health"
+msgstr "Κλείστε ραντεβού και διαχειριστείτε την υγεία σας"
+
+msgid "Create Patient Account"
+msgstr "Δημιουργία Λογαριασμού Ασθενούς"
+
+msgid "Register as a Specialist"
+msgstr "Εγγραφή ως Ειδικός"
+
+msgid "Already have an account?"
+msgstr "Έχετε ήδη λογαριασμό;"
+
+msgid "Join as a Specialist"
+msgstr "Εγγραφείτε ως Ειδικός"
+
+msgid "Managing your practice has never been easier"
+msgstr "Η διαχείριση του ιατρείου σας δεν ήταν ποτέ ευκολότερη"
+
+msgid "Start Application"
+msgstr "Έναρξη Αίτησης"
+
+msgid "Alerts"
+msgstr "Ειδοποιήσεις"
+
+msgid "My Schedule"
+msgstr "Το Πρόγραμμά μου"
+
+msgid "My Profile"
+msgstr "Το Προφίλ μου"
+
+msgid "Notifications"
+msgstr "Ειδοποιήσεις"
+
+msgid "Discover"
+msgstr "Ανακαλύψτε"
+
+msgid "Loading..."
+msgstr "Φόρτωση..."
+
+msgid "No new notifications"
+msgstr "Δεν υπάρχουν νέες ειδοποιήσεις"
+
+msgid "just now"
+msgstr "μόλις τώρα"
+
+msgid "{{count}}m ago"
+msgstr "πριν {{count}}λ"
+
+msgid "{{count}}h ago"
+msgstr "πριν {{count}}ω"
+
+msgid "{{count}}d ago"
+msgstr "πριν {{count}}μ"
+
+msgid "{{count}}w ago"
+msgstr "πριν {{count}}ε"
+
+msgid "View All Notifications"
+msgstr "Προβολή Όλων των Ειδοποιήσεων"
+
+msgid "Notification"
+msgstr "Ειδοποίηση"
+
+msgid "Schedule saved successfully"
+msgstr "Το πρόγραμμα αποθηκεύτηκε επιτυχώς"
+
+msgid "Failed to save schedule"
+msgstr "Αποτυχία αποθήκευσης προγράμματος"
+
+msgid "Mon"
+msgstr "Δευ"
+
+msgid "Tue"
+msgstr "Τρι"
+
+msgid "Wed"
+msgstr "Τετ"
+
+msgid "Thu"
+msgstr "Πεμ"
+
+msgid "Fri"
+msgstr "Παρ"
+
+msgid "Sat"
+msgstr "Σαβ"
+
+msgid "Sun"
+msgstr "Κυρ"
+
+msgid "Add Time Off"
+msgstr "Προσθήκη Άδειας"
+
+msgid "Back"
+msgstr "Πίσω"
+
+msgid "doctor.profile.professional"
+msgstr "Επαγγελματικά"
+
+msgid "doctor.profile.certifications"
+msgstr "Πιστοποιήσεις"
+
+msgid "doctor.profile.certifications_placeholder"
+msgstr "π.χ. Ευρωπαϊκό Συμβούλιο..."
+
+msgid "doctor.profile.languages"
+msgstr "Γλώσσες"
+
+msgid "doctor.profile.languages_placeholder"
+msgstr "Επιλέξτε ή προσθέστε γλώσσες"
+
+msgid "doctor.profile.insurance"
+msgstr "Ασφαλιστικά δίκτυα"
+
+msgid "doctor.profile.insurance_placeholder"
+msgstr "Επιλέξτε αποδεκτά δίκτυα"
+
+msgid "doctor.profile.location"
+msgstr "Τοποθεσία & υπηρεσίες"
+
+msgid "doctor.profile.location_found"
+msgstr "Η τοποθεσία βρέθηκε! Μπορείτε να προσαρμόσετε την πινέζα."
+
+msgid "doctor.profile.location_not_found"
+msgstr "Η διεύθυνση δεν βρέθηκε."
+
+msgid "doctor.profile.location_error"
+msgstr "Αδυναμία εύρεσης τοποθεσίας."
+
+msgid "doctor.profile.locate"
+msgstr "Εντοπισμός στο Χάρτη"
+
+msgid "doctor.profile.locate_hint"
+msgstr "Κάντε κλικ για προεπισκόπηση, και σύρετε την πινέζα για διόρθωση."
+
+msgid "doctor.profile.telemedicine"
+msgstr "Διαθέσιμη τηλεϊατρική"
+
+msgid "doctor.profile.expertise"
+msgstr "Εξειδίκευση"
+
+msgid "doctor.profile.sub_specialties"
+msgstr "Υποειδικότητες"
+
+msgid "doctor.profile.sub_specialties_placeholder"
+msgstr "Προσθήκη περιοχών εστίασης"
+
+msgid "doctor.profile.procedures"
+msgstr "Κλινικές διαδικασίες"
+
+msgid "doctor.profile.conditions"
+msgstr "Παθήσεις που αντιμετωπίζονται"
+
+msgid "doctor.profile.save"
+msgstr "Αποθήκευση"
+
+msgid "notifications.title"
+msgstr "Ειδοποιήσεις"
+
+msgid "notifications.subtitle"
+msgstr "Μείνετε ενήμεροι"
+
+msgid "notifications.mark_all"
+msgstr "Σήμανση όλων ως αναγνωσμένα"
+
+msgid "notifications.empty"
+msgstr "Καμία ειδοποίηση ακόμα"
+
+msgid "notifications.mark_read"
+msgstr "Σήμανση ως αναγνωσμένο"
+
+msgid "Confirmed"
+msgstr "Επιβεβαιωμένα"
+
+msgid "Requests"
+msgstr "Αιτήματα"
+
+msgid "Earlier"
+msgstr "Νωρίτερα"
+
+msgid "dashboard.patient_fallback"
+msgstr "παιδί"
+
+msgid "dashboard.already_appreciated"
+msgstr "Έχετε ήδη ευχαριστήσει για αυτό το ραντεβού"
+
+msgid "dashboard.appreciation_sent"
+msgstr "Το ευχαριστήριο στάλθηκε!"
+
+msgid "dashboard.appreciation_error"
+msgstr "Αδυναμία υποβολής ευχαριστηρίου. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "dashboard.approve_success"
+msgstr "Ο επαναπρογραμματισμός εγκρίθηκε"
+
+msgid "dashboard.approve_error"
+msgstr "Κάτι πήγε στραβά. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "dashboard.reject_success"
+msgstr "Ο επαναπρογραμματισμός απορρίφθηκε"
+
+msgid "dashboard.reject_error"
+msgstr "Αδυναμία απόρριψης αυτή τη στιγμή. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "dashboard.cancel_success"
+msgstr "Το ραντεβού ακυρώθηκε"
+
+msgid "dashboard.cancel_error"
+msgstr "Αδυναμία ακύρωσης αυτή τη στιγμή. Παρακαλώ δοκιμάστε ξανά."
+
+msgid "E.g. Very kind and caring."
+msgstr "Π.χ. Πολύ ευγενικός και φροντιστικός."
+
+msgid "Keep your details up to date so we can personalize your experience and help clinics reach you about appointments."
+msgstr "Κρατήστε τα στοιχεία σας ενημερωμένα για να εξατομικεύσουμε την εμπειρία σας και να βοηθήσουμε τις κλινικές να επικοινωνήσουν μαζί σας."
+
+msgid "John"
+msgstr "Γιάννης"
+
+msgid "Doe"
+msgstr "Παπαδόπουλος"
+
+msgid "Change password (coming soon)"
+msgstr "Αλλαγή κωδικού (σύντομα)"
+
+msgid "Register"
+msgstr "Εγγραφή"
+
+msgid "Min. 8 characters"
+msgstr "Ελάχ. 8 χαρακτήρες"
+
+msgid "Are you a patient?"
+msgstr "Είστε ασθενής;"

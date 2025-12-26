@@ -1,79 +1,96 @@
-export const MapboxMap = {
+import maplibregl from 'maplibre-gl'
+// CSS loaded via CDN in root.html.heex
+
+// Free vector tile style from OpenFreeMap (Positron-like light theme)
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron'
+
+export const LeafletMap = {
     mounted() {
-        this.initMap();
+        this.initMap()
     },
     updated() {
-        this.updateMarkers();
+        this.updateMarkers()
     },
     destroyed() {
-        if (this.map) this.map.remove();
+        if (this.map) {
+            this.map.remove()
+            this.map = null
+        }
     },
     initMap() {
-        mapboxgl.accessToken = 'pk.eyJ1IjoibWVkaWNnciIsImEiOiJjbWl6bnpubDcwMTk2M2VzaWZlNDlkeDh1In0.DFR6nJ1SOlC2HE5jSKaAHg';
+        // Default center (Athens, Greece)
+        const defaultCenter = [23.7275, 37.9838] // lng, lat for MapLibre
+        const defaultZoom = 11
 
-        // Default center (Athens, Greece) if no doctors or specific center provided
-        const defaultCenter = [23.7275, 37.9838];
-        const defaultZoom = 11;
-
-        this.map = new mapboxgl.Map({
+        this.map = new maplibregl.Map({
             container: this.el,
-            style: 'mapbox://styles/mapbox/streets-v12',
+            style: MAP_STYLE,
             center: defaultCenter,
-            zoom: defaultZoom
-        });
+            zoom: defaultZoom,
+            attributionControl: false
+        })
 
+        this.map.addControl(new maplibregl.NavigationControl(), 'top-right')
+        this.map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
+
+        this.markers = []
+
+        // Wait for map to be ready then update markers
         this.map.on('load', () => {
-            this.updateMarkers();
-        });
-
-        this.markers = [];
+            this.updateMarkers()
+        })
     },
 
     updateMarkers() {
-        if (!this.map || !this.map.loaded()) return;
+        if (!this.map || !this.map.loaded()) return
 
         // Clear existing markers
-        this.markers.forEach(marker => marker.remove());
-        this.markers = [];
+        this.markers.forEach(marker => marker.remove())
+        this.markers = []
 
-        const doctors = JSON.parse(this.el.dataset.doctors || "[]");
+        const doctors = JSON.parse(this.el.dataset.doctors || "[]")
 
-        if (doctors.length === 0) return;
+        if (doctors.length === 0) return
 
-        const bounds = new mapboxgl.LngLatBounds();
+        const validDoctors = doctors.filter(d => d.location_lng && d.location_lat)
+        if (validDoctors.length === 0) return
 
-        doctors.forEach(doctor => {
-            if (doctor.location_lng && doctor.location_lat) {
-                // Create popup content
-                const popupContent = `
-          <div class="p-2">
-            <h3 class="font-bold text-sm">${doctor.first_name} ${doctor.last_name}</h3>
-            <p class="text-xs text-gray-500">${doctor.specialty_name || ''}</p>
-            <div class="mt-2">
-              <span class="font-semibold text-primary">€${parseInt(doctor.consultation_fee || 0)}</span>
-            </div>
-          </div>
-        `;
+        const bounds = new maplibregl.LngLatBounds()
 
-                const popup = new mapboxgl.Popup({ offset: 25 })
-                    .setHTML(popupContent);
+        validDoctors.forEach(doctor => {
+            // Create popup content
+            const popupContent = `
+                <div class="p-2">
+                    <h3 class="font-bold text-sm">${doctor.first_name} ${doctor.last_name}</h3>
+                    <p class="text-xs text-gray-500">${doctor.specialty_name || ''}</p>
+                    <div class="mt-2">
+                        <span class="font-semibold text-primary">€${parseInt(doctor.consultation_fee || 0)}</span>
+                    </div>
+                </div>
+            `
 
-                const marker = new mapboxgl.Marker({ color: '#E1004C' }) // Medic primary color roughly
-                    .setLngLat([doctor.location_lng, doctor.location_lat])
-                    .setPopup(popup)
-                    .addTo(this.map);
+            const popup = new maplibregl.Popup({ offset: 25 })
+                .setHTML(popupContent)
 
-                this.markers.push(marker);
-                bounds.extend([doctor.location_lng, doctor.location_lat]);
-            }
-        });
+            const marker = new maplibregl.Marker({ color: '#E1004C' })
+                .setLngLat([doctor.location_lng, doctor.location_lat])
+                .setPopup(popup)
+                .addTo(this.map)
 
-        // Fit map to bounds if we have markers
+            this.markers.push(marker)
+            bounds.extend([doctor.location_lng, doctor.location_lat])
+        })
+
+        // Fit map to bounds with smooth animation
         if (this.markers.length > 0) {
             this.map.fitBounds(bounds, {
                 padding: 50,
-                maxZoom: 15
-            });
+                maxZoom: 15,
+                duration: 1000
+            })
         }
     }
-};
+}
+
+// Keep backward compatibility - export as both names
+export const MapboxMap = LeafletMap

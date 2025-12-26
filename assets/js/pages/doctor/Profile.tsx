@@ -32,20 +32,18 @@ import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import maplibregl from 'maplibre-gl'
+// CSS loaded via CDN in root.html.heex
+
+// Free vector tile style from OpenFreeMap
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron'
 
 import type { AppPageProps } from '@/types/app'
 
 const { Title, Text } = Typography
 const { TextArea } = Input
 
-const LANGUAGE_OPTIONS = ['Ελληνικά', 'English', 'Deutsch', 'Français', 'Italiano', 'Türkçe', 'Русский']
-const INSURANCE_OPTIONS = ['ΕΟΠΥΥ', 'Interamerican', 'Eurolife', 'Ethniki', 'Generali', 'Other']
-const CERTIFICATION_HINTS = ['European Board Certification', 'Greek Medical Association', 'American Board Certification']
-const SUB_SPECIALTY_OPTIONS = ['Cardiology', 'Dermatology', 'Orthopedics', 'Endocrinology', 'Neurology']
-const PROCEDURE_OPTIONS = ['MRI Consultation', 'Endoscopy', 'Physical Therapy Eval', 'Telemedicine Follow-up']
-const CONDITION_OPTIONS = ['Hypertension', 'Diabetes', 'Back Pain', 'Anxiety', 'Skin Allergy']
+
 
 type Profile = {
   id: string
@@ -89,6 +87,13 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
 
   const [messageApi, contextHolder] = message.useMessage()
 
+  const LANGUAGE_OPTIONS = ['Ελληνικά', 'English', 'Deutsch', 'Français', 'Italiano', 'Türkçe', 'Русский']
+  const INSURANCE_OPTIONS = ['ΕΟΠΥΥ', 'Interamerican', 'Eurolife', 'Ethniki', 'Generali', t('Other')]
+  const CERTIFICATION_HINTS = [t('European Board Certification'), t('Greek Medical Association'), t('American Board Certification')]
+  const SUB_SPECIALTY_OPTIONS = [t('Cardiology'), t('Dermatology'), t('Orthopedics'), t('Endocrinology'), t('Neurology')]
+  const PROCEDURE_OPTIONS = [t('MRI Consultation'), t('Endoscopy'), t('Physical Therapy Eval'), t('Telemedicine Follow-up')]
+  const CONDITION_OPTIONS = [t('Hypertension'), t('Diabetes'), t('Back Pain'), t('Anxiety'), t('Skin Allergy')]
+
   const {
     control,
     register,
@@ -122,12 +127,12 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
         router.post('/dashboard/doctor/profile', { doctor: values }, {
           preserveScroll: true,
           onSuccess: () => {
-            messageApi.success(t('doctor.profile.saved', 'Profile saved'))
+            messageApi.success(t('Profile saved'))
             resolve()
           },
           onError: () => {
             // Server-side field errors arrive via props; this prevents a generic UX.
-            messageApi.error(t('doctor.profile.save_failed', 'Unable to save. Please review the highlighted fields.'))
+            messageApi.error(t('Unable to save. Please review the highlighted fields.'))
             resolve()
           }
         })
@@ -152,19 +157,16 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
         >
           <Flex justify="space-between" align="flex-start" wrap="wrap" gap="large">
             <div>
-              <Title level={2} style={{ margin: 0 }}>{t('doctor.profile.title', 'Doctor profile')}</Title>
+              <Title level={2} style={{ margin: 0 }}>{t('Doctor profile')}</Title>
               <Text type="secondary" style={{ marginTop: 8, maxWidth: 520, display: 'block' }}>
-                {t(
-                  'doctor.profile.subtitle',
-                  'Polish your public profile so patients instantly understand who you are, what you treat, and how to book you.'
-                )}
+                {t('Polish your public profile so patients instantly understand who you are, what you treat, and how to book you.')}
               </Text>
               <Flex gap="small" style={{ marginTop: 16 }}>
                 <Tag color="cyan">
-                  {t('doctor.profile.badge_verified', 'Visible in search')}
+                  {t('Visible in search')}
                 </Tag>
                 <Tag color="blue">
-                  {t('doctor.profile.badge_secure', 'Secure data')}
+                  {t('Secure data')}
                 </Tag>
               </Flex>
             </div>
@@ -173,7 +175,7 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
               <Flex vertical gap="small">
                 <Flex justify="space-between">
                   <Text strong style={{ fontSize: 14 }}>
-                    {t('doctor.profile.completeness', 'Profile completeness')}
+                    {t('Profile completeness')}
                   </Text>
                   <Text type="secondary" style={{ fontSize: 14 }}>
                     {completion}%
@@ -193,7 +195,7 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                     <IconClipboardText size={14} />
                   </div>
                   <Text type="secondary" style={{ fontSize: 12 }}>
-                    {t('doctor.profile.helptext', 'Complete all sections to unlock premium placements.')}
+                    {t('Complete all sections to unlock premium placements.')}
                   </Text>
                 </Flex>
               </Flex>
@@ -216,9 +218,9 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                 <IconMapPin size={20} />
               </div>
               <div>
-                <Text strong style={{ display: 'block' }}>{t('doctor.profile.quick_actions', 'Quick actions')}</Text>
+                <Text strong style={{ display: 'block' }}>{t('Quick actions')}</Text>
                 <Text type="secondary" style={{ fontSize: 14 }}>
-                  {t('doctor.profile.quick_actions_desc', 'Update your public card in one place and preview the patient-facing layout.')}
+                  {t('Update your public card in one place and preview the patient-facing layout.')}
                 </Text>
               </div>
             </Flex>
@@ -237,7 +239,7 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                   }}
                   style={{ color: token.colorPrimary, borderColor: token.colorPrimary, backgroundColor: token.colorFillQuaternary }}
                 >
-                  {t(`doctor.profile.jump_${section}`, section)}
+                  {t(section)}
                 </Button>
               ))}
             </Space>
@@ -248,14 +250,14 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
           <Flex vertical gap="large">
             <Card variant="outlined" style={{ borderRadius: 16 }} id="basic">
               <Flex vertical gap="middle">
-                <Title level={4}>{t('doctor.profile.basic', 'Basic info')}</Title>
+                <Title level={4}>{t('Basic info')}</Title>
 
                 <Controller
                   name="profile_image_url"
                   control={control}
                   render={({ field }) => (
                     <div>
-                      <div style={{ marginBottom: 8 }}><Text strong>{t('doctor.profile.photo', 'Professional photo')}</Text></div>
+                      <div style={{ marginBottom: 8 }}><Text strong>{t('Professional photo')}</Text></div>
                       <Flex gap="middle" align="center" wrap="wrap">
                         <Avatar
                           size={72}
@@ -271,12 +273,12 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                           beforeUpload={(file) => {
                             const okType = ['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
                             if (!okType) {
-                              messageApi.error(t('doctor.profile.photo_type', 'Please upload a JPG, PNG, or WebP image'))
+                              messageApi.error(t('Please upload a JPG, PNG, or WebP image'))
                               return Upload.LIST_IGNORE
                             }
                             const okSize = file.size <= 5 * 1024 * 1024
                             if (!okSize) {
-                              messageApi.error(t('doctor.profile.photo_size', 'Max file size is 5MB'))
+                              messageApi.error(t('Max file size is 5MB'))
                               return Upload.LIST_IGNORE
                             }
                             return true
@@ -303,16 +305,16 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                                 const code = data?.error
                                 const msg =
                                   code === 'missing_file'
-                                    ? t('doctor.profile.photo_missing', 'No file received. Please try again.')
+                                    ? t('No file received. Please try again.')
                                     : code === 'doctor_profile_missing'
-                                      ? t('doctor.profile.photo_profile_missing', 'Save your profile first, then upload a photo.')
+                                      ? t('Save your profile first, then upload a photo.')
                                       : code === 'unsupported_type'
-                                        ? t('doctor.profile.photo_type', 'Please upload a JPG, PNG, or WebP image')
+                                        ? t('Please upload a JPG, PNG, or WebP image')
                                         : code === 'too_large'
-                                          ? t('doctor.profile.photo_size', 'Max file size is 5MB')
+                                          ? t('Max file size is 5MB')
                                           : code === 'storage_not_configured'
-                                            ? t('doctor.profile.photo_storage', 'Storage is not configured. Set Backblaze B2 env vars and restart the server.')
-                                            : t('doctor.profile.photo_failed', 'Unable to upload photo. Please try again.')
+                                            ? t('Storage is not configured. Set Backblaze B2 env vars and restart the server.')
+                                            : t('Unable to upload photo. Please try again.')
 
                                 messageApi.error(msg)
                                 throw new Error('upload_failed')
@@ -323,21 +325,21 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                               }
 
                               setValue('profile_image_url', data.profile_image_url, { shouldDirty: true })
-                              messageApi.success(t('doctor.profile.photo_uploaded', 'Photo updated'))
+                              messageApi.success(t('Photo updated'))
                               options.onSuccess?.(data, options.file as any)
                             } catch (e) {
-                              messageApi.error(t('doctor.profile.photo_failed', 'Unable to upload photo. Please try again.'))
+                              messageApi.error(t('Unable to upload photo. Please try again.'))
                               options.onError?.(e as any)
                             }
                           }}
                         >
                           <Button type="default">
-                            {t('doctor.profile.photo_upload', 'Upload photo')}
+                            {t('Upload photo')}
                           </Button>
                         </Upload>
 
                         <Text type="secondary" style={{ fontSize: 12, maxWidth: 520 }}>
-                          {t('doctor.profile.photo_help', 'Use a clear, front-facing headshot on a neutral background. JPG/PNG/WebP up to 5MB.')}
+                          {t('Use a clear, front-facing headshot on a neutral background. JPG/PNG/WebP up to 5MB.')}
                         </Text>
                       </Flex>
                     </div>
@@ -345,7 +347,7 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                 />
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <div style={{ marginBottom: 8 }}><Text strong>First name</Text></div>
+                    <div style={{ marginBottom: 8 }}><Text strong>{t('First name')}</Text></div>
                     <Controller
                       name="first_name"
                       control={control}
@@ -359,7 +361,7 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                     )}
                   </Col>
                   <Col xs={24} md={12}>
-                    <div style={{ marginBottom: 8 }}><Text strong>Last name</Text></div>
+                    <div style={{ marginBottom: 8 }}><Text strong>{t('Last name')}</Text></div>
                     <Controller
                       name="last_name"
                       control={control}
@@ -376,27 +378,27 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
 
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <div style={{ marginBottom: 8 }}><Text strong>Title</Text></div>
+                    <div style={{ marginBottom: 8 }}><Text strong>{t('Title')}</Text></div>
                     <Controller name="title" control={control} render={({ field }) => <Input {...field} />} />
                   </Col>
                   <Col xs={24} md={12}>
-                    <div style={{ marginBottom: 8 }}><Text strong>Academic title</Text></div>
+                    <div style={{ marginBottom: 8 }}><Text strong>{t('Academic title')}</Text></div>
                     <Controller name="academic_title" control={control} render={({ field }) => <Input {...field} />} />
                   </Col>
                 </Row>
 
                 <div>
-                  <div style={{ marginBottom: 8 }}><Text strong>Profile image URL</Text></div>
+                  <div style={{ marginBottom: 8 }}><Text strong>{t('Profile image URL')}</Text></div>
                   <Controller name="profile_image_url" control={control} render={({ field }) => <Input {...field} readOnly />} />
                 </div>
 
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <div style={{ marginBottom: 8 }}><Text strong>Registration number</Text></div>
+                    <div style={{ marginBottom: 8 }}><Text strong>{t('Registration number')}</Text></div>
                     <Controller name="registration_number" control={control} render={({ field }) => <Input {...field} />} />
                   </Col>
                   <Col xs={24} md={12}>
-                    <div style={{ marginBottom: 8 }}><Text strong>Years of experience</Text></div>
+                    <div style={{ marginBottom: 8 }}><Text strong>{t('Years of experience')}</Text></div>
                     <Controller
                       name="years_of_experience"
                       control={control}
@@ -408,12 +410,12 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                 </Row>
 
                 <div>
-                  <div style={{ marginBottom: 8 }}><Text strong>Hospital affiliation</Text></div>
+                  <div style={{ marginBottom: 8 }}><Text strong>{t('Hospital affiliation')}</Text></div>
                   <Controller name="hospital_affiliation" control={control} render={({ field }) => <Input {...field} />} />
                 </div>
 
                 <div>
-                  <div style={{ marginBottom: 8 }}><Text strong>Specialty</Text></div>
+                  <div style={{ marginBottom: 8 }}><Text strong>{t('Specialty')}</Text></div>
                   <Controller
                     name="specialty_id"
                     control={control}
@@ -422,7 +424,7 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                         value={field.value || undefined}
                         onChange={(value) => field.onChange(value || null)}
                         style={{ width: '100%' }}
-                        placeholder={t('doctor.profile.select_specialty', 'Select specialty')}
+                        placeholder={t('Select specialty')}
                         options={specialties.map(opt => ({ value: opt.id, label: opt.name }))}
                       />
                     )}
@@ -433,11 +435,11 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                 </div>
 
                 <div>
-                  <div style={{ marginBottom: 8 }}><Text strong>Bio (EN)</Text></div>
+                  <div style={{ marginBottom: 8 }}><Text strong>{t('Bio (EN)')}</Text></div>
                   <Controller name="bio" control={control} render={({ field }) => <TextArea autoSize={{ minRows: 4 }} {...field} />} />
                 </div>
                 <div>
-                  <div style={{ marginBottom: 8 }}><Text strong>Bio (EL)</Text></div>
+                  <div style={{ marginBottom: 8 }}><Text strong>{t('Bio (EL)')}</Text></div>
                   <Controller name="bio_el" control={control} render={({ field }) => <TextArea autoSize={{ minRows: 4 }} {...field} />} />
                 </div>
               </Flex>
@@ -529,11 +531,14 @@ const DoctorProfilePage = ({ doctor, specialties, errors: serverErrors }: PagePr
                       if (!addr) return;
 
                       try {
-                        const token = 'pk.eyJ1IjoibWVkaWNnciIsImEiOiJjbWl6bnpubDcwMTk2M2VzaWZlNDlkeDh1In0.DFR6nJ1SOlC2HE5jSKaAHg';
-                        const res = await fetch(`https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(addr)}&access_token=${token}&limit=1`);
+                        // Use free Nominatim geocoding (OpenStreetMap)
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`, {
+                          headers: { 'User-Agent': 'Medic-App' }
+                        });
                         const data = await res.json();
-                        if (data.features?.[0]?.geometry?.coordinates) {
-                          const [lng, lat] = data.features[0].geometry.coordinates;
+                        if (data?.[0]?.lat && data?.[0]?.lon) {
+                          const lat = parseFloat(data[0].lat);
+                          const lng = parseFloat(data[0].lon);
                           setValue('location_lat', lat, { shouldDirty: true });
                           setValue('location_lng', lng, { shouldDirty: true });
                           messageApi.success(t('doctor.profile.location_found', 'Location found! You can adjust the pin.'));
@@ -753,25 +758,23 @@ interface DraggableMapProps {
 
 const DraggableMap = ({ initialLat, initialLng, onDragEnd }: DraggableMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const marker = useRef<maplibregl.Marker | null>(null);
 
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
-    mapboxgl.accessToken = 'pk.eyJ1IjoibWVkaWNnciIsImEiOiJjbWl6bnpubDcwMTk2M2VzaWZlNDlkeDh1In0.DFR6nJ1SOlC2HE5jSKaAHg';
-
-    map.current = new mapboxgl.Map({
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: MAP_STYLE,
       center: [initialLng || 23.7275, initialLat || 37.9838],
       zoom: 14,
       attributionControl: false
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-    const newMarker = new mapboxgl.Marker({ draggable: true, color: '#14B8A6' })
+    const newMarker = new maplibregl.Marker({ color: '#14B8A6', draggable: true })
       .setLngLat([initialLng || 23.7275, initialLat || 37.9838])
       .addTo(map.current);
 
@@ -781,6 +784,13 @@ const DraggableMap = ({ initialLat, initialLng, onDragEnd }: DraggableMapProps) 
     });
 
     marker.current = newMarker;
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, []);
 
   // Update map and marker when initial coords change (e.g. from Locate button)
@@ -791,7 +801,7 @@ const DraggableMap = ({ initialLat, initialLng, onDragEnd }: DraggableMapProps) 
     const currentLngLat = marker.current.getLngLat();
     if (Math.abs(currentLngLat.lat - initialLat) > 0.0001 || Math.abs(currentLngLat.lng - initialLng) > 0.0001) {
       marker.current.setLngLat([initialLng, initialLat]);
-      map.current.flyTo({ center: [initialLng, initialLat], zoom: 15 });
+      map.current.flyTo({ center: [initialLng, initialLat], zoom: 15, duration: 1000 });
     }
   }, [initialLat, initialLng]);
 

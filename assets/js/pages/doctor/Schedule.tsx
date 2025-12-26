@@ -41,6 +41,8 @@ import { useState, useMemo } from 'react'
 import dayjs, { Dayjs } from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { format } from 'date-fns'
+import { enUS, el } from 'date-fns/locale'
 import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
@@ -48,6 +50,11 @@ import type { AppPageProps } from '@/types/app'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
+
+const DATE_LOCALES: Record<string, any> = {
+  en: enUS,
+  el: el
+}
 
 const { Text, Title } = Typography
 const { RangePicker } = TimePicker
@@ -164,7 +171,8 @@ const DoctorSchedule = ({
   const exceptionType = Form.useWatch('type', form)
   const isRange = exceptionType === 'range'
 
-  const { t } = useTranslation('default')
+  const { t, i18n } = useTranslation('default')
+  const dateLocale = DATE_LOCALES[i18n.language] || enUS
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<string>('1') // 1=Monday
@@ -401,10 +409,10 @@ const DoctorSchedule = ({
           }
 
           return (
-            <Card key={rule.id} size="small" type="inner" title={`${dayjs(rule.startTime, 'HH:mm').format('h:mm A')} - ${dayjs(rule.endTime, 'HH:mm').format('h:mm A')} (${interval}min)`}>
+            <Card key={rule.id} size="small" type="inner" title={`${format(dayjs(rule.startTime, 'HH:mm').toDate(), 'p', { locale: dateLocale })} - ${format(dayjs(rule.endTime, 'HH:mm').toDate(), 'p', { locale: dateLocale })} (${interval}${t('min')})`}>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
                 gap: 8,
                 justifyItems: 'start'
               }}>
@@ -414,15 +422,29 @@ const DoctorSchedule = ({
                     type={slot.active ? 'primary' : 'default'}
                     icon={slot.active ? <IconCheck size={14} /> : <IconMinus size={14} />}
                     onClick={() => handleToggleSlot(rule, slot.start, slot.end, slot.active)}
-                    ghost={!slot.active}
                     style={{
-                      opacity: slot.active ? 1 : 0.6,
-                      borderColor: slot.active ? undefined : '#d9d9d9',
+                      opacity: slot.active ? 1 : 0.85,
+                      borderColor: slot.active ? undefined : '#e5e7eb',
+                      backgroundColor: slot.active ? undefined : '#fff',
+                      color: slot.active ? undefined : '#9ca3af',
                       width: '100%',
-                      justifyContent: 'flex-start'
+                      justifyContent: 'flex-start',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!slot.active) {
+                        e.currentTarget.style.color = '#0d9488'
+                        e.currentTarget.style.borderColor = '#0d9488'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!slot.active) {
+                        e.currentTarget.style.color = '#9ca3af'
+                        e.currentTarget.style.borderColor = '#e5e7eb'
+                      }
                     }}
                   >
-                    {dayjs(slot.start, 'HH:mm').format('h:mm')}
+                    {format(dayjs(slot.start, 'HH:mm').toDate(), 'p', { locale: dateLocale })}
                   </Button>
                 ))}
               </div>
@@ -455,19 +477,19 @@ const DoctorSchedule = ({
       {/* Header */}
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
         <div>
-          <Title level={2} style={{ margin: 0 }}>{t('schedule.title', 'Manage Schedule')}</Title>
-          <Text type="secondary">{t('schedule.subtitle', 'Set your recurring weekly availability.')}</Text>
+          <Title level={2} style={{ margin: 0 }}>{t('Manage Schedule')}</Title>
+          <Text type="secondary">{t('Set your recurring weekly availability.')}</Text>
         </div>
         <Space>
           <Popconfirm
-            title={t('common.are_you_sure')}
-            description={t('schedule.reset_confirm', 'This will remove ALL your availability rules. Are you sure?')}
+            title={t('Are you sure?')}
+            description={t('This will remove ALL your availability rules. Are you sure?')}
             onConfirm={handleResetSchedule}
-            okText={t('common.yes')}
-            cancelText={t('common.no')}
+            okText={t('Yes')}
+            cancelText={t('No')}
           >
             <Button danger>
-              {t('schedule.reset', 'Reset Schedule')}
+              {t('Reset Schedule')}
             </Button>
           </Popconfirm>
           <Button
@@ -475,7 +497,7 @@ const DoctorSchedule = ({
             icon={<IconPlus size={16} />}
             onClick={populateFormWithExistingRules}
           >
-            {t('schedule.edit_availability', 'Edit Availability')}
+            {t('Edit Availability')}
           </Button>
         </Space>
       </Flex>
@@ -484,7 +506,7 @@ const DoctorSchedule = ({
         {/* Left Column: Weekly Hours */}
         <Col xs={24} lg={16}>
           <Card
-            title={t('schedule.weekly_hours', 'Weekly Hours')}
+            title={t('Weekly Hours')}
             bordered={false}
             style={{ boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)' }}
           >
@@ -507,10 +529,10 @@ const DoctorSchedule = ({
               <SlotGrid rules={currentDayRules} />
             ) : (
               <Empty
-                description={t('schedule.no_slots', 'No availability slots for this day.')}
+                description={t('No availability slots for this day.')}
               >
                 <Button type="primary" onClick={populateFormWithExistingRules}>
-                  {t('schedule.edit_availability', 'Edit Availability')}
+                  {t('Edit Availability')}
                 </Button>
               </Empty>
             )}
@@ -518,7 +540,7 @@ const DoctorSchedule = ({
 
           {/* Time Off Section */}
           <Card
-            title={t('schedule.time_off', 'Time Off & Holidays')}
+            title={t('Time Off & Holidays')}
             style={{ marginTop: 24, boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)' }}
             bordered={false}
             extra={
@@ -527,7 +549,7 @@ const DoctorSchedule = ({
                 icon={<IconPlus size={14} />}
                 onClick={() => setIsTimeOffModalOpen(true)}
               >
-                {t('common.add', 'Add')}
+                {t('Add')}
               </Button>
             }
           >
@@ -549,11 +571,11 @@ const DoctorSchedule = ({
                             </Text>
                           </Space>
                           <Text type="secondary" style={{ fontSize: 12, paddingLeft: 20 }}>
-                            {ex.reason || 'Day Off'}
+                            {ex.reason || t('Day Off')}
                           </Text>
                         </Space>
                         <Popconfirm
-                          title={t('common.are_you_sure')}
+                          title={t('Are you sure?')}
                           onConfirm={() => handleDeleteException(ex.id)}
                         >
                           <Button type="text" danger icon={<IconTrash size={14} />} size="small" />
@@ -563,7 +585,7 @@ const DoctorSchedule = ({
                   )
                 })
               ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('schedule.no_time_off', 'No time off scheduled')} />
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('No time off scheduled')} />
               )}
             </div>
           </Card>
@@ -571,7 +593,7 @@ const DoctorSchedule = ({
 
         {/* --- TIME OFF MODAL --- */}
         <Modal
-          title={t('schedule.add_time_off', 'Add Time Off')}
+          title={t('Add Time Off')}
           open={isTimeOffModalOpen}
           onCancel={() => setIsTimeOffModalOpen(false)}
           footer={null}
@@ -587,14 +609,14 @@ const DoctorSchedule = ({
                 optionType="button"
                 buttonStyle="solid"
               >
-                <Radio.Button value="single">{t('common.single_day', 'Single Day')}</Radio.Button>
-                <Radio.Button value="range">{t('common.date_range', 'Date Range')}</Radio.Button>
+                <Radio.Button value="single">{t('Single Day')}</Radio.Button>
+                <Radio.Button value="range">{t('Date Range')}</Radio.Button>
               </Radio.Group>
             </Form.Item>
 
             {isRange ? (
               <Form.Item
-                label={t('common.date_range', 'Date Range')}
+                label={t('Date Range')}
                 name="range"
                 rules={[{ required: true, message: 'Please select dates' }]}
               >
@@ -602,7 +624,7 @@ const DoctorSchedule = ({
               </Form.Item>
             ) : (
               <Form.Item
-                label={t('common.date', 'Date')}
+                label={t('Date')}
                 name="date"
                 rules={[{ required: true, message: 'Please select date' }]}
               >
@@ -610,23 +632,23 @@ const DoctorSchedule = ({
               </Form.Item>
             )}
 
-            <Form.Item label={t('common.reason', 'Reason')} name="reason">
+            <Form.Item label={t('Reason')} name="reason">
               <Select>
-                <Option value="Holiday">Holiday</Option>
-                <Option value="Vacation">Vacation</Option>
-                <Option value="Personal">Personal</Option>
-                <Option value="Conference">Conference</Option>
-                <Option value="Other">Other</Option>
+                <Option value="Holiday">{t('Holiday')}</Option>
+                <Option value="Vacation">{t('Vacation')}</Option>
+                <Option value="Personal">{t('Personal')}</Option>
+                <Option value="Conference">{t('Conference')}</Option>
+                <Option value="Other">{t('Other')}</Option>
               </Select>
               {/* Fallback to simple input via free text if Select is clearable/editable, but standard Select is fine for MVP */}
             </Form.Item>
 
             <Flex justify="end" gap="small" style={{ marginTop: 24 }}>
               <Button onClick={() => setIsTimeOffModalOpen(false)}>
-                {t('common.cancel', 'Cancel')}
+                {t('Cancel')}
               </Button>
               <Button type="primary" htmlType="submit">
-                {t('common.save', 'Save')}
+                {t('Save')}
               </Button>
             </Flex>
           </Form>
@@ -634,7 +656,7 @@ const DoctorSchedule = ({
 
         {/* Right Column: Upcoming */}
         <Col xs={24} lg={8}>
-          <Card title={t('schedule.upcoming', 'Upcoming Appointments')} bordered={false} style={{ boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)' }}>
+          <Card title={t('Upcoming Appointments')} bordered={false} style={{ boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)' }}>
             {upcomingAppointments.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {upcomingAppointments.map((appt: Appointment) => (
@@ -659,7 +681,7 @@ const DoctorSchedule = ({
                 ))}
               </div>
             ) : (
-              <Empty description={t('schedule.no_upcoming', 'No upcoming appointments')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+              <Empty description={t('No upcoming appointments')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
             )}
           </Card>
         </Col>
@@ -667,18 +689,18 @@ const DoctorSchedule = ({
 
       {/* --- ADD SLOT MODAL --- */}
       <Modal
-        title={t('schedule.setup_availability', 'Setup Availability')}
+        title={t('Setup Availability')}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={[
           <Button key="preview" onClick={handlePreview} loading={previewMutation.isPending}>
-            {t('common.preview', 'Preview Slots')}
+            {t('Preview Slots')}
           </Button>,
           <Button key="cancel" onClick={() => setIsModalOpen(false)}>
-            {t('common.cancel', 'Cancel')}
+            {t('Cancel')}
           </Button>,
           <Button key="submit" type="primary" onClick={handleSubmit(onSubmit)} loading={saveMutation.isPending}>
-            {t('common.save', 'Save availability')}
+            {t('Save availability')}
           </Button>
         ]}
         width={800}
@@ -689,22 +711,22 @@ const DoctorSchedule = ({
           <Card size="small" style={{ backgroundColor: '#f8fafc', marginBottom: 24 }}>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item label={t('schedule.consultation_mode', 'Consultation Mode')}>
+                <Form.Item label={t('Consultation Mode')}>
                   <Controller
                     name="scope.consultationMode"
                     control={control}
                     render={({ field }) => (
                       <Select {...field} style={{ width: '100%' }}>
-                        <Option value="in_person"><IconUser size={14} /> In-Person</Option>
-                        <Option value="video"><IconVideo size={14} /> Video Call</Option>
-                        <Option value="phone"><IconPhone size={14} /> Phone Call</Option>
+                        <Option value="in_person"><IconUser size={14} /> {t('In-Person')}</Option>
+                        <Option value="video"><IconVideo size={14} /> {t('Video Call')}</Option>
+                        <Option value="phone"><IconPhone size={14} /> {t('Phone Call')}</Option>
                       </Select>
                     )}
                   />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label={t('schedule.timezone', 'Timezone')}>
+                <Form.Item label={t('Timezone')}>
                   <Controller
                     name="scope.timezone"
                     control={control}
@@ -752,7 +774,7 @@ const DoctorSchedule = ({
                         {/* Accessing existing window 0 */}
                         <Row gutter={16} align="middle">
                           <Col span={8}>
-                            <Form.Item label="Hours" style={{ marginBottom: 0 }}>
+                            <Form.Item label={t('Hours')} style={{ marginBottom: 0 }}>
                               <Space.Compact>
                                 <Controller
                                   name={`days.${index}.windows.0.workStartLocal`}
@@ -784,7 +806,7 @@ const DoctorSchedule = ({
                             </Form.Item>
                           </Col>
                           <Col span={6}>
-                            <Form.Item label="Interval" style={{ marginBottom: 0 }}>
+                            <Form.Item label={t('Interval')} style={{ marginBottom: 0 }}>
                               <Controller
                                 name={`days.${index}.windows.0.slotIntervalMinutes`}
                                 control={control}

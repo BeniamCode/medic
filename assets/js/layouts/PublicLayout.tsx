@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { SharedAppProps } from '@/types/app'
 import { ensureNotificationsStream } from '@/lib/notificationsStream'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 const { Header, Content } = Layout
 const { Text } = Typography
@@ -31,7 +32,7 @@ export const PublicLayout = ({ children, app, auth }: Props) => {
       if (!detail) return
 
       notification.info({
-        message: detail.title || 'Notification',
+        message: detail.title || t('Notification'),
         description: detail.message || '',
         placement: 'topRight'
       })
@@ -58,22 +59,23 @@ export const PublicLayout = ({ children, app, auth }: Props) => {
         <Flex gap="small">
           <Link href="/search">
             <Button type="text">
-              {t('nav.search', 'Search')}
+              {t('Search')}
             </Button>
           </Link>
           {auth.authenticated ? (
             <Link href="/dashboard">
               <Button type="primary">
-                {t('nav.dashboard', 'Dashboard')}
+                {t('Dashboard')}
               </Button>
             </Link>
           ) : (
             <Link href="/login">
               <Button type="primary">
-                {t('nav.login', 'Sign in')}
+                {t('Sign In')}
               </Button>
             </Link>
           )}
+          <LanguageSwitcher />
         </Flex>
       </Header>
       <Content style={{ padding: '24px 0', background: '#f5f5f5' }}>

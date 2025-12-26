@@ -30,17 +30,21 @@ import {
   IconArrowBackUp
 } from '@tabler/icons-react'
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
+import type { Dayjs } from 'dayjs'
+import { format, formatDistanceToNow } from 'date-fns'
+import { enUS, el } from 'date-fns/locale'
 import { router } from '@inertiajs/react'
 import { useTranslation } from 'react-i18next'
-import type { Dayjs } from 'dayjs'
 
 import type { AppPageProps } from '@/types/app'
 
 const { Title, Text } = Typography
 const { useToken } = theme
 
-dayjs.extend(relativeTime)
+const DATE_LOCALES: Record<string, any> = {
+  en: enUS,
+  el: el
+}
 
 type Appointment = {
   id: string
@@ -85,14 +89,14 @@ const statusColor = (status: string) => {
   }
 }
 
-const modeLabel = (mode?: string) => {
-  if (!mode) return 'In person'
-  if (mode === 'telemedicine' || mode === 'video') return 'Telemedicine'
-  return 'In person'
+const modeLabel = (mode?: string, t?: any) => {
+  if (!mode) return t ? t('In-person') : 'In-person'
+  if (mode === 'telemedicine' || mode === 'video') return t ? t('Telemedicine') : 'Telemedicine'
+  return t ? t('In-person') : 'In-person'
 }
 
 const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
-  const { t } = useTranslation('default')
+  const { t, i18n } = useTranslation('default')
   const { token } = useToken()
   const [filter, setFilter] = useState<string>('all')
   const [reasonModal, setReasonModal] = useState<{ id: string | null; action: 'reject' }>({
@@ -101,6 +105,8 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
   })
   const [reason, setReason] = useState('')
   const [rescheduleModal, setRescheduleModal] = useState<{ id: string | null; when: dayjs.Dayjs | null }>({ id: null, when: null })
+
+  const dateLocale = DATE_LOCALES[i18n.language] || enUS
 
   const filteredAppointments = useMemo(() => {
     if (filter === 'all') return appointments
@@ -142,10 +148,10 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
         <Flex gap={8} align="center">
           <Avatar size={32} src={record.patient?.avatarUrl} icon={<IconUser size={16} />} />
           <div>
-            <Text strong>{record.patient ? `${record.patient.firstName} ${record.patient.lastName}` : t('appointments.unknown_patient', 'Unknown')}</Text>
+            <Text strong>{record.patient ? `${record.patient.firstName} ${record.patient.lastName}` : t('Unknown')}</Text>
             {record.patient?.phone && (
               <Text type="secondary" style={{ display: 'block', fontSize: 12 }}>
-                {t('appointments.phone', 'Phone')}: {record.patient.phone}
+                {t('Phone')}: {record.patient.phone}
               </Text>
             )}
           </div>
@@ -153,9 +159,9 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
         <Flex gap={8} align="flex-start">
           <IconNotes size={16} />
           <div>
-            <Text strong>{t('appointments.patient_message', 'Patient message')}</Text>
+            <Text strong>{t('Patient message')}</Text>
             <Text style={{ display: 'block', marginTop: 4 }}>
-              {record.notes || t('appointments.no_message', 'No message provided')}
+              {record.notes || t('No message provided')}
             </Text>
           </div>
         </Flex>
@@ -165,17 +171,17 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
 
   const columns = [
     {
-      title: t('appointments.patient', 'Patient'),
+      title: t('Patient'),
       key: 'patient',
       render: (_: unknown, record: Appointment) => (
         <Flex align="center" gap={12}>
           <Avatar src={record.patient?.avatarUrl} icon={<IconUser size={16} />} />
           <div>
-            <Text strong>{record.patient ? `${record.patient.firstName} ${record.patient.lastName}` : t('appointments.unknown_patient', 'Unknown')}</Text>
+            <Text strong>{record.patient ? `${record.patient.firstName} ${record.patient.lastName}` : t('Unknown')}</Text>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', color: token.colorTextSecondary }}>
               <IconNotes size={14} />
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {record.appointmentTypeName || t('appointments.general_visit', 'Consultation')}
+                {record.appointmentTypeName || t('Consultation')}
               </Text>
             </div>
           </div>
@@ -183,23 +189,23 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
       )
     },
     {
-      title: t('appointments.time', 'Time'),
+      title: t('Time'),
       key: 'time',
       render: (_: unknown, record: Appointment) => (
         <Space direction="vertical" size={0}>
           <Flex gap={6} align="center">
             <IconCalendarEvent size={16} />
-            <Text>{dayjs(record.startsAt).format('MMM D, YYYY')}</Text>
+            <Text>{format(new Date(record.startsAt), 'PP', { locale: dateLocale })}</Text>
           </Flex>
           <Flex gap={6} align="center" style={{ color: token.colorTextSecondary }}>
             <IconClock size={16} />
-            <Text>{dayjs(record.startsAt).format('h:mm A')}</Text>
+            <Text>{format(new Date(record.startsAt), 'p', { locale: dateLocale })}</Text>
           </Flex>
         </Space>
       )
     },
     {
-      title: t('appointments.mode', 'Mode'),
+      title: t('Mode'),
       key: 'mode',
       render: (_: unknown, record: Appointment) => {
         const mode = record.consultationMode || 'in_person'
@@ -207,32 +213,32 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
         return (
           <Flex gap={6} align="center">
             {isVirtual ? <IconVideo size={16} /> : <IconMapPin size={16} />}
-            <Text>{modeLabel(mode)}</Text>
+            <Text>{modeLabel(mode, t)}</Text>
           </Flex>
         )
       }
     },
     {
-      title: t('appointments.status', 'Status'),
+      title: t('Status'),
       key: 'status',
       render: (_: unknown, record: Appointment) => (
         <Space direction="vertical" size={4}>
           <Tag color={statusColor(record.status)}>{record.status}</Tag>
           {record.status === 'pending' && record.rescheduledFromAppointmentId && (
             <Tag color="blue" style={{ width: 'fit-content' }}>
-              {t('appointments.waiting_patient', 'Awaiting patient approval')}
+              {t('Awaiting patient approval')}
             </Tag>
           )}
           {record.status === 'pending' && record.pendingExpiresAt && (
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {t('appointments.expires', 'Expires')} {dayjs(record.pendingExpiresAt).fromNow()}
+              {t('Expires')} {formatDistanceToNow(new Date(record.pendingExpiresAt), { addSuffix: true, locale: dateLocale })}
             </Text>
           )}
         </Space>
       )
     },
     {
-      title: t('appointments.actions', 'Actions'),
+      title: t('Actions'),
       key: 'actions',
       render: (_: unknown, record: Appointment) => {
         const isPending = record.status === 'pending'
@@ -243,15 +249,15 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
           <Space>
             {isPending && !isPatientApprovalPending && (
               <Popconfirm
-                title={t('appointments.approve_confirm', 'Approve this appointment?')}
+                title={t('Approve this appointment?')}
                 onConfirm={() => handleApprove(record.id)}
               >
-                <Button type="primary" icon={<IconCheck size={16} />}>{t('appointments.approve', 'Approve')}</Button>
+                <Button type="primary" icon={<IconCheck size={16} />}>{t('Approve')}</Button>
               </Popconfirm>
             )}
 
             {isPatientApprovalPending && (
-              <Text type="secondary">{t('appointments.waiting_patient_actions', 'Awaiting patient decision')}</Text>
+              <Text type="secondary">{t('Awaiting patient decision')}</Text>
             )}
 
             {isUpcoming && !isPatientApprovalPending && (
@@ -259,7 +265,7 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
                 icon={<IconArrowBackUp size={16} />}
                 onClick={() => setRescheduleModal({ id: record.id, when: dayjs(record.startsAt) })}
               >
-                {t('appointments.reschedule', 'Reschedule')}
+                {t('Reschedule')}
               </Button>
             )}
 
@@ -268,7 +274,7 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
                 icon={<IconCircleX size={16} />}
                 onClick={() => setReasonModal({ id: record.id, action: 'reject' })}
               >
-                {t('appointments.reject', 'Reject')}
+                {t('Reject')}
               </Button>
             )}
           </Space>
@@ -279,25 +285,25 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
 
   const cards = [
     {
-      label: t('appointments.cards.pending', 'Pending approval'),
+      label: t('Pending approval'),
       value: counts?.pending ?? 0,
       bg: token.colorWarningBg,
       color: token.colorWarningText
     },
     {
-      label: t('appointments.cards.upcoming', 'Upcoming'),
+      label: t('Upcoming'),
       value: counts?.upcoming ?? 0,
       bg: token.colorPrimaryBg,
       color: token.colorPrimaryText
     },
     {
-      label: t('appointments.cards.completed', 'Completed'),
+      label: t('Completed'),
       value: counts?.completed ?? 0,
       bg: token.colorSuccessBg,
       color: token.colorSuccessText
     },
     {
-      label: t('appointments.cards.total', 'Total'),
+      label: t('Total'),
       value: counts?.total ?? 0,
       bg: token.colorBgContainer,
       color: token.colorText
@@ -309,22 +315,22 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
       <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 16 }}>
         <div>
           <Text type="secondary" style={{ textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>
-            {t('appointments.header_kicker', 'Practice')}
+            {t('Practice')}
           </Text>
           <Title level={2} style={{ margin: 0 }}>
-            {t('appointments.title', 'Appointments')}
+            {t('Appointments')}
           </Title>
-          <Text type="secondary">{t('appointments.subtitle', 'Approve, reschedule, or cancel your visits')}</Text>
+          <Text type="secondary">{t('Approve, reschedule, or cancel your visits')}</Text>
         </div>
         <Segmented
           value={filter}
           onChange={(val) => setFilter(String(val))}
           options={[
-            { label: t('appointments.filter.all', 'All'), value: 'all' },
-            { label: t('appointments.filter.pending', 'Pending'), value: 'pending' },
-            { label: t('appointments.filter.upcoming', 'Upcoming'), value: 'upcoming' },
-            { label: t('appointments.filter.completed', 'Completed'), value: 'completed' },
-            { label: t('appointments.filter.cancelled', 'Cancelled'), value: 'cancelled' }
+            { label: t('All'), value: 'all' },
+            { label: t('Pending'), value: 'pending' },
+            { label: t('Upcoming'), value: 'upcoming' },
+            { label: t('Completed'), value: 'completed' },
+            { label: t('Cancelled'), value: 'cancelled' }
           ]}
         />
       </Flex>
@@ -364,13 +370,13 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
       {(reasonModal.id) && (
         <Card
           style={{ position: 'fixed', bottom: 24, right: 24, maxWidth: 360, boxShadow: '0 12px 30px rgba(0,0,0,0.16)' }}
-          title={t('appointments.reject', 'Reject')}
+          title={t('Reject')}
           extra={<Button type="text" onClick={() => { setReasonModal({ id: null, action: 'reject' }); setReason('') }} icon={<IconX size={16} />} />}
         >
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Text type="secondary">{t('appointments.reject_reason', 'Add a short reason for the patient')}</Text>
-            <Input.TextArea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('appointments.reject_placeholder', 'Example: prefer earlier in the day')} />
-            <Button type="primary" danger onClick={handleReject} disabled={!reason.trim()}>{t('appointments.reject', 'Reject')}</Button>
+            <Text type="secondary">{t('Add a short reason for the patient')}</Text>
+            <Input.TextArea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('Example: prefer earlier in the day')} />
+            <Button type="primary" danger onClick={handleReject} disabled={!reason.trim()}>{t('Reject')}</Button>
           </Space>
         </Card>
       )}
@@ -378,11 +384,11 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
       {(rescheduleModal.id) && (
         <Card
           style={{ position: 'fixed', bottom: 24, right: 24, maxWidth: 420, boxShadow: '0 12px 30px rgba(0,0,0,0.16)' }}
-          title={t('appointments.reschedule', 'Reschedule')}
+          title={t('Reschedule')}
           extra={<Button type="text" onClick={() => { setRescheduleModal({ id: null, when: null }); setReason('') }} icon={<IconX size={16} />} />}
         >
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Text type="secondary">{t('appointments.reschedule_pick', 'Pick a new slot to propose')}</Text>
+            <Text type="secondary">{t('Pick a new slot to propose')}</Text>
             <DatePicker
               style={{ width: '100%' }}
               value={rescheduleModal.when as Dayjs | null}
@@ -412,9 +418,9 @@ const DoctorAppointmentsPage = ({ appointments = [], counts }: PageProps) => {
                 }))
               }
             />
-            <Input.TextArea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('appointments.reschedule_placeholder', 'Add a note for the patient (optional)')} />
+            <Input.TextArea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('Add a note for the patient (optional)')} />
             <Button type="primary" onClick={handleReschedule} disabled={!rescheduleModal.when}>
-              {t('appointments.reschedule_send', 'Send reschedule request')}
+              {t('Send reschedule request')}
             </Button>
           </Space>
         </Card>

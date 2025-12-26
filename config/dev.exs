@@ -1,16 +1,33 @@
 import Config
 
+# Load .env file in development (if it exists)
+if File.exists?(".env") do
+  File.read!(".env")
+  |> String.split("\n")
+  |> Enum.each(fn line ->
+    case String.split(line, "=", parts: 2) do
+      [key, value] when key != "" ->
+        key = String.trim(key)
+        value = String.trim(value)
+        # Skip comments and empty lines
+        unless String.starts_with?(key, "#") do
+          System.put_env(key, value)
+        end
+      _ -> :ok
+    end
+  end)
+end
+
 import_config "oban.exs"
 
 # Configure your database
+# Uses DATABASE_URL from .env if set (for Neon.tech), otherwise falls back to local postgres
 config :medic, Medic.Repo,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "medic_dev",
+  url: System.get_env("DATABASE_URL") || "postgres://postgres:postgres@localhost/medic_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20"),
+  ssl: if(System.get_env("DATABASE_URL"), do: [verify: :verify_none], else: false)
 
 # Oban configuration is shared in config/oban.exs
 
@@ -29,7 +46,8 @@ config :medic, MedicWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "sqyjAhhWA2k/0nUSSkqdJdqiTGfCYomVQIigpUBzbLXpd4xbujXJMkzPkigW2Hly",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:medic, ~w(--sourcemap=inline --watch)]}
+    esbuild: {Esbuild, :install_and_run, [:medic, ~w(--sourcemap=inline --watch)]},
+    ssr: {Esbuild, :install_and_run, [:ssr, ~w(--sourcemap=inline --watch)]}
   ]
 
 # ## SSL Support
@@ -93,3 +111,34 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Gmail SMTP config for development testing (uses env vars from .env)
+# Set USE_SMTP=true in .env to enable real email sending in dev
+# Each sender (hi@, appointments@, support@) uses its own app password
+if System.get_env("USE_SMTP") == "true" do
+  config :medic, Medic.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: "smtp.gmail.com",
+    port: 587,
+    username: System.get_env("HI_USERNAME") || "hi@medic.gr",
+    password: System.get_env("HI_SMTP_APP"),
+    ssl: false,
+    tls: :if_available,
+    tls_options: [verify: :verify_none],
+    auth: :always,
+    retries: 2,
+    no_mx_lookups: false
+
+  config :medic, Medic.AppointmentsMailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: "smtp.gmail.com",
+    port: 587,
+    username: "appointments@medic.gr",
+    password: System.get_env("APPOINTMENTS_SMTP_APP"),
+    ssl: false,
+    tls: :if_available,
+    tls_options: [verify: :verify_none],
+    auth: :always,
+    retries: 2,
+    no_mx_lookups: false
+end

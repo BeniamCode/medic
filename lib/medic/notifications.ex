@@ -9,16 +9,70 @@ defmodule Medic.Notifications do
     resource Medic.Notifications.Notification
     resource Medic.Notifications.NotificationJob
     resource Medic.Notifications.NotificationDelivery
+    resource Medic.Notifications.EmailTemplate
+    resource Medic.Notifications.EmailLog
   end
 
   import Ecto.Query, warn: false
   import Ecto.Changeset, only: [change: 2, add_error: 3]
 
-  alias Medic.Notifications.{Notification, NotificationJob}
+  alias Medic.Notifications.{Notification, NotificationJob, EmailTemplate, EmailLog}
   alias Medic.Workers.NotificationDispatch
   alias Oban
   require Logger
   require Ash.Query
+  require Ash.Sort
+
+  # --- Email Templates ---
+
+  def get_email_template_by_name(name) do
+    EmailTemplate
+    |> Ash.Query.for_read(:by_name, %{name: name})
+    |> Ash.read_one()
+  end
+
+  def create_email_template(attrs) do
+    EmailTemplate
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+    |> normalize_result()
+  end
+
+  def update_email_template(%EmailTemplate{} = template, attrs) do
+    template
+    |> Ash.Changeset.for_update(:update, attrs)
+    |> Ash.update()
+    |> normalize_result()
+  end
+
+  def list_email_templates do
+    EmailTemplate
+    |> Ash.read!()
+  end
+
+  def get_email_template!(id), do: Ash.get!(EmailTemplate, id)
+
+  def delete_email_template(%EmailTemplate{} = template) do
+    Ash.destroy(template)
+  end
+
+  # --- Email Logs ---
+
+  def create_email_log(attrs) do
+    EmailLog
+    |> Ash.Changeset.for_create(:create, attrs)
+    |> Ash.create()
+    |> normalize_result()
+  end
+
+  def list_email_logs do
+    EmailLog
+    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.read!()
+  end
+
+  def get_email_log!(id), do: Ash.get!(EmailLog, id)
+
 
   @doc """
   Returns the list of notifications.

@@ -15,7 +15,13 @@ defmodule Medic.Accounts.User do
   end
 
   actions do
-    defaults [:read, :destroy]
+    defaults [:read]
+
+    destroy :destroy do
+      primary? true
+      soft? true
+      change set_attribute(:deleted_at, &DateTime.utc_now/0)
+    end
 
     create :create do
       primary? true
@@ -52,6 +58,10 @@ defmodule Medic.Accounts.User do
 
     attribute :totp_secret, :binary do
       sensitive? true
+      public? true
+    end
+
+    attribute :deleted_at, :utc_datetime_usec do
       public? true
     end
 

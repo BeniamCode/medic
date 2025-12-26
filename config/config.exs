@@ -7,6 +7,11 @@
 # General application configuration
 import Config
 
+# Register custom MIME types before any other config
+config :mime, :types, %{
+  "text/event-stream" => ["sse"]
+}
+
 config :medic, :env, config_env()
 
 config :medic,
@@ -50,11 +55,16 @@ config :medic, MedicWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :medic, Medic.Mailer, adapter: Swoosh.Adapters.Local
 
+# AppointmentsMailer also uses Local adapter in dev/test - emails show in /dev/mailbox
+config :medic, Medic.AppointmentsMailer, adapter: Swoosh.Adapters.Local
+
 config :inertia,
   endpoint: MedicWeb.Endpoint,
   static_paths: ["/assets/js/app.js", "/assets/css/app.css"],
   camelize_props: true,
   history: [encrypt: true],
+  # SSR disabled - requires debugging the render output format
+  ssr: false,
   raise_on_ssr_failure: config_env() != :prod
 
 # Configure esbuild (the version is required)
@@ -62,7 +72,13 @@ config :esbuild,
   version: "0.25.4",
   medic: [
     args:
-      ~w(js/app.tsx --bundle --target=es2022 --outdir=../priv/static/assets --format=esm --external:/fonts/* --external:/images/* --alias:@=js --loader:.js=jsx --loader:.ts=ts --loader:.tsx=tsx),
+      ~w(js/app.tsx --bundle --splitting --target=es2022 --outdir=../priv/static/assets --format=esm --external:/fonts/* --external:/images/* --alias:@=js --loader:.js=jsx --loader:.ts=ts --loader:.tsx=tsx),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
+  ],
+  ssr: [
+    args:
+      ~w(js/ssr.tsx --bundle --platform=node --outdir=../priv --format=cjs --alias:@=js --loader:.js=jsx --loader:.ts=ts --loader:.tsx=tsx),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]

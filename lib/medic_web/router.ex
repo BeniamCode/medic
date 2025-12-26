@@ -24,6 +24,18 @@ defmodule MedicWeb.Router do
     plug :put_layout, html: {MedicWeb.Layouts, :admin}
   end
 
+  pipeline :admin_auth do
+    plug MedicWeb.Plugs.RequireAdminUser
+  end
+
+  # SSE (Server-Sent Events) pipeline for notification streaming
+  pipeline :sse do
+    plug :accepts, ["html", "sse"]
+    plug :fetch_session
+    plug :fetch_current_user
+  end
+
+
   # Public routes
   scope "/", MedicWeb do
     pipe_through :browser
@@ -62,6 +74,7 @@ defmodule MedicWeb.Router do
       get "/appointments/:id", AppointmentsController, :show
       post "/appointments/:id/appreciate", AppreciationController, :create
       post "/appointments/:id/approve_reschedule", AppointmentsController, :approve_reschedule
+      post "/appointments/:id/experience_submission", ExperienceSubmissionController, :create
       post "/appointments/:id/reject_reschedule", AppointmentsController, :reject_reschedule
       post "/appointments/:id/cancel", AppointmentsController, :cancel
       get "/settings", SettingsController, :show
@@ -71,7 +84,6 @@ defmodule MedicWeb.Router do
       post "/doctor/schedule", DoctorScheduleController, :update
       delete "/doctor/schedule/:id", DoctorScheduleController, :delete
       post "/doctor/schedule/day_off", DoctorScheduleController, :block_day
-      get "/notifications/stream", NotificationStreamController, :stream
       get "/notifications/recent_unread", NotificationController, :recent_unread
       post "/notifications/mark_all", NotificationController, :mark_all
       post "/notifications/:id/read", NotificationController, :mark_read
@@ -90,6 +102,13 @@ defmodule MedicWeb.Router do
     delete "/doctor/schedule/exceptions/:id", DoctorScheduleController, :delete_exception
   end
 
+  # SSE notification stream - separate from browser pipeline to accept event-stream
+  scope "/", MedicWeb do
+    pipe_through [:sse, :require_authenticated_user]
+
+    get "/notifications/stream", NotificationStreamController, :stream
+  end
+
   # Doctor-specific routes
   scope "/dashboard", MedicWeb do
     pipe_through [:browser, :require_authenticated_user]
@@ -103,6 +122,13 @@ defmodule MedicWeb.Router do
     get "/doctor/profile", DoctorProfileController, :show
     post "/doctor/profile", DoctorProfileController, :update
     post "/doctor/profile/image", DoctorProfileController, :upload_image
+
+    # Booking Calendar
+    get "/doctor/calendar", Doctor.BookingCalendarController, :index
+    post "/doctor/calendar/month-data", Doctor.BookingCalendarController, :month_data
+    post "/doctor/calendar/day-slots", Doctor.BookingCalendarController, :day_slots
+    post "/doctor/calendar/search-patient", Doctor.BookingCalendarController, :search_patient
+    post "/doctor/calendar/create-booking", Doctor.BookingCalendarController, :create_booking
 
     get "/patient/profile", PatientProfileController, :show
     post "/patient/profile", PatientProfileController, :update
@@ -121,33 +147,129 @@ defmodule MedicWeb.Router do
     end
   end
 
+  pipeline :api_public do
+    plug :accepts, ["json"]
+  end
+
+  pipeline :api_authenticated do
+    plug :accepts, ["json"]
+    plug MedicWeb.Plugs.VerifyApiToken
+  end
+
+  # --- Public API Routes ---
+  scope "/api", MedicWeb.API do
+    pipe_through :api_public
+
+    # Auth
+    post "/auth/login", AuthController, :login
+    post "/auth/register", AuthController, :register
+    post "/auth/forgot_password", AuthController, :forgot_password
+    post "/auth/reset_password", AuthController, :reset_password
+
+    # Doctors (public)
+    get "/doctors", DoctorController, :index
+    get "/doctors/:id", DoctorController, :show
+    get "/doctors/:id/availability", DoctorController, :availability
+    get "/doctors/:id/appointment_types", DoctorController, :appointment_types
+    get "/doctors/:doctor_id/reviews", ReviewController, :index
+
+    # Specialties (public)
+    get "/specialties", SpecialtyController, :index
+  end
+
+  # --- Authenticated API Routes ---
+  scope "/api", MedicWeb.API do
+    pipe_through :api_authenticated
+
+    # Auth
+    get "/auth/me", AuthController, :me
+    post "/auth/refresh", AuthController, :refresh
+    post "/auth/change_password", AuthController, :change_password
+
+    # Appointments
+    get "/appointments", AppointmentController, :index
+    get "/appointments/:id", AppointmentController, :show
+    post "/appointments", AppointmentController, :create
+    post "/appointments/:id/cancel", AppointmentController, :cancel
+    post "/appointments/:id/approve", AppointmentController, :approve
+    post "/appointments/:id/reject", AppointmentController, :reject
+    post "/appointments/:id/appreciate", AppointmentController, :appreciate
+    post "/appointments/:id/experience", AppointmentController, :experience
+    post "/appointments/:id/reschedule", AppointmentController, :reschedule
+    post "/appointments/:id/approve_reschedule", AppointmentController, :approve_reschedule
+    post "/appointments/:id/reject_reschedule", AppointmentController, :reject_reschedule
+
+    # Profile
+    get "/profile", ProfileController, :show
+    put "/profile", ProfileController, :update
+
+    # Notifications
+    get "/notifications", NotificationController, :index
+    post "/notifications/:id/read", NotificationController, :mark_read
+    post "/notifications/mark_all", NotificationController, :mark_all
+
+    # Doctor Portal
+    get "/doctor/dashboard", DoctorPortalController, :dashboard
+    get "/doctor/patients", DoctorPortalController, :patients
+    get "/doctor/schedule", DoctorPortalController, :schedule
+    put "/doctor/schedule", DoctorPortalController, :update_schedule
+    post "/doctor/schedule/exceptions", DoctorPortalController, :create_exception
+    delete "/doctor/schedule/exceptions/:id", DoctorPortalController, :delete_exception
+
+    # Patient Portal
+    get "/patient/dashboard", PatientPortalController, :dashboard
+    get "/patient/doctors", PatientPortalController, :doctors
+
+    # Reviews (authenticated to post)
+    post "/doctors/:doctor_id/reviews", ReviewController, :create
+
+    # Push Notifications
+    post "/devices", DeviceController, :create
+    delete "/devices/:token", DeviceController, :delete
+  end
+
   # --- Admin Routes ---
-  scope "/medic", MedicWeb do
-    pipe_through [:browser, :admin_layout]
+  scope "/medic", MedicWeb.Admin do
+    pipe_through :browser
 
-    # Admin Login (Unauthenticated)
-    live_session :admin_login,
-      on_mount: [{MedicWeb.UserAuth, :mount_current_user}, {MedicWeb.LiveHooks.Locale, :default}] do
-      live "/login", AdminLoginLive
-    end
+    # Admin Login (unauthenticated)
+    get "/login", AuthController, :new
+    post "/login", AuthController, :create
+  end
 
-    # Authenticated Admin Routes
-    live_session :admin_dashboard,
-      on_mount: [{MedicWeb.UserAuth, :ensure_admin_user}, {MedicWeb.LiveHooks.Locale, :default}] do
-      # Dashboard
-      live "/dashboard", Admin.DashboardLive
+  scope "/medic", MedicWeb.Admin do
+    pipe_through [:browser, :admin_auth]
 
-      # CMS
-      live "/doctors", Admin.DoctorLive.Index, :index
-      live "/doctors/:id/edit", Admin.DoctorLive.Index, :edit
+    # Admin logout
+    delete "/logout", AuthController, :delete
 
-      live "/patients", Admin.PatientLive.Index, :index
-      live "/patients/:id/edit", Admin.PatientLive.Index, :edit
+    # Dashboard
+    get "/dashboard", DashboardController, :index
 
-      live "/on_duty", Admin.OnDutyLive
+    # User Management
+    get "/users", UsersController, :index
+    delete "/users/:id", UsersController, :delete
 
-      live "/reviews", Admin.ReviewLive.Index, :index
-      live "/financials", Admin.FinancialLive, :index
-    end
+    # Appointment Management
+    get "/appointments", AppointmentsController, :index
+    post "/appointments/:id/cancel", AppointmentsController, :cancel
+
+    # Keep existing routes (will convert later)
+    get "/doctors", DoctorsController, :index
+    get "/patients", PatientsController, :index
+    get "/reviews", ReviewsController, :index
+    get "/financials", FinancialsController, :index
+
+    # Email Management
+    get "/email_templates", EmailTemplatesController, :index
+    get "/email_templates/new", EmailTemplatesController, :new
+    post "/email_templates", EmailTemplatesController, :create
+    get "/email_templates/:id/edit", EmailTemplatesController, :edit
+    put "/email_templates/:id", EmailTemplatesController, :update
+    delete "/email_templates/:id", EmailTemplatesController, :delete
+
+    get "/email_logs", EmailLogsController, :index
+  post "/email_logs/:id/resend", EmailLogsController, :resend
+  post "/email_debug/send", EmailDebugController, :send_test_email
   end
 end

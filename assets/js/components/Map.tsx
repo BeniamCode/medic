@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react'
-import mapboxgl from 'mapbox-gl'
-import 'mapbox-gl/dist/mapbox-gl.css'
-// Define local interface to avoid circular imports
+import React, { useEffect, useRef, useMemo } from 'react'
+import maplibregl from 'maplibre-gl'
+import i18next from 'i18next'
+
 interface MapDoctor {
     id: string
     firstName: string
@@ -19,37 +19,57 @@ interface MapProps {
     focusedDoctorId?: string | null
 }
 
-export default function DoctorMap({ doctors, height = '100%', expanded = false, focusedDoctorId = null }: MapProps) {
+// Free vector tile style from OpenFreeMap (Positron-like light theme)
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron'
+
+export default function DoctorMap({
+    doctors,
+    height = '100%',
+    expanded = false,
+    focusedDoctorId = null
+}: MapProps) {
     const mapContainer = useRef<HTMLDivElement>(null)
-    const map = useRef<mapboxgl.Map | null>(null)
-    const markers = useRef<{ [key: string]: mapboxgl.Marker }>({})
+    const map = useRef<maplibregl.Map | null>(null)
+    const markers = useRef<{ [key: string]: maplibregl.Marker }>({})
+
+    const validDoctors = useMemo(
+        () => doctors.filter(d => d.locationLat && d.locationLng),
+        [doctors]
+    )
+
+    // Lazy load CSS to avoid blocking initial page load
+    useEffect(() => {
+        const href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css'
+        if (!document.querySelector(`link[href="${href}"]`)) {
+            const link = document.createElement('link')
+            link.rel = 'stylesheet'
+            link.href = href
+            document.head.appendChild(link)
+        }
+    }, [])
 
     // Initialize Map
     useEffect(() => {
         if (map.current || !mapContainer.current) return
 
-        mapboxgl.accessToken = 'pk.eyJ1IjoibWVkaWNnciIsImEiOiJjbWl6bnpubDcwMTk2M2VzaWZlNDlkeDh1In0.DFR6nJ1SOlC2HE5jSKaAHg'
-
-        map.current = new mapboxgl.Map({
+        map.current = new maplibregl.Map({
             container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/light-v11',
-            center: [23.7275, 37.9838], // Default to Athens
+            style: MAP_STYLE,
+            center: [23.7275, 37.9838], // Athens (lng, lat for MapLibre)
             zoom: 10,
             attributionControl: false
         })
 
-        map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
+        map.current.addControl(new maplibregl.NavigationControl(), 'top-right')
+        map.current.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
+
+        return () => {
+            if (map.current) {
+                map.current.remove()
+                map.current = null
+            }
+        }
     }, [])
-
-    // Handle Expansion Animation (Padding Shift)
-    useEffect(() => {
-        if (!map.current) return
-
-        map.current.easeTo({
-            padding: { bottom: expanded ? 0 : 250 },
-            duration: 300
-        })
-    }, [expanded])
 
     // Update Markers when doctors change
     useEffect(() => {
@@ -59,70 +79,61 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false, 
         Object.values(markers.current).forEach(marker => marker.remove())
         markers.current = {}
 
-        if (doctors.length === 0) return
+        if (validDoctors.length === 0) return
 
-        const bounds = new mapboxgl.LngLatBounds()
+        const bounds = new maplibregl.LngLatBounds()
 
-        doctors.forEach(doctor => {
-            const lat = doctor.locationLat
-            const lng = doctor.locationLng
+        validDoctors.forEach(doctor => {
+            const lat = doctor.locationLat!
+            const lng = doctor.locationLng!
 
-            if (lat && lng) {
-                const el = document.createElement('div')
-                el.className = 'marker'
-                el.style.backgroundColor = '#14B8A6'
-                el.style.width = '24px'
-                el.style.height = '24px'
-                el.style.borderRadius = '50%'
-                el.style.border = '2px solid white'
-                el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
-                el.style.cursor = 'pointer'
+            // Create Popup with Button
+            const popupHTML = `
+                <div style="font-family: Inter, sans-serif; min-width: 180px;">
+                    <strong style="color: #111; font-size: 14px; display: block; margin-bottom: 2px;">${doctor.firstName} ${doctor.lastName}</strong>
+                    <span style="color: #0D9488; font-size: 12px; font-weight: 600;">${doctor.specialtyName || ''}</span>
+                    <div style="color: #666; font-size: 12px; margin-top: 4px; line-height: 1.4;">${doctor.address || ''}</div>
+                    <a href="/doctors/${doctor.id}" 
+                       style="display: block; margin-top: 8px; text-align: center; background: #14B8A6; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 500;">
+                       View Profile
+                    </a>
+                </div>
+            `
 
-                // Create Popup with Button
-                const popupHTML = `
-                    <div style="font-family: Inter, sans-serif; min-width: 180px;">
-                        <strong style="color: #111; font-size: 14px; display: block; margin-bottom: 2px;">${doctor.firstName} ${doctor.lastName}</strong>
-                        <span style="color: #0D9488; font-size: 12px; font-weight: 600;">${doctor.specialtyName || ''}</span>
-                        <div style="color: #666; font-size: 12px; margin-top: 4px; line-height: 1.4;">${doctor.address || ''}</div>
-                        <a href="/doctors/${doctor.id}" 
-                           style="display: block; margin-top: 8px; text-align: center; background: #14B8A6; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 500;">
-                           Book Appointment
-                        </a>
-                    </div>
-                `
+            const popup = new maplibregl.Popup({ offset: 25, closeButton: false })
+                .setHTML(popupHTML)
 
-                const marker = new mapboxgl.Marker({ element: el })
-                    .setLngLat([lng, lat])
-                    .setPopup(new mapboxgl.Popup({ offset: 25, closeButton: false }).setHTML(popupHTML))
-                    .addTo(map.current!)
+            const marker = new maplibregl.Marker({ color: '#14B8A6' })
+                .setLngLat([lng, lat])
+                .setPopup(popup)
+                .addTo(map.current!)
 
-                markers.current[doctor.id] = marker
-                bounds.extend([lng, lat])
-            }
+            markers.current[doctor.id] = marker
+            bounds.extend([lng, lat])
         })
 
         // Fit bounds if we have markers
         if (Object.keys(markers.current).length > 0) {
             map.current.fitBounds(bounds, {
-                padding: { top: 50, bottom: expanded ? 50 : 300, left: 50, right: 50 },
+                padding: 50,
                 maxZoom: 15,
-                duration: 1000
+                duration: 1000 // Smooth animation
             })
         }
-    }, [doctors]) // Removed 'expanded' from deps to avoid re-fit on hover
+    }, [validDoctors])
 
-    // Handle Focused Doctor (FlyTo)
+    // Handle Focused Doctor (FlyTo with smooth animation)
     useEffect(() => {
         if (!map.current || !focusedDoctorId) return
 
         const doctor = doctors.find(d => d.id === focusedDoctorId)
-        if (doctor && doctor.locationLat && doctor.locationLng) {
-            // Fly to location
+        if (doctor?.locationLat && doctor?.locationLng) {
+            // Smooth fly to location
             map.current.flyTo({
                 center: [doctor.locationLng, doctor.locationLat],
                 zoom: 15,
-                essential: true,
-                padding: { bottom: expanded ? 0 : 250 }, // Maintain padding awareness
+                duration: 1500,
+                essential: true
             })
 
             // Open popup if marker exists
@@ -131,16 +142,18 @@ export default function DoctorMap({ doctors, height = '100%', expanded = false, 
                 marker.togglePopup()
             }
         }
-    }, [focusedDoctorId, doctors, expanded])
+    }, [focusedDoctorId, doctors])
 
-
-    // Resize map when container height changes
+    // Handle resize when container changes
     useEffect(() => {
         if (!map.current) return
-        map.current.resize()
-    }, [height])
+        setTimeout(() => map.current?.resize(), 100)
+    }, [expanded, height])
 
     return (
-        <div ref={mapContainer} style={{ height: height, width: '100%', borderRadius: 0 }} />
+        <div
+            ref={mapContainer}
+            style={{ height, width: '100%', borderRadius: 16 }}
+        />
     )
 }

@@ -25,7 +25,7 @@ defmodule Medic.Appointments do
   }
 
   alias Medic.Notifications
-  alias Medic.Workers.{AppointmentHoldExpiry, AppointmentPendingExpiry}
+  alias Medic.Workers.{AppointmentHoldExpiry, AppointmentPendingExpiry, SendEmail}
   alias Phoenix.PubSub
   alias Oban
   require Ash.Query
@@ -122,7 +122,15 @@ defmodule Medic.Appointments do
     Ash.Query.filter(query, is_active == true)
   end
 
-  def get_appointment_type!(id), do: Ash.get!(AppointmentType, id)
+  def get_appointment_type!(id) do
+    Ash.get!(AppointmentType, id)
+  end
+
+  def get_appointment_type_by_slug(slug, doctor_id) do
+    AppointmentType
+    |> Ash.Query.filter(slug == ^slug and doctor_id == ^doctor_id)
+    |> Ash.read_one()
+  end
 
   def create_appointment_type(attrs) do
     AppointmentType
@@ -531,6 +539,9 @@ defmodule Medic.Appointments do
         template: "appointment_confirmed_patient",
         payload: base_payload
       })
+
+      # Send confirmation email to patient
+      SendEmail.enqueue_confirmation(appointment.id)
     end
 
     if appointment.doctor && appointment.doctor.user_id do
@@ -539,6 +550,9 @@ defmodule Medic.Appointments do
         template: "appointment_confirmed_doctor",
         payload: base_payload
       })
+
+      # Send new booking alert email to doctor
+      SendEmail.enqueue_doctor_alert(appointment.id)
     end
 
     :ok
@@ -561,6 +575,9 @@ defmodule Medic.Appointments do
           resource_type: "appointment"
         }
       })
+
+      # Send email to doctor (action required)
+      SendEmail.enqueue_new_request_doctor(appointment.id)
     end
 
     :ok
@@ -614,6 +631,12 @@ defmodule Medic.Appointments do
           resource_type: "appointment"
         }
       })
+
+      if appointment.status == "pending" do
+        SendEmail.enqueue_new_request_doctor(appointment.id)
+      else
+        SendEmail.enqueue_doctor_alert(appointment.id)
+      end
     end
   end
 
@@ -764,6 +787,9 @@ defmodule Medic.Appointments do
         idempotency_key: "booking.cancelled:patient:#{appointment.id}",
         payload: Map.merge(base_payload, %{title: title, message: message})
       })
+
+      # Send cancellation email to patient
+      SendEmail.enqueue_cancelled_patient(appointment.id)
     end
 
     if appointment.doctor && appointment.doctor.user_id do
@@ -787,6 +813,9 @@ defmodule Medic.Appointments do
         idempotency_key: "booking.cancelled:doctor:#{appointment.id}",
         payload: Map.merge(base_payload, %{title: title, message: message})
       })
+
+      # Send cancellation email to doctor
+      SendEmail.enqueue_cancelled_doctor(appointment.id)
     end
 
     :ok
@@ -860,6 +889,9 @@ defmodule Medic.Appointments do
           new_starts_at: DateTime.to_iso8601(new_starts_at)
         }
       })
+
+      # Send reschedule proposed email to patient
+      SendEmail.enqueue_reschedule_proposed(appointment.id, previous_starts_at, new_starts_at)
     end
 
     :ok
@@ -892,6 +924,9 @@ defmodule Medic.Appointments do
           resource_type: "appointment"
         }
       })
+
+      # Send declined email to patient
+      SendEmail.enqueue_declined_patient(appointment.id, reason)
     end
 
     :ok
@@ -999,5 +1034,123 @@ defmodule Medic.Appointments do
       _ ->
         false
     end)
+  end
+
+  # --- Calendar Booking Support ---
+
+  @doc """
+  Get appointment counts grouped by date for a doctor within a date range.
+  Returns a map of dates to counts: %{~D[2025-01-15] => 3, ...}
+  """
+  def get_appointment_counts_by_date(doctor_id, start_date, end_date) do
+    # Convert dates to datetimes for comparison
+    start_dt = DateTime.new!(start_date, ~T[00:00:00], "Etc/UTC")
+    end_dt = DateTime.new!(end_date, ~T[23:59:59], "Etc/UTC")
+
+    from(a in Appointment,
+      where: a.doctor_id == ^doctor_id,
+      where: a.starts_at >= ^start_dt and a.starts_at <= ^end_dt,
+      where: a.status in ["pending", "confirmed", "completed"],
+      select: {fragment("date(?)", a.starts_at), count(a.id)},
+      group_by: fragment("date(?)", a.starts_at)
+    )
+    |> Repo.all()
+    |> Map.new(fn {date_string, count} ->
+      # Convert PostgreSQL date string to Elixir Date
+      {:ok, date} = Date.from_iso8601(to_string(date_string))
+      {date, count}
+    end)
+  end
+
+  @doc """
+  Get available and booked slots for a specific doctor on a specific date.
+  Delegates to Scheduling.get_slots but formats for calendar UI.
+  """
+  def get_day_slots(doctor_id, date, opts \\ []) do
+    doctor = Medic.Doctors.get_doctor!(doctor_id)
+    Medic.Scheduling.get_slots(doctor, date, opts)
+  end
+
+  @doc """
+  Create a doctor-initiated booking with patient lookup/creation.
+  Accepts email and phone, searches for existing patient, creates if needed.
+
+  Returns {:ok, appointment} or {:error, reason}
+  """
+  def create_doctor_booking(doctor_id, booking_attrs, patient_attrs) do
+    Repo.transaction(fn ->
+      email = Map.get(patient_attrs, "email") || Map.get(patient_attrs, :email)
+      phone = Map.get(patient_attrs, "phone") || Map.get(patient_attrs, :phone)
+
+      # Search for existing patient
+      patient =
+        case Medic.Patients.search_patients_by_contact(email, phone) do
+          [found_patient] ->
+            found_patient
+
+          [] ->
+            # Create unclaimed patient
+            case Medic.Patients.create_unclaimed_patient(patient_attrs) do
+              {:ok, new_patient} -> new_patient
+              {:error, reason} -> Repo.rollback(reason)
+            end
+
+          _multiple ->
+            # Return error if multiple patients found (shouldn't happen with exact match)
+            Repo.rollback(:multiple_patients_found)
+        end
+
+      # Create appointment
+      appointment_attrs =
+        booking_attrs
+        |> Map.put(:doctor_id, doctor_id)
+        |> Map.put(:patient_id, patient.id)
+        |> Map.put(:created_by_actor_type, "doctor")
+        |> Map.put(:created_by_actor_id, doctor_id)
+        |> Map.put(:source, "doctor_calendar")
+
+      case create_appointment(appointment_attrs) do
+        {:ok, appointment} ->
+          # Notify patient if they have a user account
+          patient = Ash.load!(patient, [:user])
+
+          if patient.user_id do
+            maybe_notify_patient_of_doctor_booking(appointment)
+          end
+
+          appointment
+
+        {:error, reason} ->
+          Repo.rollback(reason)
+      end
+    end)
+  end
+
+  defp maybe_notify_patient_of_doctor_booking(appointment) do
+    appointment = Ash.load!(appointment, [:patient, :doctor])
+
+    if appointment.patient && appointment.patient.user_id && appointment.doctor do
+      doctor_name = format_doctor_name(appointment.doctor)
+
+      Notifications.enqueue_notification_job(%{
+        user_id: appointment.patient.user_id,
+        template: "appointment_created_by_doctor",
+        idempotency_key: "booking.doctor_created:patient:#{appointment.id}",
+        payload: %{
+          type: "booking",
+          title: "Appointment scheduled",
+          message: "#{doctor_name} has scheduled an appointment for you.",
+          resource_id: appointment.id,
+          resource_type: "appointment"
+        }
+      })
+
+      # Send confirmation email to patient
+      SendEmail.enqueue_confirmation(appointment.id)
+    end
+
+    :ok
+  rescue
+    _ -> :ok
   end
 end

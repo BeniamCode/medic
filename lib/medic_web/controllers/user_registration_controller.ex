@@ -2,6 +2,7 @@ defmodule MedicWeb.UserRegistrationController do
   use MedicWeb, :controller
 
   alias Medic.Accounts
+  alias Medic.Workers.SendWelcomeEmail
   alias MedicWeb.UserAuth
 
   def new(conn, _params) do
@@ -25,6 +26,9 @@ defmodule MedicWeb.UserRegistrationController do
             user,
             &url(~p"/users/confirm/#{&1}")
           )
+
+        # Send welcome email from hi@medic.gr
+        SendWelcomeEmail.enqueue(user.id)
 
         conn
         |> put_flash(:info, "Account created successfully!")
@@ -79,6 +83,9 @@ defmodule MedicWeb.UserRegistrationController do
             user,
             &url(~p"/users/confirm/#{&1}")
           )
+
+        # Send welcome email from hi@medic.gr
+        SendWelcomeEmail.enqueue(user.id)
 
         conn
         |> put_flash(:info, "Doctor account created! Please complete your profile.")

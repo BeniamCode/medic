@@ -553,3 +553,1302 @@ msgstr ""
 #, elixir-autogen, elixir-format
 msgid "initial visit"
 msgstr ""
+
+msgid "New: Telemedicine Support"
+msgstr ""
+
+msgid "Modern healthcare for"
+msgstr ""
+
+msgid "everyone"
+msgstr ""
+
+msgid "Book appointments with trusted doctors, manage your visits, and take control of your health journey."
+msgstr ""
+
+msgid "Join as Patient"
+msgstr ""
+
+msgid "Trusted by 10,000+ patients"
+msgstr ""
+
+msgid "Easy Search"
+msgstr ""
+
+msgid "Find specialists by name, specialty, or location instantly."
+msgstr ""
+
+msgid "Instant Booking"
+msgstr ""
+
+msgid "Real-time availability means no more phone tag."
+msgstr ""
+
+msgid "Verified Doctors"
+msgstr ""
+
+msgid "Every specialist is vetted for license and quality."
+msgstr ""
+
+msgid "Telemedicine"
+msgstr ""
+
+msgid "Connect with doctors from the comfort of your home."
+msgstr ""
+
+msgid "Are you a doctor?"
+msgstr ""
+
+msgid "Join our network of verified specialists and grow your practice."
+msgstr ""
+
+msgid "Join Medic Network"
+msgstr ""
+
+msgid "Book appointments with trusted doctors, manage your visits, and take control of your health journey—all in one place."
+msgstr ""
+
+msgid "Are you a qualified doctor?"
+msgstr ""
+
+msgid "Join our network of over 600 verified specialists. specific tools to manage your schedule and grow your practice."
+msgstr ""
+
+msgid "Doctor"
+msgstr ""
+
+msgid "Dr."
+msgstr ""
+
+msgid "General Practitioner"
+msgstr ""
+
+msgid "Online"
+msgstr ""
+
+msgid "Ask"
+msgstr ""
+
+msgid "Search doctors..."
+msgstr ""
+
+msgid "List"
+msgstr ""
+
+msgid "Map"
+msgstr ""
+
+msgid "{{count}} doctors found"
+msgstr ""
+
+msgid "All specialties"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "All cities"
+msgstr ""
+
+msgid "Telemedicine only"
+msgstr ""
+
+msgid "Show {{count}} results"
+msgstr ""
+
+msgid "Search doctors, clinics, specialties, etc."
+msgstr ""
+
+msgid "Select specialty"
+msgstr ""
+
+msgid "Select city"
+msgstr ""
+
+msgid "Telemedicine available"
+msgstr ""
+
+msgid "Only show doctors offering telehealth"
+msgstr ""
+
+msgid "Less filters"
+msgstr ""
+
+msgid "More filters"
+msgstr ""
+
+msgid "Select insurance"
+msgstr ""
+
+msgid "Max price"
+msgstr ""
+
+msgid "Any price"
+msgstr ""
+
+msgid "Clear filters"
+msgstr ""
+
+msgid "{{count}} specialists found"
+msgstr ""
+
+msgid "Sort by: Best Match"
+msgstr ""
+
+msgid "Try adjusting your filters"
+msgstr ""
+
+msgid "Medical Specialist"
+msgstr ""
+
+msgid "{{count}}+ years"
+msgstr ""
+
+msgid "Consultation"
+msgstr ""
+
+msgid "Book Now"
+msgstr ""
+
+msgid "Book"
+msgstr ""
+
+msgid "Visit Type"
+msgstr ""
+
+msgid "Clinic"
+msgstr ""
+
+msgid "Video"
+msgstr ""
+
+msgid "Select Date"
+msgstr ""
+
+msgid "Available Slots"
+msgstr ""
+
+msgid "No available slots"
+msgstr ""
+
+msgid "Reason for visit (optional)..."
+msgstr ""
+
+msgid "Confirm Booking"
+msgstr ""
+
+msgid "No payment required to book"
+msgstr ""
+
+msgid "Biography"
+msgstr ""
+
+msgid "No biography available."
+msgstr ""
+
+msgid "Special Interests"
+msgstr ""
+
+msgid "Procedures"
+msgstr ""
+
+msgid "Practice Address"
+msgstr ""
+
+msgid "Affiliation"
+msgstr ""
+
+msgid "Map View"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "About & Expertise"
+msgstr ""
+
+msgid "Medical Expertise"
+msgstr ""
+
+msgid "Interactive Map"
+msgstr ""
+
+msgid "Get Directions"
+msgstr ""
+
+msgid "Appreciated by {{count}} patients"
+msgstr ""
+
+msgid "+{{count}} in last 30 days"
+msgstr ""
+
+msgid "{{count}}+ Years Exp."
+msgstr ""
+
+msgid "Clinic Visit"
+msgstr ""
+
+msgid "Video Call"
+msgstr ""
+
+msgid "No available slots for this date."
+msgstr ""
+
+msgid "No payment required to book."
+msgstr ""
+
+msgid "Good morning, Dr. {{lastName}}"
+msgstr ""
+
+msgid "Today"
+msgstr ""
+
+msgid "Pending"
+msgstr ""
+
+msgid "This Week"
+msgstr ""
+
+msgid "Today's Schedule"
+msgstr ""
+
+msgid "No appointments today"
+msgstr ""
+
+msgid "Manage Availability"
+msgstr ""
+
+msgid "Edit Profile"
+msgstr ""
+
+msgid "Doctor Dashboard"
+msgstr ""
+
+msgid "appointments"
+msgstr ""
+
+msgid "Pending requests"
+msgstr ""
+
+msgid "Action required"
+msgstr ""
+
+msgid "Confirmed (week)"
+msgstr ""
+
+msgid "upcoming visits"
+msgstr ""
+
+msgid "reviews"
+msgstr ""
+
+msgid "Quick Actions"
+msgstr ""
+
+msgid "Analytics (coming soon)"
+msgstr ""
+
+msgid "In-person"
+msgstr ""
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Phone"
+msgstr ""
+
+msgid "Patient message"
+msgstr ""
+
+msgid "No message provided"
+msgstr ""
+
+msgid "Patient"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Awaiting patient approval"
+msgstr ""
+
+msgid "Expires"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Approve this appointment?"
+msgstr ""
+
+msgid "Approve"
+msgstr ""
+
+msgid "Awaiting patient decision"
+msgstr ""
+
+msgid "Reschedule"
+msgstr ""
+
+msgid "Reject"
+msgstr ""
+
+msgid "Pending approval"
+msgstr ""
+
+msgid "Upcoming"
+msgstr ""
+
+msgid "Completed"
+msgstr ""
+
+msgid "Total"
+msgstr ""
+
+msgid "Practice"
+msgstr ""
+
+msgid "Approve, reschedule, or cancel your visits"
+msgstr ""
+
+msgid "Cancelled"
+msgstr ""
+
+msgid "Add a short reason for the patient"
+msgstr ""
+
+msgid "Example: prefer earlier in the day"
+msgstr ""
+
+msgid "Pick a new slot to propose"
+msgstr ""
+
+msgid "Add a note for the patient (optional)"
+msgstr ""
+
+msgid "Send reschedule request"
+msgstr ""
+
+msgid "Manage Schedule"
+msgstr ""
+
+msgid "Set your recurring weekly availability."
+msgstr ""
+
+msgid "Reset Schedule"
+msgstr ""
+
+msgid "Edit Availability"
+msgstr ""
+
+msgid "Weekly Hours"
+msgstr ""
+
+msgid "Time Off & Holidays"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "No availability slots for this day."
+msgstr ""
+
+msgid "min"
+msgstr ""
+
+msgid "Day Off"
+msgstr ""
+
+msgid "No time off scheduled"
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "Holiday"
+msgstr ""
+
+msgid "Vacation"
+msgstr ""
+
+msgid "Personal"
+msgstr ""
+
+msgid "Conference"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Upcoming Appointments"
+msgstr ""
+
+msgid "No upcoming appointments"
+msgstr ""
+
+msgid "Setup Availability"
+msgstr ""
+
+msgid "Preview Slots"
+msgstr ""
+
+msgid "Save availability"
+msgstr ""
+
+msgid "Consultation Mode"
+msgstr ""
+
+msgid "In-Person"
+msgstr ""
+
+msgid "Phone Call"
+msgstr ""
+
+msgid "Timezone"
+msgstr ""
+
+msgid "Hours"
+msgstr ""
+
+msgid "Interval"
+msgstr ""
+
+msgid "Are you sure?"
+msgstr ""
+
+msgid "This will remove ALL your availability rules. Are you sure?"
+msgstr ""
+
+msgid "Yes"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
+msgid "Single Day"
+msgstr ""
+
+msgid "Date Range"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "European Board Certification"
+msgstr ""
+
+msgid "Greek Medical Association"
+msgstr ""
+
+msgid "American Board Certification"
+msgstr ""
+
+msgid "Cardiology"
+msgstr ""
+
+msgid "Dermatology"
+msgstr ""
+
+msgid "Orthopedics"
+msgstr ""
+
+msgid "Endocrinology"
+msgstr ""
+
+msgid "Neurology"
+msgstr ""
+
+msgid "MRI Consultation"
+msgstr ""
+
+msgid "Endoscopy"
+msgstr ""
+
+msgid "Physical Therapy Eval"
+msgstr ""
+
+msgid "Telemedicine Follow-up"
+msgstr ""
+
+msgid "Hypertension"
+msgstr ""
+
+msgid "Diabetes"
+msgstr ""
+
+msgid "Back Pain"
+msgstr ""
+
+msgid "Anxiety"
+msgstr ""
+
+msgid "Skin Allergy"
+msgstr ""
+
+msgid "Profile saved"
+msgstr ""
+
+msgid "Unable to save. Please review the highlighted fields."
+msgstr ""
+
+msgid "Doctor profile"
+msgstr ""
+
+msgid "Polish your public profile so patients instantly understand who you are, what you treat, and how to book you."
+msgstr ""
+
+msgid "Visible in search"
+msgstr ""
+
+msgid "Secure data"
+msgstr ""
+
+msgid "Profile completeness"
+msgstr ""
+
+msgid "Complete all sections to unlock premium placements."
+msgstr ""
+
+msgid "Quick actions"
+msgstr ""
+
+msgid "Update your public card in one place and preview the patient-facing layout."
+msgstr ""
+
+msgid "basic"
+msgstr ""
+
+msgid "professional"
+msgstr ""
+
+msgid "location"
+msgstr ""
+
+msgid "expertise"
+msgstr ""
+
+msgid "Basic info"
+msgstr ""
+
+msgid "Professional"
+msgstr ""
+
+msgid "Location & services"
+msgstr ""
+
+msgid "Expertise"
+msgstr ""
+
+msgid "Professional photo"
+msgstr ""
+
+msgid "Please upload a JPG, PNG, or WebP image"
+msgstr ""
+
+msgid "Max file size is 5MB"
+msgstr ""
+
+msgid "No file received. Please try again."
+msgstr ""
+
+msgid "Save your profile first, then upload a photo."
+msgstr ""
+
+msgid "Storage is not configured. Set Backblaze B2 env vars and restart the server."
+msgstr ""
+
+msgid "Unable to upload photo. Please try again."
+msgstr ""
+
+msgid "Photo updated"
+msgstr ""
+
+msgid "Upload photo"
+msgstr ""
+
+msgid "Use a clear, front-facing headshot on a neutral background. JPG/PNG/WebP up to 5MB."
+msgstr ""
+
+msgid "First name"
+msgstr ""
+
+msgid "Last name"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Academic title"
+msgstr ""
+
+msgid "Profile image URL"
+msgstr ""
+
+msgid "Registration number"
+msgstr ""
+
+msgid "Years of experience"
+msgstr ""
+
+msgid "Hospital affiliation"
+msgstr ""
+
+msgid "Bio (EN)"
+msgstr ""
+
+msgid "Bio (EL)"
+msgstr ""
+
+msgid "Certifications"
+msgstr ""
+
+msgid "e.g. European Board of ..."
+msgstr ""
+
+msgid "Languages"
+msgstr ""
+
+msgid "Select or add languages"
+msgstr ""
+
+msgid "Insurance networks"
+msgstr ""
+
+msgid "Choose accepted networks"
+msgstr ""
+
+msgid "Address"
+msgstr ""
+
+msgid "Area"
+msgstr ""
+
+msgid "Zip Code"
+msgstr ""
+
+msgid "Location found! You can adjust the pin."
+msgstr ""
+
+msgid "Address not found."
+msgstr ""
+
+msgid "Could not fetch location."
+msgstr ""
+
+msgid "Locate on Map"
+msgstr ""
+
+msgid "Click to preview, then drag the pin to correct precise location."
+msgstr ""
+
+msgid "Consultation fee (€)"
+msgstr ""
+
+msgid "Sub-specialties"
+msgstr ""
+
+msgid "Add focus areas"
+msgstr ""
+
+msgid "Clinical procedures"
+msgstr ""
+
+msgid "Conditions treated"
+msgstr ""
+
+msgid "Doctor Portal"
+msgstr ""
+
+msgid "Sign out"
+msgstr ""
+
+msgid "Profile progress"
+msgstr ""
+
+msgid "welcome"
+msgstr ""
+
+msgid "personal"
+msgstr ""
+
+msgid "specialty"
+msgstr ""
+
+msgid "pricing"
+msgstr ""
+
+msgid "complete"
+msgstr ""
+
+msgid "Submit profile"
+msgstr ""
+
+msgid "Let's start"
+msgstr ""
+
+msgid "Continue"
+msgstr ""
+
+msgid "Welcome to Medic"
+msgstr ""
+
+msgid "Think of this as a guided intro—answer a few friendly questions and we will shape your booking profile."
+msgstr ""
+
+msgid "Tell us about you"
+msgstr ""
+
+msgid "A warm introduction helps patients know they are in excellent hands."
+msgstr ""
+
+msgid "First Name"
+msgstr ""
+
+msgid "Last Name"
+msgstr ""
+
+msgid "Registration No."
+msgstr ""
+
+msgid "Experience (Years)"
+msgstr ""
+
+msgid "What is your area of expertise?"
+msgstr ""
+
+msgid "Select your specialty"
+msgstr ""
+
+msgid "Professional Bio"
+msgstr ""
+
+msgid "Share a short paragraph highlighting your style and focus areas."
+msgstr ""
+
+msgid "Where do you meet patients?"
+msgstr ""
+
+msgid "Street Address"
+msgstr ""
+
+msgid "Offer telemedicine appointments?"
+msgstr ""
+
+msgid "Set your consultation fee"
+msgstr ""
+
+msgid "Transparency builds trust—you can always fine-tune later."
+msgstr ""
+
+msgid "Profile ready!"
+msgstr ""
+
+msgid "Next stop: availability. Set your calendar so patients can start booking you right away."
+msgstr ""
+
+msgid "Manage availability"
+msgstr ""
+
+msgid "Reschedule approved"
+msgstr ""
+
+msgid "Something went wrong"
+msgstr ""
+
+msgid "You declined this reschedule"
+msgstr ""
+
+msgid "Reschedule rejected"
+msgstr ""
+
+msgid "Unable to reject"
+msgstr ""
+
+msgid "This will remove your booking."
+msgstr ""
+
+msgid "Cancelled by patient"
+msgstr ""
+
+msgid "Appointment cancelled"
+msgstr ""
+
+msgid "Unable to cancel"
+msgstr ""
+
+msgid "Already appreciated"
+msgstr ""
+
+msgid "Thank you!"
+msgstr ""
+
+msgid "Unable to send"
+msgstr ""
+
+msgid "General practice"
+msgstr ""
+
+msgid "Review this rescheduled time"
+msgstr ""
+
+msgid "Confirm if the new time works or choose to reject it."
+msgstr ""
+
+msgid "Reject this rescheduled time?"
+msgstr ""
+
+msgid "This booking will be cancelled if you reject."
+msgstr ""
+
+msgid "Waiting for your doctor to confirm"
+msgstr ""
+
+msgid "Cancel this appointment?"
+msgstr ""
+
+msgid "Join Call"
+msgstr ""
+
+msgid "Book a new appointment"
+msgstr ""
+
+msgid "Past"
+msgstr ""
+
+msgid "No past appointments"
+msgstr ""
+
+msgid "Hello, {{name}}"
+msgstr ""
+
+msgid "Manage your health journey"
+msgstr ""
+
+msgid "Your Appointments"
+msgstr ""
+
+msgid "Medical Records"
+msgstr ""
+
+msgid "Get the Medic App"
+msgstr ""
+
+msgid "Manage appointments on the go with our mobile app."
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Appreciate Doctor"
+msgstr ""
+
+msgid "Send Appreciation"
+msgstr ""
+
+msgid "Would you like to leave a short thank-you note? (Optional)"
+msgstr ""
+
+msgid "e.g. Very kind and caring..."
+msgstr ""
+
+msgid "Appreciation sent!"
+msgstr ""
+
+msgid "Unable to submit appreciation. Please try again."
+msgstr ""
+
+msgid "Unable to save"
+msgstr ""
+
+msgid "Patient profile"
+msgstr ""
+
+msgid "Keep your details up to date"
+msgstr ""
+
+msgid "Basic Info"
+msgstr ""
+
+msgid "Date of birth"
+msgstr ""
+
+msgid "Emergency contact"
+msgstr ""
+
+msgid "Preferences"
+msgstr ""
+
+msgid "Preferred language"
+msgstr ""
+
+msgid "Preferred timezone"
+msgstr ""
+
+msgid "Email reminders"
+msgstr ""
+
+msgid "SMS reminders"
+msgstr ""
+
+msgid "Save changes"
+msgstr ""
+
+msgid "Private"
+msgstr ""
+
+msgid "Profile photo"
+msgstr ""
+
+msgid "Use a clear photo. JPG/PNG/WebP up to 5MB."
+msgstr ""
+
+msgid "Name + phone"
+msgstr ""
+
+msgid "These help us tailor notifications and the experience."
+msgstr ""
+
+msgid "Appointment confirmations"
+msgstr ""
+
+msgid "Appointment confirmations and reminders"
+msgstr ""
+
+msgid "Optional SMS updates"
+msgstr ""
+
+msgid "Optional SMS updates when available"
+msgstr ""
+
+msgid "How was your experience?"
+msgstr ""
+
+msgid "Your appreciation helps other patients find great care."
+msgstr ""
+
+msgid "Your appreciation is anonymous and helps other patients find great care."
+msgstr ""
+
+msgid "Send"
+msgstr ""
+
+msgid "Send appreciation"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "Appointment details"
+msgstr ""
+
+msgid "Notes"
+msgstr ""
+
+msgid "Cancel appointment"
+msgstr ""
+
+msgid "Express appreciation"
+msgstr ""
+
+msgid "Optional thank-you note (max 80 characters)"
+msgstr ""
+
+msgid "Account settings"
+msgstr ""
+
+msgid "Manage your profile and preferences"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Role"
+msgstr ""
+
+msgid "Update profile"
+msgstr ""
+
+msgid "Security"
+msgstr ""
+
+msgid "Welcome back"
+msgstr ""
+
+msgid "Sign in to manage your appointments"
+msgstr ""
+
+msgid "Email address"
+msgstr ""
+
+msgid "Please enter your email"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Please enter your password"
+msgstr ""
+
+msgid "Your password"
+msgstr ""
+
+msgid "Remember me"
+msgstr ""
+
+msgid "Forgot password?"
+msgstr ""
+
+msgid "Sign in"
+msgstr ""
+
+msgid "Don't have an account?"
+msgstr ""
+
+msgid "Create an account"
+msgstr ""
+
+msgid "Book appointments and manage your health"
+msgstr ""
+
+msgid "Create Patient Account"
+msgstr ""
+
+msgid "Register as a Specialist"
+msgstr ""
+
+msgid "Already have an account?"
+msgstr ""
+
+msgid "Join as a Specialist"
+msgstr ""
+
+msgid "Managing your practice has never been easier"
+msgstr ""
+
+msgid "Start Application"
+msgstr ""
+
+msgid "Alerts"
+msgstr ""
+
+msgid "My Schedule"
+msgstr ""
+
+msgid "My Profile"
+msgstr ""
+
+msgid "Notifications"
+msgstr ""
+
+msgid "Discover"
+msgstr ""
+
+msgid "Loading..."
+msgstr ""
+
+msgid "No new notifications"
+msgstr ""
+
+msgid "just now"
+msgstr ""
+
+msgid "{{count}}m ago"
+msgstr ""
+
+msgid "{{count}}h ago"
+msgstr ""
+
+msgid "{{count}}d ago"
+msgstr ""
+
+msgid "{{count}}w ago"
+msgstr ""
+
+msgid "View All Notifications"
+msgstr ""
+
+msgid "Notification"
+msgstr ""
+
+msgid "Schedule saved successfully"
+msgstr ""
+
+msgid "Failed to save schedule"
+msgstr ""
+
+msgid "Mon"
+msgstr ""
+
+msgid "Tue"
+msgstr ""
+
+msgid "Wed"
+msgstr ""
+
+msgid "Thu"
+msgstr ""
+
+msgid "Fri"
+msgstr ""
+
+msgid "Sat"
+msgstr ""
+
+msgid "Sun"
+msgstr ""
+
+msgid "Add Time Off"
+msgstr ""
+
+msgid "Back"
+msgstr ""
+
+msgid "doctor.profile.professional"
+msgstr "Professional"
+
+msgid "doctor.profile.certifications"
+msgstr "Certifications"
+
+msgid "doctor.profile.certifications_placeholder"
+msgstr "e.g. European Board of ..."
+
+msgid "doctor.profile.languages"
+msgstr "Languages"
+
+msgid "doctor.profile.languages_placeholder"
+msgstr "Select or add languages"
+
+msgid "doctor.profile.insurance"
+msgstr "Insurance networks"
+
+msgid "doctor.profile.insurance_placeholder"
+msgstr "Choose accepted networks"
+
+msgid "doctor.profile.location"
+msgstr "Location & services"
+
+msgid "doctor.profile.location_found"
+msgstr "Location found! You can adjust the pin."
+
+msgid "doctor.profile.location_not_found"
+msgstr "Address not found."
+
+msgid "doctor.profile.location_error"
+msgstr "Could not fetch location."
+
+msgid "doctor.profile.locate"
+msgstr "Locate on Map"
+
+msgid "doctor.profile.locate_hint"
+msgstr "Click to preview, then drag the pin to correct precise location."
+
+msgid "doctor.profile.telemedicine"
+msgstr "Telemedicine available"
+
+msgid "doctor.profile.expertise"
+msgstr "Expertise"
+
+msgid "doctor.profile.sub_specialties"
+msgstr "Sub-specialties"
+
+msgid "doctor.profile.sub_specialties_placeholder"
+msgstr "Add focus areas"
+
+msgid "doctor.profile.procedures"
+msgstr "Clinical procedures"
+
+msgid "doctor.profile.conditions"
+msgstr "Conditions treated"
+
+msgid "doctor.profile.save"
+msgstr "Save"
+
+msgid "notifications.title"
+msgstr "Notifications"
+
+msgid "notifications.subtitle"
+msgstr "Stay up to date"
+
+msgid "notifications.mark_all"
+msgstr "Mark all read"
+
+msgid "notifications.empty"
+msgstr "No notifications yet"
+
+msgid "notifications.mark_read"
+msgstr "Mark read"
+
+msgid "Confirmed"
+msgstr ""
+
+msgid "Requests"
+msgstr ""
+
+msgid "Earlier"
+msgstr ""
+
+msgid "dashboard.patient_fallback"
+msgstr "there"
+
+msgid "dashboard.already_appreciated"
+msgstr "You already appreciated this appointment"
+
+msgid "dashboard.appreciation_sent"
+msgstr "Appreciation sent!"
+
+msgid "dashboard.appreciation_error"
+msgstr "Unable to submit appreciation. Please try again."
+
+msgid "dashboard.approve_success"
+msgstr "Reschedule approved"
+
+msgid "dashboard.approve_error"
+msgstr "Something went wrong. Please try again."
+
+msgid "dashboard.reject_success"
+msgstr "Reschedule rejected"
+
+msgid "dashboard.reject_error"
+msgstr "Unable to reject right now. Please try again."
+
+msgid "dashboard.cancel_success"
+msgstr "Appointment cancelled"
+
+msgid "dashboard.cancel_error"
+msgstr "Unable to cancel right now. Please try again."
+
+msgid "E.g. Very kind and caring."
+msgstr ""
+
+msgid "Keep your details up to date so we can personalize your experience and help clinics reach you about appointments."
+msgstr ""
+
+msgid "John"
+msgstr ""
+
+msgid "Doe"
+msgstr ""
+
+msgid "Change password (coming soon)"
+msgstr ""
+
+msgid "Register"
+msgstr ""
+
+msgid "Min. 8 characters"
+msgstr ""
+
+msgid "Are you a patient?"
+msgstr ""

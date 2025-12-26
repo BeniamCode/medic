@@ -101,7 +101,7 @@ defmodule Medic.Scheduling do
   end
 
   defp schedule_rule_to_virtual_rule(%ScheduleRule{} = rule) do
-    rule = Ash.load!(rule, :breaks)
+    # rule = Ash.load!(rule, :breaks) # Removed: Breaks are already loaded in batch fetch
     breaks = rule.breaks || []
     # For backward compatibility, also set break_start/break_end from first break
     first_break = List.first(breaks)
@@ -256,16 +256,26 @@ defmodule Medic.Scheduling do
       priority: 0
     }
 
-    case find_schedule_rule_for_upsert(doctor_id, attrs) do
+      case find_schedule_rule_for_upsert(doctor_id, attrs) do
       nil ->
-        ScheduleRule
-        |> Ash.Changeset.for_create(:create, Map.put(data, :doctor_id, doctor_id))
-        |> Ash.create()
+        result = 
+          ScheduleRule
+          |> Ash.Changeset.for_create(:create, Map.put(data, :doctor_id, doctor_id))
+          |> Ash.create()
+        
+        # Trigger Cache Refresh
+        Task.start(fn -> Medic.Scheduling.refresh_doctor_schedule_cache(doctor_id) end)
+        result
 
       %ScheduleRule{} = rule ->
-        rule
-        |> Ash.Changeset.for_update(:update, Map.drop(data, [:day_of_week]))
-        |> Ash.update()
+        result = 
+          rule
+          |> Ash.Changeset.for_update(:update, Map.drop(data, [:day_of_week]))
+          |> Ash.update()
+        
+        # Trigger Cache Refresh
+        Task.start(fn -> Medic.Scheduling.refresh_doctor_schedule_cache(doctor_id) end)
+        result
     end
   end
 
@@ -332,12 +342,19 @@ defmodule Medic.Scheduling do
   end
 
   defp destroy_schedule_rule(rule) do
+    doctor_id = rule.doctor_id
+
     rule
     |> Ash.load!(:breaks)
     |> Map.get(:breaks, [])
     |> Enum.each(&Ash.destroy/1)
 
-    Ash.destroy(rule)
+    result = Ash.destroy(rule)
+    
+    # Trigger Cache Refresh
+    Task.start(fn -> Medic.Scheduling.refresh_doctor_schedule_cache(doctor_id) end)
+    
+    result
   end
 
   defp truthy?(value), do: value not in [false, "false", 0, "0", nil]
@@ -479,17 +496,61 @@ defmodule Medic.Scheduling do
   @doc """
   Gets available slots for multiple days (week view).
   """
-  def get_slots_for_range(%Doctor{} = doctor, start_date, end_date, opts \\ []) do
-    # Generate date range
-    days = Timex.diff(end_date, start_date, :days) + 1
+  @doc """
+  Gets available slots for multiple days (week view).
+  Optimized to avoid N+1 queries.
+  """
+  def get_slots_for_range(%Doctor{id: doctor_id} = doctor, start_date, end_date, opts \\ []) do
+    timezone = Keyword.get(opts, :timezone, @timezone)
+    days_count = Timex.diff(end_date, start_date, :days) + 1
 
-    0..(days - 1)
+    # 1. Batch Fetch Rules
+    # We fetch all rules and group them by day_of_week
+    rules_map = get_doctor_rules_map(doctor_id)
+
+    # 2. Batch Fetch Bookings (Appointments + Exceptions) for the whole range
+    # Ensure we cover the full range in the target timezone
+    range_start = start_date |> Timex.to_datetime(timezone) |> Timex.beginning_of_day()
+    range_end = end_date |> Timex.to_datetime(timezone) |> Timex.end_of_day()   
+    
+    all_booked_ranges = get_all_booked_ranges(doctor_id, range_start, range_end)
+
+    # 3. Process In-Memory
+    0..(days_count - 1)
     |> Enum.map(fn offset ->
       date = Timex.shift(start_date, days: offset)
+      # 1=Monday, 7=Sunday
+      day_of_week = Timex.weekday(date)
+
+      # Get rule for this day from map
+      rule = Map.get(rules_map, day_of_week)
+
+      slots = 
+        case rule do
+          nil -> 
+            []
+          rule ->
+            rule_timezone = Map.get(rule, :timezone, timezone)
+            
+            # Generate slots
+            potential_slots = generate_slots_from_rule(rule, date, rule_timezone)
+
+            # Filter booked ranges for this specific day to optimize intersection check
+            # (Optional optimized step, or just pass all if list is small. 
+            #  Given week view, passing all is fine, but we can filter for correctness/speed)
+            day_start_dt = Timex.beginning_of_day(Timex.to_datetime(date, timezone))
+            day_end_dt = Timex.end_of_day(Timex.to_datetime(date, timezone))
+            
+            relevant_booked = Enum.filter(all_booked_ranges, fn {start_b, end_b} -> 
+               Timex.compare(end_b, day_start_dt) > 0 and Timex.compare(start_b, day_end_dt) < 0
+            end)
+
+            mark_slot_availability(potential_slots, relevant_booked)
+        end
 
       %{
         date: date,
-        slots: get_slots(doctor, date, opts)
+        slots: slots
       }
     end)
   end
@@ -652,14 +713,50 @@ defmodule Medic.Scheduling do
     in_any_break || legacy_in_break
   end
 
-  defp get_booked_ranges(doctor_id, date, timezone) do
-    day_start = date |> Timex.to_datetime(timezone) |> Timex.beginning_of_day()
-    day_end = date |> Timex.to_datetime(timezone) |> Timex.end_of_day()
+  # --- Optimization Helpers ---
 
+  defp get_doctor_rules_map(doctor_id) do
+    # Fetch ScheduleRules first (priority)
+    schedule_rules = 
+      ScheduleRule
+      |> Ash.Query.filter(doctor_id == ^doctor_id)
+      |> Ash.Query.load(:breaks)
+      |> Ash.read!()
+    
+    # Fetch AvailabilityRules (fallback)
+    availability_rules = 
+      AvailabilityRule
+      |> Ash.Query.filter(doctor_id == ^doctor_id)
+      |> Ash.Query.filter(is_active == true)
+      |> Ash.read!()
+
+    # Build map: %{day_of_week => rule}
+    # Priority: ScheduleRule > AvailabilityRule
+    
+    # 1. Map availability rules
+    av_map = Map.new(availability_rules, fn r -> 
+      {r.day_of_week, %{
+          day_of_week: r.day_of_week,
+          start_time: r.start_time,
+          end_time: r.end_time,
+          break_start: r.break_start,
+          break_end: r.break_end,
+          slot_duration_minutes: r.slot_duration_minutes,
+          timezone: @timezone
+      }} 
+    end)
+
+    # 2. Overlay ScheduleRules (convert to virtual rule format)
+    Enum.reduce(schedule_rules, av_map, fn r, acc -> 
+      Map.put(acc, r.day_of_week, schedule_rule_to_virtual_rule(r))
+    end)
+  end
+
+  defp get_all_booked_ranges(doctor_id, start_dt, end_dt) do
     appointments =
       Appointment
       |> where([a], a.doctor_id == ^doctor_id)
-      |> where([a], a.starts_at >= ^day_start and a.starts_at <= ^day_end)
+      |> where([a], a.starts_at >= ^start_dt and a.starts_at <= ^end_dt)
       |> where([a], a.status in ["pending", "confirmed"])
       |> select([a], {a.starts_at, a.ends_at})
       |> Repo.all()
@@ -667,11 +764,19 @@ defmodule Medic.Scheduling do
     exceptions =
       AvailabilityException
       |> where([e], e.doctor_id == ^doctor_id)
-      |> where([e], e.starts_at <= ^day_end and e.ends_at >= ^day_start)
+      # Check overlap: (StartA <= EndB) and (EndA >= StartB)
+      |> where([e], e.starts_at <= ^end_dt and e.ends_at >= ^start_dt)
       |> select([e], {e.starts_at, e.ends_at})
       |> Repo.all()
 
     appointments ++ exceptions
+  end
+
+  defp get_booked_ranges(doctor_id, date, timezone) do
+    day_start = date |> Timex.to_datetime(timezone) |> Timex.beginning_of_day()
+    day_end = date |> Timex.to_datetime(timezone) |> Timex.end_of_day()
+
+    get_all_booked_ranges(doctor_id, day_start, day_end)
   end
 
   defp mark_slot_availability(slots, booked_ranges) do
@@ -988,5 +1093,34 @@ defmodule Medic.Scheduling do
       other ->
         other
     end
+  end
+  @doc """
+  Refreshes the cached schedule for a doctor (next 30 days).
+  Calculates slots and stores them in the `cached_schedule` map on the Doctor record.
+  """
+  def refresh_doctor_schedule_cache(doctor_id) do
+    # 1. Calc range (Today -> +30 days)
+    # Use UTC for "today" relative to server, but slots will be generated timezone-aware
+    start_date = Date.utc_today()
+    end_date = Date.add(start_date, 30)
+
+    # 2. Get Doctor (needed for timezone/rules)
+    doctor = Medic.Doctors.get_doctor!(doctor_id)
+
+    # 3. Calculate Slots (using our optimized function)
+    # The result is: [%{date: ~D[...], slots: [...]}, ...]
+    schedule_data = get_slots_for_range(doctor, start_date, end_date)
+
+    # 4. Convert to map keyed by ISO Date String for JSON storage
+    # %{"2015-01-01" => [...]}
+    cache_payload = 
+      Map.new(schedule_data, fn %{date: date, slots: slots} -> 
+        {Date.to_iso8601(date), slots}
+      end)
+
+    # 5. Update Doctor record
+    doctor
+    |> Ash.Changeset.for_update(:update, %{cached_schedule: cache_payload})
+    |> Ash.update()
   end
 end

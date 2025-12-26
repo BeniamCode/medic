@@ -4,6 +4,7 @@ import { usePage, router } from '@inertiajs/react'
 import type { SharedAppProps } from '@/types/app'
 import { useState } from 'react'
 import axios from 'axios'
+import { useTranslation } from 'react-i18next'
 
 type NotificationCategory = 'confirmed' | 'request' | 'cancelled' | 'other'
 
@@ -30,25 +31,26 @@ function getNotificationColor(category?: NotificationCategory): string {
   }
 }
 
-function formatTimeAgo(dateString: string): string {
+function formatTimeAgo(dateString: string, t: any): string {
   const date = new Date(dateString)
   const now = new Date()
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return t('just now')
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return t('{{count}}m ago', { count: minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+  if (hours < 24) return t('{{count}}h ago', { count: hours })
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
+  if (days < 7) return t('{{count}}d ago', { count: days })
   const weeks = Math.floor(days / 7)
-  return `${weeks}w ago`
+  return t('{{count}}w ago', { count: weeks })
 }
 
 export const NotificationBell = () => {
+  const { t } = useTranslation('default')
   const page = usePage<SharedAppProps & { unread_count?: number }>()
-  const unread = page.props.app?.unreadCount || 0
+  const unread = page.props.app?.unread_count || 0
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
@@ -107,20 +109,20 @@ export const NotificationBell = () => {
 
       {loading ? (
         <div style={{ padding: 24, textAlign: 'center' }}>
-          <Typography.Text type="secondary">Loading...</Typography.Text>
+          <Typography.Text type="secondary">{t('Loading...')}</Typography.Text>
         </div>
       ) : notifications.length === 0 ? (
         <div style={{ padding: 24 }}>
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={<Typography.Text type="secondary">No new notifications</Typography.Text>}
+            description={<Typography.Text type="secondary">{t('No new notifications')}</Typography.Text>}
           />
         </div>
       ) : (
         <div>
           {notifications.map((notification) => {
             const color = getNotificationColor(notification.category)
-            const timeAgo = formatTimeAgo(notification.inserted_at)
+            const timeAgo = formatTimeAgo(notification.inserted_at, t)
 
             return (
               <div
@@ -203,7 +205,7 @@ export const NotificationBell = () => {
           }}
           style={{ padding: 0 }}
         >
-          View All Notifications
+          {t('View All Notifications')}
         </Button>
       </div>
     </div>

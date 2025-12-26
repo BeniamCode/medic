@@ -11,14 +11,147 @@ defmodule Medic.Doctors do
     resource Medic.Doctors.Review
     resource Medic.Doctors.Location
     resource Medic.Doctors.LocationRoom
+    resource Medic.Doctors.ExperienceSubmission
+    resource Medic.Doctors.PatientContext
+  end
+
+  alias Medic.Doctors.ExperienceSubmission
+  require Decimal
+
+
+  def get_doctor_experience_profile(doctor_id) do
+    import Ecto.Query
+
+    query =
+      from s in ExperienceSubmission,
+        where: s.doctor_id == ^doctor_id,
+        select: %{
+          communication_style: avg(s.communication_style),
+          explanation_style: avg(s.explanation_style),
+          personality_tone: avg(s.personality_tone),
+          pace: avg(s.pace),
+          appointment_timing: avg(s.appointment_timing),
+          consultation_style: avg(s.consultation_style),
+          count: count(s.id)
+        }
+
+    case Medic.Repo.one(query) do
+      nil -> nil
+      %{count: 0} -> nil
+      stats -> 
+        # Convert Decimals/Floats to rounded integers
+        stats
+        |> Map.new(fn {k, v} -> 
+           val = 
+             cond do
+               k == :count -> v
+               Decimal.is_decimal(v) -> Decimal.to_float(v)
+               is_float(v) -> v
+               is_integer(v) -> v / 1
+               true -> 0.0
+             end
+           {k, round(val)} 
+        end)
+    end
   end
 
   import Ecto.Query
   alias Ecto.Changeset
   alias Medic.Repo
-  alias Medic.Doctors.{Doctor, Specialty, Location, LocationRoom}
+  alias Medic.Doctors.{Doctor, Specialty, Location, LocationRoom, PatientContext}
+  alias Medic.Appointments.Appointment
   alias Medic.Workers.IndexDoctor
   require Ash.Query
+
+  # --- Patient Context ---
+  @doc """
+  Lists distinct patients seen by a doctor with aggregate stats.
+  """
+  def list_my_patients(doctor_id) do
+    # Get comprehensive patient stats from appointments
+    query = 
+      from a in Appointment,
+        join: p in assoc(a, :patient),
+        where: a.doctor_id == ^doctor_id,
+        where: a.status in ["completed", "confirmed"],
+        group_by: [
+          p.id, 
+          p.first_name, 
+          p.last_name, 
+          p.phone, 
+          p.date_of_birth,
+          p.profile_image_url
+        ],
+        select: %{
+          patient_id: p.id,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          phone: p.phone,
+          date_of_birth: p.date_of_birth,
+          profile_image_url: p.profile_image_url,
+          visit_count: count(a.id),
+          last_visit: max(a.starts_at),
+          first_visit: min(a.starts_at)
+        }
+
+    visits = Repo.all(query)
+
+    # Get contexts
+    patient_ids = Enum.map(visits, & &1.patient_id)
+    
+    contexts = 
+      if patient_ids == [] do
+        %{}
+      else
+        PatientContext
+        |> Ash.Query.filter(doctor_id == ^doctor_id and patient_id in ^patient_ids)
+        |> Ash.read!()
+        |> Map.new(&{&1.patient_id, &1})
+      end
+
+    # Merge and calculate age
+    Enum.map(visits, fn visit -> 
+      visit
+      |> Map.put(:context, Map.get(contexts, visit.patient_id))
+      |> Map.put(:age, calculate_age(visit.date_of_birth))
+    end)
+    |> Enum.sort_by(& &1.last_visit, {:desc, DateTime})
+  end
+
+  defp calculate_age(nil), do: nil
+  defp calculate_age(dob) do
+    today = Date.utc_today()
+    years = today.year - dob.year
+    if Date.compare(Date.new!(today.year, dob.month, dob.day), today) == :gt do
+      years - 1
+    else
+      years
+    end
+  end
+
+  def get_patient_context(doctor_id, patient_id) do
+    PatientContext
+    |> Ash.Query.filter(doctor_id == ^doctor_id and patient_id == ^patient_id)
+    |> Ash.read_one()
+    |> case do
+      {:ok, context} -> context
+      _ -> nil
+    end
+  end
+
+  def update_patient_context(doctor_id, patient_id, attrs) do
+    case get_patient_context(doctor_id, patient_id) do
+      nil ->
+        PatientContext
+        |> Ash.Changeset.for_create(:create, Map.merge(attrs, %{"doctor_id" => doctor_id, "patient_id" => patient_id}))
+        |> Ash.create()
+      
+      context ->
+        context
+        |> Ash.Changeset.for_update(:update, attrs)
+        |> Ash.update()
+    end
+  end
 
   # --- Specialties ---
 

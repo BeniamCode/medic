@@ -3,7 +3,8 @@ import Config
 if database_url = System.get_env("DATABASE_URL") do
   config :medic, Medic.Repo,
     url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20"),
+    ssl: [verify: :verify_none]
 end
 
 # config/runtime.exs is executed for all environments, including
@@ -35,16 +36,17 @@ config :medic, Medic.Storage.B2,
   bucket_name: System.get_env("B2_BUCKET_NAME")
 
 if config_env() == :prod do
-  database_path =
-    System.get_env("DATABASE_PATH") ||
+  database_url =
+    System.get_env("DATABASE_URL") ||
       raise """
-      environment variable DATABASE_PATH is missing.
-      For example: /etc/medic/medic.db
+      environment variable DATABASE_URL is missing.
+      For example: postgresql://user:pass@host/database
       """
 
   config :medic, Medic.Repo,
-    database: database_path,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+    url: database_url,
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20"),
+    ssl: [verify: :verify_none]
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
@@ -107,19 +109,30 @@ if config_env() == :prod do
 
   # ## Configuring the mailer
   #
-  # In production you need to configure the mailer to use a different adapter.
-  # Here is an example configuration for Mailgun:
-  #
-  #     config :medic, Medic.Mailer,
-  #       adapter: Swoosh.Adapters.Mailgun,
-  #       api_key: System.get_env("MAILGUN_API_KEY"),
-  #       domain: System.get_env("MAILGUN_DOMAIN")
-  #
-  # Most non-SMTP adapters require an API client. Swoosh supports Req, Hackney,
-  # and Finch out-of-the-box. This configuration is typically done at
-  # compile-time in your config/prod.exs:
-  #
-  #     config :swoosh, :api_client, Swoosh.ApiClient.Req
-  #
-  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  # Gmail SMTP configuration for Google Workspace (Gmail for Business)
+  # Uses the GMAIL_SMTP_APP app password (single app password for all aliases)
+  # The username can be any of your aliases - hi@, appointments@, etc.
+  config :medic, Medic.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: "smtp.gmail.com",
+    port: 587,
+    username: System.get_env("HI_USERNAME") || "hi@medic.gr",
+    password: System.get_env("GMAIL_SMTP_APP"),
+    ssl: false,
+    tls: :always,
+    auth: :always,
+    retries: 2,
+    no_mx_lookups: false
+
+  config :medic, Medic.AppointmentsMailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: "smtp.gmail.com",
+    port: 587,
+    username: "appointments@medic.gr",
+    password: System.get_env("APPOINTMENTS_SMTP_APP"),
+    ssl: false,
+    tls: :always,
+    auth: :always,
+    retries: 2,
+    no_mx_lookups: false
 end
