@@ -4,7 +4,9 @@
 # This script runs on the server to deploy the application
 # It should be executed as the medic user
 
-set -e  # Exit on error
+
+# Initialize ASDF
+. "$HOME/.asdf/asdf.sh"
 
 APP_NAME="medic"
 APP_DIR="/opt/medic"
